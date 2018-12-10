@@ -1,5 +1,5 @@
 
-#
+#   bash
 #   Example for filtering line numbers
 #
 
