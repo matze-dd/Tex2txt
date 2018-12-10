@@ -74,7 +74,7 @@
 #     since LaTeX does not allow them
 #
 #
-#                                   Matthias Baumann, November 2018
+#                                   Matthias, November 2018
 #
 
 class Parms: pass
