@@ -3,7 +3,7 @@ LaTex filter with Python
 
 This is a small Python script for extracting raw text from LaTeX documents.
 
-In some sense, it compares to tools like opendetex and textidote. As in textidote, we make an effort to track line numbers. The file shell.sh shows an example for filtering messages from a language checker.
+In some sense, it compares to tools like OpenDetex and TeXtidote. As in textidote, we make an effort to track line numbers. The file shell.sh shows an example for filtering messages from a language checker.
 
 A speciality is some parsing of LaTeX environments for displayed equations. Therefore, one can check embedded \text{...} macros (LaTeX package amsmath) and interpunction in -- not too complex -- displayed equations.
 
