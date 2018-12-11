@@ -10,3 +10,5 @@ A speciality is some parsing of LaTeX environments for displayed equations. Ther
 In the starting section of the script, macros and environments with tailored treatment are listed. This should ease adaptation to own needs. We assume that the LaTeX source does not contain things from the preamble but only a "real" text part.
 
 Some shortcomings result from processing mainly via regular expressions. They are marked in the code.
+
+A more complete shell script for checking a whole document tree is checks.sh.
