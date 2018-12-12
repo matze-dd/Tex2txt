@@ -60,21 +60,21 @@
 #   - replacements are performed via the wrapper mysub() in order
 #     to observe deletion and inclusion of line breaks
 #   - in order to treat nested braces / brackets and some nested
-#     environments, we construct regular expressions by interation;
+#     environments, we construct regular expressions by iteration;
 #     maximum recognized nesting depth (and thus length of these expressions)
 #     is controlled by the variables max_depth_br and max_depth_env
 #
 #   Bugs:
 #   - parsing with regular expressions is fun, but limited; as the
-#     replacement argument of re.sub() may be a callable, one can plug-in
+#     replacement argument of re.sub() may be a callable, one can plug in
 #     some programming, however
-#   - several related shortcommings are marked with BUG (for some
+#   - several related shortcomings are marked with BUG (for some
 #     of them, warnings are generated)
 #   - problems with nesting of equation environments are less severe,
 #     since LaTeX does not allow them
 #
 #
-#                                   Matthias, November 2018
+#                                   Matthias Baumann, November 2018
 #
 
 class Parms: pass
@@ -176,6 +176,20 @@ parms.macros_arg_delete = (
     'label',
     'TBDoff',
     'vspace',
+)
+
+#   delete these macros together with []-option and 2 {}-arguments
+#   unless macro is given in option --extr
+#
+parms.macros_two_args_delete = (
+    'colorbox',
+)
+
+#   delete these macros together with []-option and 3 {}-arguments
+#   unless macro is given in option --extr
+#
+parms.macros_three_args_delete = (
+    'fcolorbox',
 )
 
 #   replace these macros together with their braced argument,
@@ -466,7 +480,7 @@ if not cmdline.lang or cmdline.lang == 'de':
     # proof environment:
     parms.proof_title = 'Beweis'
     # macro to mark foreign language:
-    parms.foreign_lang__mac = 'engl'
+    parms.foreign_lang_mac = 'engl'
     # replacement for this macro:
     parms.replace_frgn_lang_mac = '[englisch]'
 
@@ -477,7 +491,7 @@ elif cmdline.lang == 'en':
                         '*': ' times ', '/': ' over ',
                         None: ' equal '}
     parms.proof_title = 'Proof'
-    parms.foreign_lang__mac = 'foreign'
+    parms.foreign_lang_mac = 'foreign'
     parms.replace_frgn_lang_mac = '[foreign]'
 
 else:
@@ -530,7 +544,7 @@ text = mysub(r'^(([^\n\\%]|\\.)*[^ \t\n\\%])(?<!\\newline)%.*\n',
     # --> re-try
 text = mysub(r'^(([^\n\\%]|\\.)*\\%)%.*\n', r'\1', text, flags=re.M)
 
-#   - "normal case": just remove rest of line, keeping the line break;
+#   - "normal case": just remove rest of line, keeping the line break
 #
 text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
 
@@ -551,8 +565,24 @@ for s in parms.macros_arg_delete:
             eol2space('')
         )]
 
+for s in parms.macros_two_args_delete:
+    if s not in cmdline.extr_list:
+        actions += [(
+            r'\\' + s + r'\s*(' + bracketed + r')?\s*'
+                + braced + r'\s*' + braced + eat_eol,
+            eol2space('')
+        )]
+
+for s in parms.macros_three_args_delete:
+    if s not in cmdline.extr_list:
+        actions += [(
+            r'\\' + s + r'\s*(' + bracketed + r')?\s*'
+                + braced + r'\s*' + braced + r'\s*' + braced + eat_eol,
+            eol2space('')
+        )]
+
 for s in (parms.macros_arg_replace
-        + ((parms.foreign_lang__mac, parms.replace_frgn_lang_mac),)):
+        + ((parms.foreign_lang_mac, parms.replace_frgn_lang_mac),)):
     test_tuple(s, 'parms.macros_arg_replace')
     if s[0] not in cmdline.extr_list:
         actions += [(r'\\' + s[0] + r'\s*' + braced, s[1])]
@@ -602,8 +632,9 @@ actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)*)\$',
 #   delete macro \newcommand
 #
 actions += [(
-    r'\\newcommand\s*' + braced + r'\s*(' + bracketed + r')?\s*' + braced,
-    ''
+    r'\\newcommand\s*' + braced + r'\s*(' + bracketed + r')?\s*'
+            + braced + eat_eol,
+    eol2space('')
 )]
 
 #   proof environment with optional [...]:
@@ -708,7 +739,7 @@ def math2txt(txt, first_on_line):
         return ''
 
     # check for leading operator, possibly after mathspace;
-    # there also might be a '{}' for making e.g. '-' unary
+    # there also might be a '{}' for making e.g. '-' binary
     m = re.match(r'(' + parms.mathspace + r'|\{\}|\s)*'
                     + r'(' + parms.mathop + ')', txt)
     if m and not first_on_line:
@@ -877,6 +908,8 @@ if parms.keep_item_labels:
     text = mysub(r'\\item\s*' + bracketed, r'\1', text)
 else:
     text = mysub(r'\\item\s*' + bracketed + eat_eol, eol2space(''), text)
+# finally, items without [...]
+text = mysub(r'\\item\b' + eat_eol, eol2space(''), text)
 
 #   delete remaining \xxx macros unless given in --extr option;
 #   if followed by braced argument: copy its content
