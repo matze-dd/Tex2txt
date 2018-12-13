@@ -1,6 +1,4 @@
 # Tex2txt
-A LaTeX filter with Python
-
 This is a small Python script for extracting raw text from LaTeX documents.
 
 In some sense, it compares to tools like OpenDetex and TeXtidote. As in TeXtidote, we make an effort to track line numbers. The file shell.sh shows an example for filtering messages from a language checker.
