@@ -6,3 +6,7 @@
 - \newcommand{}[]{} will not create empty line
 - corrected some typos in comments
 
+2018/12/13
+==========
+- added further templates, e.g., for \colorbox etc.
+- \LTskip won't leave blank line
