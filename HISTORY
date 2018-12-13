@@ -10,3 +10,4 @@
 ==========
 - added further templates, e.g., for \colorbox etc.
 - \LTskip won't leave blank line
+- created release 0.1.0
