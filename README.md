@@ -1,5 +1,5 @@
 # Tex2txt
-A LaTex filter with Python
+A LaTeX filter with Python
 
 This is a small Python script for extracting raw text from LaTeX documents.
 
