@@ -14,7 +14,7 @@
 #
 
 #   Python3:
-#   Extract raw text from LaTex file, write result to standard output
+#   Extract raw text from LaTeX file, write result to standard output
 #
 #   . output suitable for check, e.g., with LanguageTool (LT)
 #   . we make an effort to avoid creation of additional empty lines that
@@ -51,7 +51,7 @@
 #     interpunction, argument of \text{...} is included into output text;
 #     see LAB:EQUATIONS below for example and detailed description
 #   - rare LT warnings can be supressed using \LTadd, \LTskip,
-#     and \LTalter (see below) in the LaTex text with suitable macro
+#     and \LTalter (see below) in the LaTeX text with suitable macro
 #     definitions there, e.g. adding something for LT only:
 #       \newcommand{\LTadd}[1]{}
 #
@@ -167,7 +167,9 @@ parms.environments_replace = (
 #   unless macro is given in option --extr
 #
 parms.macros_arg_delete = (
+    'color',
     'comment',
+    'documentclass',
     'footnote',
     'footnotetext',
     'hspace',
@@ -175,20 +177,40 @@ parms.macros_arg_delete = (
     'input',
     'label',
     'TBDoff',
+    'usepackage',
     'vspace',
 )
 
-#   delete these macros together with []-option and 2 {}-arguments
+#   delete these macros together with []-option and two {}-arguments,
 #   unless macro is given in option --extr
 #
 parms.macros_two_args_delete = (
-    'colorbox',
+#   'xxx',
 )
 
-#   delete these macros together with []-option and 3 {}-arguments
+#   delete these macros together with []-option and three {}-arguments,
 #   unless macro is given in option --extr
 #
 parms.macros_three_args_delete = (
+#   'xxx',
+)
+
+#   copy last {}-argument of these macros with []-option and one {}-argument
+#
+parms.macros_arg_copy_last = (
+    'framebox',
+)
+
+#   copy last {}-argument of these macros with []-option and two {}-arguments
+#
+parms.macros_two_args_copy_last = (
+    'colorbox',
+    'textcolor',
+)
+
+#   copy last {}-argument of these macros with []-option and three {}-arguments
+#
+parms.macros_three_args_copy_last = (
     'fcolorbox',
 )
 
@@ -245,13 +267,13 @@ parms.misc_replace = lambda: [
     (r'\\vgV\b(\{\})?', 'v.' + utf8_nbsp + 'g.' + utf8_nbsp + 'V.'),
     (r'\\zB\b', 'z.' + utf8_nbsp + 'B.'),
 
-    # suppress some LT warnings by altering the LaTex text
+    # suppress some LT warnings by altering the LaTeX text
     (r'\\LTadd\s*' + braced, r'\1'),
-                    # for LaTex, argument is ignored
+                    # for LaTeX, argument is ignored
     (r'\\LTalter\s*' + braced + r'\s*' + braced, r'\2'),
-                    # for LaTex, first argument is used
-    (r'\\LTskip\s*' + braced, ''),
-                    # for LaTex, argument is used
+                    # for LaTeX, first argument is used
+    (r'\\LTskip\s*' + braced + eat_eol, eol2space('')),
+                    # for LaTeX, argument is used
 
     # delete '\!', '\-'
     (r'\\[!-]', ''),
@@ -561,14 +583,14 @@ actions = parms.misc_replace()
 for s in parms.macros_arg_delete:
     if s not in cmdline.extr_list:
         actions += [(
-            r'\\' + s + r'\s*(' + bracketed + r')?\s*' + braced + eat_eol,
+            r'\\' + s + r'\s*(?:' + bracketed + r')?\s*' + braced + eat_eol,
             eol2space('')
         )]
 
 for s in parms.macros_two_args_delete:
     if s not in cmdline.extr_list:
         actions += [(
-            r'\\' + s + r'\s*(' + bracketed + r')?\s*'
+            r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
                 + braced + r'\s*' + braced + eat_eol,
             eol2space('')
         )]
@@ -576,10 +598,30 @@ for s in parms.macros_two_args_delete:
 for s in parms.macros_three_args_delete:
     if s not in cmdline.extr_list:
         actions += [(
-            r'\\' + s + r'\s*(' + bracketed + r')?\s*'
+            r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
                 + braced + r'\s*' + braced + r'\s*' + braced + eat_eol,
             eol2space('')
         )]
+
+for s in parms.macros_arg_copy_last:
+    actions += [(
+        r'\\' + s + r'\s*(?:' + bracketed + r')?\s*' + braced,
+        r'\2'
+    )]
+
+for s in parms.macros_two_args_copy_last:
+    actions += [(
+        r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
+                + braced + r'\s*' + braced,
+        r'\3'
+    )]
+
+for s in parms.macros_three_args_copy_last:
+    actions += [(
+        r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
+                + braced + r'\s*' + braced + r'\s*' + braced,
+        r'\4'
+    )]
 
 for s in (parms.macros_arg_replace
         + ((parms.foreign_lang_mac, parms.replace_frgn_lang_mac),)):
