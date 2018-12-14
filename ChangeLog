@@ -1,0 +1,11 @@
+Release 0.2.0
+=============
+- handle \[ ... \] and displaymath environment
+- recognize versions with * for \hspace, \vspace
+- perform checks for nesting depth of {} braces, [] brackets, and environments
+- allow macros from parms.macros_*_copy_last to be nested (bug in 0.1.0)
+
+Release 0.1.0
+=============
+- initial version
+
