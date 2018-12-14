@@ -1,11 +1,19 @@
 Release 0.2.0
 =============
 - handle \[ ... \] and displaymath environment
+  (required minor reorganisation of equation parsing machinery)
 - recognize versions with * for \hspace, \vspace
 - perform checks for nesting depth of {} braces, [] brackets, and environments
 - allow macros from parms.macros_*_copy_last to be nested (bug in 0.1.0)
 
 Release 0.1.0
 =============
-- initial version
+- added templates for macros with 2 and 3 arguments to be ignored or
+  with last argument to be kept
+- \LTskip, \item without [], and \newcommand{}[]{} won't leave blank line
+- corrected some typos in comments
+
+Initial Version
+===============
+- first upload
 
