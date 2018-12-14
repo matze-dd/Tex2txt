@@ -74,7 +74,7 @@
 #     since LaTeX does not allow them
 #
 #
-#                                   Matthias Baumann, November 2018
+#                                   Matthias Baumann, December 2018
 #
 
 class Parms: pass
@@ -111,6 +111,7 @@ parms.theorem_environments = (
 parms.equation_environments = (
     r'align',
     r'align\*',     # extra pattern with *: safely match begin and end
+    r'displaymath',
     r'equation',
     r'equation\*',
     r'eqnarray',
@@ -160,7 +161,7 @@ parms.environments_delete = (
 #   these environments are replaced completely by a fix text
 #
 parms.environments_replace = (
-#   ('YYY', '[YYY]'),
+    ('table', '[Tabelle].'),
 )
 
 #   delete these macros together with their []-option / {}-argument,
@@ -172,13 +173,13 @@ parms.macros_arg_delete = (
     'documentclass',
     'footnote',
     'footnotetext',
-    'hspace',
+    r'hspace\*?',
     'includegraphics',
     'input',
     'label',
     'TBDoff',
     'usepackage',
-    'vspace',
+    r'vspace\*?',
 )
 
 #   delete these macros together with []-option and two {}-arguments,
@@ -326,7 +327,7 @@ import argparse, re, sys
 def fatal(msg):
     raise Exception('\n*** Internal error: ' + msg + '\n')
 def warning(msg, detail):
-    sys.stderr.write('\n*** Warning: ' + msg + '\n')
+    sys.stderr.write('\n*** ' + sys.argv[0] + ': warning: ' + msg + '\n')
     if detail:
         sys.stderr.write(detail)
     sys.stderr.write('\n')
@@ -348,41 +349,47 @@ begin_lbr = r'\\begin\s*\{'
 end_lbr = r'\\end\s*\{'
 
 #   regular expression for nested {} braces
-#   BUG (without warning): the nesting limit is unjustified
+#   BUG (with warning): the nesting limit is unjustified
 #
 max_depth_br = 20
     # maximum nesting depth
-atom = r'[^\\{}]|\\.'
-braced = r'\{(?:' + atom + r')*\}'
-    # (?:...) is (...) without creation of a reference
-for i in range(max_depth_br - 2):
-    braced = r'\{(?:' + atom + r'|' + braced + r')*\}'
-braced = r'(?<!\\)\{((?:' + atom + r'|' + braced + r')*)\}'
-    # outer-most (...) for reference at substitutions below
-    # '(?<!x)y' matches 'y' not preceded by 'x'
+def re_braced(max_depth, inner_beg, inner_end):
+    atom = r'[^\\{}]|\\.'
+    braced = inner_beg + r'\{(?:' + atom + r')*\}' + inner_end
+        # (?:...) is (...) without creation of a reference
+    for i in range(max_depth - 2):
+        braced = r'\{(?:' + atom + r'|' + braced + r')*\}'
+    braced = r'(?<!\\)\{((?:' + atom + r'|' + braced + r')*)\}'
+        # outer-most (...) for reference at substitutions below
+        # '(?<!x)y' matches 'y' not preceded by 'x'
+    return braced
+braced = re_braced(max_depth_br, '', '')
 
 #   the same for [] brackets
 #   BUG (without warning): enclosed {} pairs are not recognized
 #
-atom = r'[^]\\[]|\\.'
-bracketed = r'\[(?:' + atom + r')*\]'
-for i in range(max_depth_br - 2):
-    bracketed = r'\[(?:' + atom + r'|' + bracketed + r')*\]'
-bracketed = r'(?<!\\)\[((?:' + atom + r'|' + bracketed + r')*)\]'
+def re_bracketed(max_depth, inner_beg, inner_end):
+    atom = r'[^]\\[]|\\.'
+    bracketed = inner_beg + r'\[(?:' + atom + r')*\]' + inner_end
+    for i in range(max_depth - 2):
+        bracketed = r'\[(?:' + atom + r'|' + bracketed + r')*\]'
+    bracketed = r'(?<!\\)\[((?:' + atom + r'|' + bracketed + r')*)\]'
+    return bracketed
+bracketed = re_bracketed(max_depth_br, '', '')
 
 #   regular expression for an environment
-#   BUG (without warning): the nesting limit is unjustified
+#   BUG (with warning): the nesting limit is unjustified
 #
 max_depth_env = 10
-def re_nested_env(s):
+def re_nested_env(s, max_depth, arg):
     env_begin = begin_lbr + s + r'\}'
     env_end = end_lbr + s + r'\}'
     # important here: non-greedy *? repetition
-    env = env_begin + r'(?:.|\n)*?' + env_end
-    for i in range(max_depth_env - 2):
+    env = r'(' + env_begin + r'(?:.|\n)*?' + env_end + r')'
+    for i in range(max_depth - 2):
         # important here: non-greedy *? repetition
         env = env_begin + r'(?:(?:' + env + r')|.|\n)*?' + env_end
-    env = env_begin + r'((?:(?:' + env + r')|.|\n)*?)' + env_end
+    env = env_begin + arg + r'((?:(?:' + env + r')|.|\n)*?)' + env_end
     return env
 
 #   these RE match beginning and end of arbitrary environments;
@@ -465,12 +472,6 @@ def mysearch(expr, text, flags=0):
         fatal('wrong arg for mysearch()')
     return re.search(expr, text[0], flags=flags)
 
-# if variable text were a pure string:
-#
-# def mysub(expr, repl, text, flags=0):
-#     return re.sub(expr, repl, text, flags=flags)
-# def mysearch(expr, text, flags=0):
-#     return re.search(expr, text, flags=flags)
 
 #######################################################################
 #
@@ -571,6 +572,31 @@ text = mysub(r'^(([^\n\\%]|\\.)*\\%)%.*\n', r'\1', text, flags=re.M)
 text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
 
 
+#   check nesting limits for braces, brackets, and environments
+#
+for m in re.finditer(re_braced(max_depth_br + 1, '(', ')'), text[0]):
+    if m.group(2):
+        warning('maximum nesting depth for {} braces exceeded,'
+                + ' max_depth_br=' + str(max_depth_br), m.group(0))
+for m in re.finditer(re_bracketed(max_depth_br + 1, '(', ')'), text[0]):
+    if m.group(2):
+        warning('maximum nesting depth for [] brackets exceeded,'
+                + ' max_depth_br=' + str(max_depth_br), m.group(0))
+for env in (
+    parms.theorem_environments
+    + parms.equation_environments
+    + parms.equation_environments_with_arg
+    + tuple(e[0] for e in parms.equation_environments_replace)
+    + parms.environments_delete
+    + tuple(e[0] for e in parms.environments_replace)
+):
+    expr = re_nested_env(env, max_depth_env + 1, '')
+    for m in re.finditer(expr, text[0]):
+        if m.group(2):
+            warning('maximum nesting depth for environments exceeded,'
+                    + ' max_depth_env=' + str(max_depth_env), m.group(0))
+
+
 #######################################################################
 #
 #   replacements: collected in list actions
@@ -603,26 +629,6 @@ for s in parms.macros_three_args_delete:
             eol2space('')
         )]
 
-for s in parms.macros_arg_copy_last:
-    actions += [(
-        r'\\' + s + r'\s*(?:' + bracketed + r')?\s*' + braced,
-        r'\2'
-    )]
-
-for s in parms.macros_two_args_copy_last:
-    actions += [(
-        r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
-                + braced + r'\s*' + braced,
-        r'\3'
-    )]
-
-for s in parms.macros_three_args_copy_last:
-    actions += [(
-        r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
-                + braced + r'\s*' + braced + r'\s*' + braced,
-        r'\4'
-    )]
-
 for s in (parms.macros_arg_replace
         + ((parms.foreign_lang_mac, parms.replace_frgn_lang_mac),)):
     test_tuple(s, 'parms.macros_arg_replace')
@@ -630,11 +636,12 @@ for s in (parms.macros_arg_replace
         actions += [(r'\\' + s[0] + r'\s*' + braced, s[1])]
 
 for env in parms.environments_delete:
-    actions += [(re_nested_env(env) + eat_eol, eol2space(''))]
+    actions += [(re_nested_env(env, max_depth_env, '') + eat_eol,
+                    eol2space(''))]
 
 for env in parms.environments_replace:
     test_tuple(env, 'parms.environments_replace')
-    actions += [(re_nested_env(env[0]), env[1])]
+    actions += [(re_nested_env(env[0], max_depth_env, ''), env[1])]
 
 def f(m):
     txt = m.group(2)
@@ -705,6 +712,23 @@ actions += [
 for r in actions:
     test_tuple(r, 'actions')
     text = mysub(r[0], r[1], text, flags=re.M)
+
+#   these macros might be nested
+#
+for s in parms.macros_arg_copy_last:
+    expr = r'\\' + s + r'\s*(?:' + bracketed + r')?\s*' + braced
+    while mysearch(expr, text):
+        text = mysub(expr, r'\2', text)
+for s in parms.macros_two_args_copy_last:
+    expr = (r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
+                + braced + r'\s*' + braced)
+    while mysearch(expr, text):
+        text = mysub(expr, r'\3', text)
+for s in parms.macros_three_args_copy_last:
+    expr = (r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
+                + braced + r'\s*' + braced + r'\s*' + braced)
+    while mysearch(expr, text):
+        text = mysub(expr, r'\4', text)
 
 
 ##################################################################
@@ -832,59 +856,51 @@ def split_sec(txt, first_on_line):
     res += math2txt(txt[last:], first_on_line)
     return res
 
+#   parse the text of an equation environment
+#
+def parse_equ(equ):
+    # first resolve sub-environments (e.g. cases) in order
+    # to see interpunction
+    equ = re.sub(re_begin_env, '', equ)
+    equ = re.sub(re_end_env, '', equ)
+
+    # then split into lines delimited by \newline
+    # BUG (with warning for braced macro arguments):
+    # repl_line() and later repl_sec() may fail if \\ alias \newline
+    # or later & are argument of a macro
+    #
+    for f in re.finditer(braced, equ):
+        if re.search(r'\\newline|(?<!\\)&', f.group(1)):
+            warning('"\\\\" or "&" in {} braces (macro argument?):'
+                        + ' not properly handled',
+                        re.sub(r'\\newline\b', r'\\\\', equ))
+            break
+    # important: non-greedy *? repetition
+    line = r'((.|\n)*?)(\\newline\b|\Z)'
+    # return replacement for RE line
+    def repl_line(m):
+        # finally, split line into sections delimited by '&'
+        # important: non-greedy *? repetition
+        sec = r'((.|\n)*?)((?<!\\)&|\Z)'
+        first_on_line = True
+        def repl_sec(m):
+            nonlocal first_on_line
+            # split this section into math and text parts
+            # BUG (without warning):
+            # we assume that '&' always creates white space
+            ret = split_sec(m.group(1), first_on_line) + ' '
+            first_on_line = False
+            return ret
+        return '  ' + re.sub(sec, repl_sec, m.group(1)) + '\n'
+
+    return re.sub(line, repl_line, equ)
+
 #   replace an equation environment by suitable text
-#   BUG (with warning): nested environments of same type are not
-#                       treated properly
 #
 def repl_equ_env(env, arg, text):
-    # the non-greedy repetition (.|\n)*? is really important here;
-    # otherwise, the expression could run too far
-    env = (begin_lbr + r'(' + env + r')\}' + arg
-            + r'((.|\n)*?)' + end_lbr + env + r'\}' + eat_eol)
-
-    # return replacement for RE env
-    def repl_equ(m):
-        equ = m.group(3)        # group 2 is in argument arg
-        if re.search(begin_lbr + re.escape(m.group(1)) + r'\}', equ):
-            warning('nested environment "' + m.group(1)
-                        + '" not properly handled', m.group(0))
-
-        # first resolve sub-environments (e.g. cases) in order
-        # to see interpunction
-        equ = re.sub(re_begin_env, '', equ)
-        equ = re.sub(re_end_env, '', equ)
-
-        # then split into lines delimited by \newline
-        # BUG (with warning for braced macro arguments):
-        # repl_line() and later repl_sec() may fail if \\ alias \newline
-        # or later & are argument of a macro
-        #
-        for f in re.finditer(braced, equ):
-            if re.search(r'\\newline|(?<!\\)&', f.group(1)):
-                warning('"\\\\" or "&" in {} braces (macro argument?):'
-                            + ' not properly handled',
-                            re.sub(r'\\newline\b', r'\\\\', m.group(0)))
-                break
-        # important: non-greedy *? repetition
-        line = r'((.|\n)*?)(\\newline\b|\Z)'
-        # return replacement for RE line
-        def repl_line(m):
-            # finally, split line into sections delimited by '&'
-            # important: non-greedy *? repetition
-            sec = r'((.|\n)*?)((?<!\\)&|\Z)'
-            first_on_line = True
-            def repl_sec(m):
-                nonlocal first_on_line
-                # split this section into math and text parts
-                # BUG: we assume that '&' always creates white space
-                ret = split_sec(m.group(1), first_on_line) + ' '
-                first_on_line = False
-                return ret
-            return '  ' + re.sub(sec, repl_sec, m.group(1)) + '\n'
-
-        return re.sub(line, repl_line, equ)
-
-    return mysub(env, repl_equ, text)
+    expr = re_nested_env(env, max_depth_env, arg) + eat_eol
+    return mysub(expr, lambda m: parse_equ(m.group(2)), text)
+                    # first () group is in arg
 
 #   replace equation environments listed above;
 #   first resolve some disturbing macros
@@ -897,11 +913,17 @@ for env in parms.equation_environments:
 for env in parms.equation_environments_with_arg:
     text = repl_equ_env(env, r'\s*' + braced, text)
 
+#   replace \[ ... \] displayed equation
+#
+text = mysub(r'\\\[((.|\n)*?)\\\]' + eat_eol,
+                lambda m: parse_equ(m.group(1)), text)
+        # important: non-greedy *? repetition
+
 #   equation environments with fixed replacement and added interpunction
 #
 for environ in parms.equation_environments_replace:
     test_tuple(environ, 'parms.equation_environments_replace')
-    env = re_nested_env(environ[0])
+    env = re_nested_env(environ[0], max_depth_env, '')
     def f(m):
         txt = m.group(1)
         txt = re.sub(r'\\' + parms.text_macro + r'\s*' + braced, r'\1', txt)
