@@ -50,7 +50,7 @@
 #   - equation environments are resolved in a way suitable for check of
 #     interpunction, argument of \text{...} is included into output text;
 #     see LAB:EQUATIONS below for example and detailed description
-#   - rare LT warnings can be supressed using \LTadd, \LTskip,
+#   - rare LT warnings can be suppressed using \LTadd, \LTskip,
 #     and \LTalter (see below) in the LaTeX text with suitable macro
 #     definitions there, e.g. adding something for LT only:
 #       \newcommand{\LTadd}[1]{}
@@ -70,8 +70,6 @@
 #     some programming, however
 #   - several related shortcomings are marked with BUG (for some
 #     of them, warnings are generated)
-#   - problems with nesting of equation environments are less severe,
-#     since LaTeX does not allow them
 #
 #
 #                                   Matthias Baumann, December 2018
@@ -79,6 +77,56 @@
 
 class Parms: pass
 parms = Parms()
+
+#   these are macros with tailored treatment;
+#   replacement only if not given in option --extr
+#
+#   Macro(name, args, repl=''):
+#   args:
+#       - A stands for an {...} argument
+#       - O stands for an optional [...]
+#   repl:
+#       - replacement pattern, r'\d' (d: single digit) extracts text
+#         from position d in args (counting from 1)
+#       - repl empty: suppress generation of empty lines
+#       - if refering to an optional argument, e.g.
+#               Macro('xxx', 'OA', r'\1'),
+#         Python version of at least 3.5 is required (non-matched group
+#         yields empty string); otherwise re module may raise exceptions
+#
+parms.the_macros = lambda: (
+    Macro('color', 'A'),
+    Macro('comment', 'A'),
+    Macro('colorbox', 'AA', r'\2'),
+    Macro('documentclass', 'OA'),
+    Macro('fcolorbox', 'AAA', r'\3'),
+    Macro('footnote', 'A'),
+    Macro('footnotetext', 'A'),
+    Macro('framebox', 'OA', r'\2'),
+    Macro(r'hspace\*?', 'A'),
+    Macro('includegraphics', 'OA'),
+    Macro('input', 'A'),
+    Macro('label', 'A'),
+    Macro('TBDoff', 'A'),
+    Macro('textcolor', 'AA', r'\2'),
+    Macro('usepackage', 'OA'),
+    Macro(r'vspace\*?', 'A'),
+
+    # suppress some LT warnings by altering the LaTeX text
+    Macro('LTadd', 'A', r'\1'),
+                    # for LaTeX, argument is ignored
+    Macro('LTalter', 'AA', r'\2'),
+                    # for LaTeX, first argument is used
+    Macro('LTskip', 'A'),
+                    # for LaTeX, first argument is used
+
+    # macro for foreign-language text
+    Macro(parms.foreign_lang_mac, 'A', parms.replace_frgn_lang_mac),
+
+    # necessary for correct parsing of equation environments
+    # (might hide interpunction)
+    Macro('mathrlap', 'A', r'\1')
+)
 
 #   heading macros with optional argument [...]:
 #   copy content of {...} and add '.' if not ending with interpunction
@@ -105,121 +153,52 @@ parms.theorem_environments = (
     'Satz',
 )
 
-#   equation environments from LaTeX package amsmath;
+#   equation environments, partly from LaTeX package amsmath;
 #   see comments at LAB:EQUATIONS below
 #
-parms.equation_environments = (
-    r'align',
-    r'align\*',     # extra pattern with *: safely match begin and end
-    r'displaymath',
-    r'equation',
-    r'equation\*',
-    r'eqnarray',
-    r'eqnarray\*',
-)
-
-#   equation environments with argument, \begin{...}{...}
-#   see comments at LAB:EQUATIONS below
-#
-parms.equation_environments_with_arg = (
-    r'alignat',
-    r'alignat\*',
-)
-
-#   these environments are replaced completely by a fix text
-#   - if the actual content ends with a character from variable
+#   EquEnv(name, args='', repl='')
+#   - args: arguments at \begin, as for Macro()
+#   - repl not empty: replace whole environment with this fix text;
+#     if the actual content ends with a character from variable
 #     parms.mathpunct (ignoring macros from variables
 #     parms.macros_in_math_env and parms.mathspace), then this sign
 #     is appended
 #
-parms.equation_environments_replace = (
-    (r'flalign', '[Komplex-Formelausdruck]'),
-    (r'flalign\*', '[Komplex-Formelausdruck]'),
+parms.equation_environments = lambda: (
+    EquEnv(r'align'),
+    EquEnv(r'align\*'),
+            # extra pattern with *: safely match begin and end
+    EquEnv(r'alignat', args='A'),
+    EquEnv(r'alignat\*', args='A'),
+    EquEnv(r'displaymath'),
+    EquEnv(r'equation'),
+    EquEnv(r'equation\*'),
+    EquEnv(r'eqnarray'),
+    EquEnv(r'eqnarray\*'),
+    EquEnv(r'flalign', repl='[Komplex-Formelausdruck]'),
+    EquEnv(r'flalign\*', repl='[Komplex-Formelausdruck]'),
 )
 
-#   macro for "plain text" in equation environments;
-#   its argument will be copied, see LAB:EQUATIONS below
+#   these environments are deleted or replaced completely (with body)
 #
-parms.text_macro = 'text'           # LaTeX package amsmath
-
-#   these macros need to be resolved/deleted "manually" for correct
-#   handling of equation environments; see LAB:EQUATIONS below
+#   EnvRepl(name, repl='')
+#   - repl: if empty, then suppress creation of blank lines
 #
-parms.macros_in_math_env = (
-    'mathrlap',     # keep the braced argument
-    'nonumber',
-    'notag',
-    'qedhere',
+parms.environments = lambda: (
+    EnvRepl('table', '[Tabelle].'),
+#   EnvRepl('XXX'),
 )
 
-#   these environments are deleted completely (with their body)
+#   at the end, we delete all unknown "standard" environment frames;
+#   these are environments with options / arguments at \begin{...}
 #
-parms.environments_delete = (
-#   'XXX',
-)
-
-#   these environments are replaced completely by a fix text
+#   EnvBegArg(name, args)
+#   - args: as for Macro()
 #
-parms.environments_replace = (
-    ('table', '[Tabelle].'),
-)
-
-#   delete these macros together with their []-option / {}-argument,
-#   unless macro is given in option --extr
-#
-parms.macros_arg_delete = (
-    'color',
-    'comment',
-    'documentclass',
-    'footnote',
-    'footnotetext',
-    r'hspace\*?',
-    'includegraphics',
-    'input',
-    'label',
-    'TBDoff',
-    'usepackage',
-    r'vspace\*?',
-)
-
-#   delete these macros together with []-option and two {}-arguments,
-#   unless macro is given in option --extr
-#
-parms.macros_two_args_delete = (
-#   'xxx',
-)
-
-#   delete these macros together with []-option and three {}-arguments,
-#   unless macro is given in option --extr
-#
-parms.macros_three_args_delete = (
-#   'xxx',
-)
-
-#   copy last {}-argument of these macros with []-option and one {}-argument
-#
-parms.macros_arg_copy_last = (
-    'framebox',
-)
-
-#   copy last {}-argument of these macros with []-option and two {}-arguments
-#
-parms.macros_two_args_copy_last = (
-    'colorbox',
-    'textcolor',
-)
-
-#   copy last {}-argument of these macros with []-option and three {}-arguments
-#
-parms.macros_three_args_copy_last = (
-    'fcolorbox',
-)
-
-#   replace these macros together with their braced argument,
-#   unless given in option --extr
-#
-parms.macros_arg_replace = (
-#   ('zzz', '[zzz]'),
+parms.environments_with_args = lambda: (
+    EnvBegArg('figure', 'O'),
+    EnvBegArg('minipage', 'A'),
+    EnvBegArg('tabular', 'A'),
 )
 
 #   a list of 2-tuples for other macros to be replaced
@@ -268,14 +247,6 @@ parms.misc_replace = lambda: [
     (r'\\vgV\b(\{\})?', 'v.' + utf8_nbsp + 'g.' + utf8_nbsp + 'V.'),
     (r'\\zB\b', 'z.' + utf8_nbsp + 'B.'),
 
-    # suppress some LT warnings by altering the LaTeX text
-    (r'\\LTadd\s*' + braced, r'\1'),
-                    # for LaTeX, argument is ignored
-    (r'\\LTalter\s*' + braced + r'\s*' + braced, r'\2'),
-                    # for LaTeX, first argument is used
-    (r'\\LTskip\s*' + braced + eat_eol, eol2space('')),
-                    # for LaTeX, argument is used
-
     # delete '\!', '\-'
     (r'\\[!-]', ''),
     # delete "-
@@ -299,6 +270,20 @@ parms.misc_replace = lambda: [
     (r'(?<!\\)"' + "'", utf8_grqq),
 ]
 
+#   macro for "plain text" in equation environments;
+#   its argument will be copied, see LAB:EQUATIONS below
+#
+parms.text_macro = 'text'           # LaTeX package amsmath
+
+#   these macros need to be resolved/deleted "manually" for correct
+#   handling of equation environments; see LAB:EQUATIONS below
+#
+parms.macros_in_math_env = (
+    'nonumber',
+    'notag',
+    'qedhere',
+)
+
 #   see LAB:ITEMS below
 #
 parms.keep_item_labels = True
@@ -309,7 +294,7 @@ parms.keep_item_labels = True
 #   - removal of \newcommand
 #   - proof environment
 #   - macros for cross references
-#   - handling of displayed equations
+#   - handling of displayed equations including \[ ... \]
 #   - some treatment of \item[...] labels (see LAB:ITEMS)
 #   - environments not listed above:
 #     \begin (possibly with option or argument) and \end deleted
@@ -324,18 +309,18 @@ import argparse, re, sys
 
 #   first of all ...
 #
-def fatal(msg):
-    raise Exception('\n*** Internal error: ' + msg + '\n')
+def fatal(msg, detail=None):
+    err = '\n*** Internal error: ' + msg + '\n'
+    if detail:
+        err += detail + '\n'
+    raise Exception(err)
 def warning(msg, detail):
     sys.stderr.write('\n*** ' + sys.argv[0] + ': warning: ' + msg + '\n')
     if detail:
         sys.stderr.write(detail)
     sys.stderr.write('\n')
-def test_tuple(x, s):
-    if type(x) is not tuple or len(x) != 2:
-        fatal('element "' + str(x) + '" of ' + s + ' is not a 2-tuple')
 
-#   when deleting environment frames, we do not want to create
+#   when deleting e.g. environment frames, we do not want to create
 #   new empty lines that break sentences for LT;
 #   thus also delete line break if rest of line is empty
 #
@@ -389,14 +374,42 @@ def re_nested_env(s, max_depth, arg):
     for i in range(max_depth - 2):
         # important here: non-greedy *? repetition
         env = env_begin + r'(?:(?:' + env + r')|.|\n)*?' + env_end
-    env = env_begin + arg + r'((?:(?:' + env + r')|.|\n)*?)' + env_end
+    env = (env_begin + arg + r'(?P<body>(?:(?:' + env + r')|.|\n)*?)'
+                    + env_end)
     return env
 
-#   these RE match beginning and end of arbitrary environments;
-#   \begin{...} may have option [...] or argument {...}
+#   helpers for "declaration" of macros and environments
 #
-re_begin_env = (begin_lbr + r'[a-zA-Z]+\}(?:\s*(?:(?:' + bracketed
-                    + r')|(?:' + braced + r')))?')
+def Macro(name, args, repl=''):
+    return (name, args, repl)
+def EquEnv(name, args='', repl=''):
+    return (name, args, repl)
+def EnvRepl(name, repl=''):
+    return (name, repl)
+def EnvBegArg(name, args=''):
+    return (name, args)
+def re_code_args(args, who):
+    # return regular expression for 'OAA' code
+    ret = ''
+    for a in args:
+        if a == 'A':
+            ret += r'\s*' + braced
+        elif a == 'O':
+            ret += r'(?:\s*' + bracketed + r')?'
+        else:
+            fatal(who + '(): bad argument code "' + a + '"')
+    return ret
+
+#   these RE match beginning and end of arbitrary "standard" environments,
+#   and those with arguments at \begin as declared above
+#
+re_begin_env, op = '', ''
+for (name, args) in parms.environments_with_args():
+    expr = begin_lbr + name + r'\}' + re_code_args(args, 'EnvBegArg')
+    re_begin_env += op + r'(?:' + expr + r')'
+    op = r'|'
+re_begin_env += op + r'(?:' + begin_lbr + r'[a-zA-Z]+\})'
+re_begin_env = r'(?:' + re_begin_env + r')'
 re_end_env = end_lbr + r'[a-zA-Z]+' + r'\}'
 
 #   UTF-8 characters;
@@ -576,24 +589,22 @@ text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
 #
 for m in re.finditer(re_braced(max_depth_br + 1, '(', ')'), text[0]):
     if m.group(2):
-        warning('maximum nesting depth for {} braces exceeded,'
+        # inner-most {} braces did match
+        fatal('maximum nesting depth for {} braces exceeded,'
                 + ' max_depth_br=' + str(max_depth_br), m.group(0))
 for m in re.finditer(re_bracketed(max_depth_br + 1, '(', ')'), text[0]):
     if m.group(2):
-        warning('maximum nesting depth for [] brackets exceeded,'
+        fatal('maximum nesting depth for [] brackets exceeded,'
                 + ' max_depth_br=' + str(max_depth_br), m.group(0))
+
 for env in (
-    parms.theorem_environments
-    + parms.equation_environments
-    + parms.equation_environments_with_arg
-    + tuple(e[0] for e in parms.equation_environments_replace)
-    + parms.environments_delete
-    + tuple(e[0] for e in parms.environments_replace)
+    parms.equation_environments()
+    + parms.environments()
 ):
-    expr = re_nested_env(env, max_depth_env + 1, '')
+    expr = re_nested_env(env[0], max_depth_env + 1, '')
     for m in re.finditer(expr, text[0]):
         if m.group(2):
-            warning('maximum nesting depth for environments exceeded,'
+            fatal('maximum nesting depth for environments exceeded,'
                     + ' max_depth_env=' + str(max_depth_env), m.group(0))
 
 
@@ -606,42 +617,12 @@ for env in (
 #
 actions = parms.misc_replace()
 
-for s in parms.macros_arg_delete:
-    if s not in cmdline.extr_list:
-        actions += [(
-            r'\\' + s + r'\s*(?:' + bracketed + r')?\s*' + braced + eat_eol,
-            eol2space('')
-        )]
-
-for s in parms.macros_two_args_delete:
-    if s not in cmdline.extr_list:
-        actions += [(
-            r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
-                + braced + r'\s*' + braced + eat_eol,
-            eol2space('')
-        )]
-
-for s in parms.macros_three_args_delete:
-    if s not in cmdline.extr_list:
-        actions += [(
-            r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
-                + braced + r'\s*' + braced + r'\s*' + braced + eat_eol,
-            eol2space('')
-        )]
-
-for s in (parms.macros_arg_replace
-        + ((parms.foreign_lang_mac, parms.replace_frgn_lang_mac),)):
-    test_tuple(s, 'parms.macros_arg_replace')
-    if s[0] not in cmdline.extr_list:
-        actions += [(r'\\' + s[0] + r'\s*' + braced, s[1])]
-
-for env in parms.environments_delete:
-    actions += [(re_nested_env(env, max_depth_env, '') + eat_eol,
-                    eol2space(''))]
-
-for env in parms.environments_replace:
-    test_tuple(env, 'parms.environments_replace')
-    actions += [(re_nested_env(env[0], max_depth_env, ''), env[1])]
+for (name, repl) in parms.environments():
+    env = re_nested_env(name, max_depth_env, '')
+    if repl:
+        actions += [(env, repl)]
+    else:
+        actions += [(env + eat_eol, eol2space(''))]
 
 def f(m):
     txt = m.group(2)
@@ -658,11 +639,9 @@ for s in parms.theorem_environments:
     thm_text = s.capitalize()
     actions += [
         # first try with option ...
-        (begin_lbr + s + r'\}\s*' + bracketed,
-                thm_text + r' 1.2 (\1).'),
+        (begin_lbr + s + r'\}\s*' + bracketed, thm_text + r' 1.2 (\1).'),
         # ... and then without
-        (begin_lbr + s + r'\}',
-                thm_text + r' 1.2.'),
+        (begin_lbr + s + r'\}', thm_text + r' 1.2.'),
         # delete \end{...}
         (end_lbr + s + r'\}' + eat_eol, eol2space('')),
     ]
@@ -670,13 +649,12 @@ for s in parms.theorem_environments:
 # replace $...$ by variable parms.inline_math
 # BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
 #
-def repl_check_inline_math(m):
+def f(m):
     if re.search(r'(?<!\\)\$', m.group(1)):
         warning('"$" in {} braces (macro argument?): not properly handled',
                     m.group(0))
     return parms.inline_math
-actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)*)\$',
-            repl_check_inline_math)]
+actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)*)\$', f)]
 
 #   delete macro \newcommand
 #
@@ -709,26 +687,23 @@ actions += [
 
 #   now perform the collected replacement actions
 #
-for r in actions:
-    test_tuple(r, 'actions')
-    text = mysub(r[0], r[1], text, flags=re.M)
+for (expr, repl) in actions:
+    text = mysub(expr, repl, text, flags=re.M)
 
-#   these macros might be nested
+#   treat macros listed above
 #
-for s in parms.macros_arg_copy_last:
-    expr = r'\\' + s + r'\s*(?:' + bracketed + r')?\s*' + braced
-    while mysearch(expr, text):
-        text = mysub(expr, r'\2', text)
-for s in parms.macros_two_args_copy_last:
-    expr = (r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
-                + braced + r'\s*' + braced)
-    while mysearch(expr, text):
-        text = mysub(expr, r'\3', text)
-for s in parms.macros_three_args_copy_last:
-    expr = (r'\\' + s + r'\s*(?:' + bracketed + r')?\s*'
-                + braced + r'\s*' + braced + r'\s*' + braced)
-    while mysearch(expr, text):
-        text = mysub(expr, r'\4', text)
+for (name, args, repl) in parms.the_macros():
+    if name in cmdline.extr_list:
+        continue
+    expr = r'\\' + name
+    if name[-1].isalpha():
+        expr += r'\b'
+    expr += re_code_args(args, 'Macro')
+    if not repl:
+        text = mysub(expr + eat_eol, eol2space(''), text)
+    else:
+        while mysearch(expr, text):
+            text = mysub(expr, repl, text)
 
 
 ##################################################################
@@ -899,44 +874,42 @@ def parse_equ(equ):
 #
 def repl_equ_env(env, arg, text):
     expr = re_nested_env(env, max_depth_env, arg) + eat_eol
-    return mysub(expr, lambda m: parse_equ(m.group(2)), text)
-                    # first () group is in arg
+    return mysub(expr, lambda m: parse_equ(m.group('body')), text)
 
 #   replace equation environments listed above;
 #   first resolve some disturbing macros
 #
 for mac in parms.macros_in_math_env:
-    text = mysub(r'\\' + mac + r'\s*' + braced, r'\1', text)
     text = mysub(r'\\' + mac + r'\b', '', text)
-for env in parms.equation_environments:
-    text = repl_equ_env(env, r'()', text)
-for env in parms.equation_environments_with_arg:
-    text = repl_equ_env(env, r'\s*' + braced, text)
+for (name, args, replacement) in parms.equation_environments():
+    if not replacement:
+        re_args = re_code_args(args, 'EquEnv')
+        text = repl_equ_env(name, re_args, text)
+        continue
+    # environment with fixed replacement and added interpunction
+    env = re_nested_env(name, max_depth_env, '')
+    def f(m):
+        txt = m.group(1)
+        expr = r'\\' + parms.text_macro + r'\s*' + braced
+        while re.search(expr, txt):
+            # might be nested
+            txt = re.sub(expr, r'\1', txt)
+        txt = re.sub(re_begin_env, '', txt)
+        txt = re.sub(re_end_env, '', txt)
+        txt = re.sub(parms.mathspace, '', txt)
+        txt = txt.strip()
+        s = replacement
+        m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
+        if (m):
+            s += m.group(1)
+        return s
+    text = mysub(env, f, text)
 
 #   replace \[ ... \] displayed equation
 #
 text = mysub(r'\\\[((.|\n)*?)\\\]' + eat_eol,
                 lambda m: parse_equ(m.group(1)), text)
         # important: non-greedy *? repetition
-
-#   equation environments with fixed replacement and added interpunction
-#
-for environ in parms.equation_environments_replace:
-    test_tuple(environ, 'parms.equation_environments_replace')
-    env = re_nested_env(environ[0], max_depth_env, '')
-    def f(m):
-        txt = m.group(1)
-        txt = re.sub(r'\\' + parms.text_macro + r'\s*' + braced, r'\1', txt)
-        txt = re.sub(re_begin_env, '', txt)
-        txt = re.sub(re_end_env, '', txt)
-        txt = re.sub(parms.mathspace, '', txt)
-        txt = txt.strip()
-        s = environ[1]
-        m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
-        if (m):
-            s += m.group(1)
-        return s
-    text = mysub(env, f, text)
 
 
 #######################################################################
