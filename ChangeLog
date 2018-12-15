@@ -1,10 +1,10 @@
-Release 0.2.0
+Version 0.2.0 (unreleased)
 =============
-- handle \[ ... \] and displaymath environment
-  (required minor reorganisation of equation parsing machinery)
-- recognize versions with * for \hspace, \vspace
-- perform checks for nesting depth of {} braces, [] brackets, and environments
-- allow macros from parms.macros_*_copy_last to be nested (bug in 0.1.0)
+- more flexible declaration of macros / environments with tailored treatment
+- recognize \[ ... \] displayed equations
+- only delete environment \begin{...} with option or argument, if declared
+  (was a bit sloppy before)
+- check nesting depths of {} braces, [] brackets, and environments
 
 Release 0.1.0
 =============
