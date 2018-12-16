@@ -1,10 +1,11 @@
-Version 0.2.0 (unreleased)
+Release 0.2.0
 =============
 - more flexible declaration of macros / environments with tailored treatment
 - recognize \[ ... \] displayed equations
 - only delete environment \begin{...} with option or argument, if declared
   (was a bit sloppy before)
 - check nesting depths of {} braces, [] brackets, and environments
+- warnings / errors will print a mark to be found by the language checker
 
 Release 0.1.0
 =============
