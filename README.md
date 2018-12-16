@@ -7,6 +7,6 @@ A speciality is some parsing of LaTeX environments for displayed equations. Ther
 
 In the starting section of the script, macros and environments with tailored treatment are listed. This should ease adaptation to own needs. We assume that the LaTeX source does not contain things from the preamble but only a "real" text part.
 
-In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we check for instance, whether nested {} braces of the actual text do overrun the corresponding regular expression. In that case, a warning is generated.
+In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we check for instance, whether nested {} braces of the actual text do overrun the corresponding regular expression. In that case, an error message is generated.
 
 A more complete shell script for checking a whole document tree is checks.sh.
