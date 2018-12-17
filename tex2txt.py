@@ -81,10 +81,13 @@ parms = Parms()
 #   these are macros with tailored treatment;
 #   replacement only if not given in option --extr
 #
+#   Simple(name, repl=''):
+#   abbreviation for Macro(name, '', repl)
+#
 #   Macro(name, args, repl=''):
 #   args:
-#       - A stands for an {...} argument
-#       - O stands for an optional [...]
+#       - A: mandatory {...} argument
+#       - O: optional [...] argument
 #   repl:
 #       - replacement pattern, r'\d' (d: single digit) extracts text
 #         from position d in args (counting from 1);
@@ -95,9 +98,62 @@ parms = Parms()
 #         Python version of at least 3.5 is required (non-matched group
 #         yields empty string); otherwise re module may raise exceptions
 #
-parms.the_macros = lambda: (
-    Macro('color', 'A'),
+parms.project_macros = lambda: (
+    Simple('Arzela', 'Arzela'),
+    Simple('bzw', 'bzw.'),
+#   Simple('dphp', 'd.' + utf8_nbsp + 'h.'),
+#   Simple('dphpkomma', 'd.' + utf8_nbsp + 'h.,'),
+            # LT only recognizes missing comma in fully written version
+    Simple('dphp', 'das heißt'),
+    Simple('dphpkomma', 'das heißt,'),
+    Simple('fpuep', 'f.' + utf8_nbsp + 'ü.'),
+    Simple('Han', 'Han-Name'),
+            # place 'Han-Name' instead of 'Han' in private dictionary
+    Simple('ipap', 'i.' + utf8_nbsp + 'A.'),
+    Simple('LaTeX', 'Latex'),
+    Simple('monthname', 'Oktober'),
+    Simple('Necas', 'Necas'),
+    Simple('numbera', 'B1'),
+            # during later checks, we also look for single letters
+    Simple('numberb', 'B2'),
+    Simple('numberc', 'B3'),
+    Simple('numberd', 'B4'),
+    Simple('numbere', 'B5'),
+    Simple('numberf', 'B6'),
+    Simple('numberi', 'N1'),
+    Simple('numberii', 'N2'),
+    Simple('numberiii', 'N3'),
+    Simple('numberiv', 'N4'),
+    Simple('numberv', 'N5'),
+    Simple('numberI', 'N1'),
+    Simple('numberII', 'N2'),
+    Simple('Poincare', 'Poincare'),
+    Simple('Sp', 'Seite'),
+    Simple('year', '2018'),
+    Simple('TBD', '[Hilfe]:'),
+    Simple('Thomee', 'Thomee'),
+    Simple('upap', 'u.' + utf8_nbsp + 'a.'),
+    Simple('usw', 'usw.'),
+    Simple('vgl', 'vgl.'),
+    Simple('vgV', 'v.' + utf8_nbsp + 'g.' + utf8_nbsp + 'V.'),
+    Simple('zB', 'z.' + utf8_nbsp + 'B.'),
+
     Macro('comment', 'A'),
+    Macro('TBDoff', 'A'),
+
+    # suppress some LT warnings by altering the LaTeX text
+    Macro('LTadd', 'A', r'\1'),
+                    # for LaTeX, argument is ignored
+    Macro('LTalter', 'AA', r'\2'),
+                    # for LaTeX, first argument is used
+    Macro('LTskip', 'A'),
+                    # for LaTeX, first argument is used
+)
+
+#   BUG: quite probably, some macro is missing here ;-)
+#
+parms.system_macros = lambda: (
+    Macro('color', 'A'),
     Macro('colorbox', 'AA', r'\2'),
     Macro('documentclass', 'OA'),
     Macro('fcolorbox', 'AAA', r'\3'),
@@ -108,18 +164,9 @@ parms.the_macros = lambda: (
     Macro('includegraphics', 'OA'),
     Macro('input', 'A'),
     Macro('newcommand', 'AOA'),
-    Macro('TBDoff', 'A'),
     Macro('textcolor', 'AA', r'\2'),
     Macro('usepackage', 'OA'),
     Macro(r'vspace\*?', 'A'),
-
-    # suppress some LT warnings by altering the LaTeX text
-    Macro('LTadd', 'A', r'\1'),
-                    # for LaTeX, argument is ignored
-    Macro('LTalter', 'AA', r'\2'),
-                    # for LaTeX, first argument is used
-    Macro('LTskip', 'A'),
-                    # for LaTeX, first argument is used
 
     # macro for foreign-language text
     Macro(parms.foreign_lang_mac, 'A', parms.replace_frgn_lang_mac),
@@ -129,9 +176,9 @@ parms.the_macros = lambda: (
     # (might hide interpunction, see LAB:EQUATIONS)
     Macro('label', 'A'),
     Macro('mathrlap', 'A', r'\1'),
-    Macro('nonumber', ''),
-    Macro('notag', ''),
-    Macro('qedhere', ''),
+    Simple('nonumber'),
+    Simple('notag'),
+    Simple('qedhere'),
 )
 
 #   heading macros with optional argument [...]:
@@ -206,56 +253,15 @@ parms.environments_with_args = lambda: (
     EnvBegArg('tabular', 'A'),
 )
 
-#   a list of 2-tuples for other macros to be replaced
+#   a list of 2-tuples for other things to be replaced
 #       [0]: search pattern as regular expression
 #       [1]: replacement text
-#   utf8_xxx only defined below --> use function
 #
 parms.misc_replace = lambda: [
-    (r'\\Arzela\b', 'Arzela'),
-    (r'\\bzw\b', 'bzw.'),
-#   (r'\\dphp\b', 'd.' + utf8_nbsp + 'h.'),
-#   (r'\\dphpkomma\b', 'd.' + utf8_nbsp + 'h.,'),
-            # LT only recognizes missing comma in fully written version
-    (r'\\dphp\b', 'das heißt'),
-    (r'\\dphpkomma\b', 'das heißt,'),
-    (r'\\fpuep\b', 'f.' + utf8_nbsp + 'ü.'),
-    (r'\\Han\b', 'Han-Name'),
-            # place 'Han-Name' instead of 'Han' in private dictionary
-    (r'\\hfill\b', ' '),
-    (r'\\ipap\b', 'i.' + utf8_nbsp + 'A.'),
-    (r'\\LaTeX\b', 'Latex'),
-    (r'\\monthname\b', 'Oktober'),
-    (r'\\Necas\b', 'Necas'),
-    (r'\\numbera\b', 'B1'),
-            # during later checks, we also look for single letters
-    (r'\\numberb\b', 'B2'),
-    (r'\\numberc\b', 'B3'),
-    (r'\\numberd\b', 'B4'),
-    (r'\\numbere\b', 'B5'),
-    (r'\\numberf\b', 'B6'),
-    (r'\\numberi\b', 'N1'),
-    (r'\\numberii\b', 'N2'),
-    (r'\\numberiii\b', 'N3'),
-    (r'\\numberiv\b', 'N4'),
-    (r'\\numberv\b', 'N5'),
-    (r'\\numberI\b', 'N1'),
-    (r'\\numberII\b', 'N2'),
-    (r'\\Poincare\b', 'Poincare'),
-    (r'\\Sp\b', 'Seite'),
-    (r'\\the\\year\b', '2018'),
-    (r'\\TBD\b', '[Hilfe]:'),
-    (r'\\Thomee\b', 'Thomee'),
-    (r'\\upap\b', 'u.' + utf8_nbsp + 'a.'),
-    (r'\\usw\b', 'usw.'),
-    (r'\\vgl\b', 'vgl.'),
-    (r'\\vgV\b(\{\})?', 'v.' + utf8_nbsp + 'g.' + utf8_nbsp + 'V.'),
-    (r'\\zB\b', 'z.' + utf8_nbsp + 'B.'),
-
     # delete '\!', '\-'
     (r'\\[!-]', ''),
     # delete "-
-    (r'(?<!\\)"-', ''),     # r'(?<!x)y' matches 'y' not precceded by 'x'
+    (r'(?<!\\)"-', ''),     # r'(?<!x)y' matches 'y' not preceded by 'x'
 
     # "=    ==> -
     (r'(?<!\\)"=', '-'),
@@ -310,14 +316,14 @@ import argparse, re, sys
 def fatal(msg, detail=None):
     sys.stdout.write(parms.warning_error_msg)
     sys.stdout.flush()
-    err = '\n*** Internal error: ' + msg + '\n'
+    err = '\n*** Internal error:\n' + msg + '\n'
     if detail:
         err += detail + '\n'
     raise Exception(err)
 def warning(msg, detail=None):
     sys.stdout.write(parms.warning_error_msg)
     sys.stdout.flush()
-    err = '\n*** ' + sys.argv[0] + ': warning: ' + msg + '\n'
+    err = '\n*** ' + sys.argv[0] + ': warning:\n' + msg + '\n'
     if detail:
         err += detail + '\n'
     sys.stderr.write(err)
@@ -333,7 +339,6 @@ def eol2space(m):
     if m.group('eateol'):
         return ' '
     return ''
-
 
 begin_lbr = r'\\begin\s*\{'
 end_lbr = r'\\end\s*\{'
@@ -375,7 +380,7 @@ def re_nested_env(s, max_depth, arg):
     env_begin = begin_lbr + s + r'\}'
     env_end = end_lbr + s + r'\}'
     # important here: non-greedy *? repetition
-    env = r'(' + env_begin + r'(?:.|\n)*?' + env_end + r')'
+    env = r'(?P<inner>' + env_begin + r'(?:.|\n)*?' + env_end + r')'
     for i in range(max_depth - 2):
         # important here: non-greedy *? repetition
         env = env_begin + r'(?:(?:' + env + r')|.|\n)*?' + env_end
@@ -383,10 +388,17 @@ def re_nested_env(s, max_depth, arg):
                     + env_end)
     return env
 
+#   the expression r'\\to\b' does not work as expected on \to123
+#   --> use r'\\to' + end_mac
+#
+end_mac = r'(?![a-zA-Z])'
+
 #   helpers for "declaration" of macros and environments
 #
 def Macro(name, args, repl=''):
     return (name, args, repl)
+def Simple(name, repl=''):
+    return (name, '', repl)
 def EquEnv(name, args='', repl=''):
     return (name, args, repl)
 def EnvRepl(name, repl=''):
@@ -581,7 +593,7 @@ text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
 #
 text = mysub(r'^(([^\n\\%]|\\.)*[^ \t\n\\%])(?<!\\newline)%.*\n',
                 r'\1', text, flags=re.M)
-    # r'(?<!x)y' matches 'y' not preceeded by 'x'
+    # r'(?<!x)y' matches 'y' not preceded by 'x'
     # the previous replacement does not join lines on '\%%'
     # --> re-try
 text = mysub(r'^(([^\n\\%]|\\.)*\\%)%.*\n', r'\1', text, flags=re.M)
@@ -591,15 +603,21 @@ text = mysub(r'^(([^\n\\%]|\\.)*\\%)%.*\n', r'\1', text, flags=re.M)
 text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
 
 
-#   check nesting limits for braces, brackets, and environments
+#######################################################################
 #
-for m in re.finditer(re_braced(max_depth_br + 1, '(', ')'), text[0]):
-    if m.group(2):
-        # inner-most {} braces did match
+#   check nesting limits for braces, brackets, and environments;
+#   we construct regular expressions for a larger nesting depth and
+#   test, whether the innermost group matches
+#
+for m in re.finditer(re_braced(max_depth_br + 1, '(?P<inner>', ')'),
+                            text[0]):
+    if m.group('inner'):
+        # innermost {} braces did match
         fatal('maximum nesting depth for {} braces exceeded,'
                 + ' max_depth_br=' + str(max_depth_br), m.group(0))
-for m in re.finditer(re_bracketed(max_depth_br + 1, '(', ')'), text[0]):
-    if m.group(2):
+for m in re.finditer(re_bracketed(max_depth_br + 1, '(?P<inner>', ')'),
+                            text[0]):
+    if m.group('inner'):
         fatal('maximum nesting depth for [] brackets exceeded,'
                 + ' max_depth_br=' + str(max_depth_br), m.group(0))
 
@@ -609,7 +627,7 @@ for env in (
 ):
     expr = re_nested_env(env[0], max_depth_env + 1, '')
     for m in re.finditer(expr, text[0]):
-        if m.group(2):
+        if m.group('inner'):
             fatal('maximum nesting depth for environments exceeded,'
                     + ' max_depth_env=' + str(max_depth_env), m.group(0))
 
@@ -690,23 +708,23 @@ for (expr, repl) in actions:
 
 #   treat macros listed above
 #
-for (name, args, repl) in parms.the_macros():
+for (name, args, repl) in (
+    parms.system_macros()
+    + parms.project_macros()
+):
     if name in cmdline.extr_list:
         continue
-    expr = r'\\' + name
-    if name[-1].isalpha():
-        expr += r'\b'
-    expr += re_code_args(args, 'Macro', name)
+    expr = r'\\' + name + end_mac + re_code_args(args, 'Macro', name)
+    if not repl:
+        text = mysub(expr + eat_eol, eol2space, text)
+        continue
     for m in re.finditer(r'\\(\d)', repl):
         n = int(m.group(1))
         if n < 1 or n > len(args):
             fatal('inavlid "\\' + m.group(1) + '" in replacement for "'
-                        + name + '"')
-    if not repl:
-        text = mysub(expr + eat_eol, eol2space, text)
-    else:
-        while mysearch(expr, text):
-            text = mysub(expr, repl, text)
+                                        + name + '"')
+    while mysearch(expr, text):
+        text = mysub(expr, repl, text)
 
 
 ##################################################################
@@ -762,16 +780,16 @@ for (name, args, repl) in parms.the_macros():
 #   - mathematical space as \; and \quad (variable parms.mathspace)
 #     is still present
 
-parms.mathspace = r'(?:\\[ ,;:]|\\q?quad\b)'
+parms.mathspace = r'(?:\\[ ,;:]|\\q?quad' + end_mac + r')'
 parms.mathop = (
     r'\+|-|\*|/'
     + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
-    + r'|\\[gl]eq?\b'
-    + r'|\\su[bp]set(?:eq)?\b'
-    + r'|\\Leftrightarrow\b'
-    + r'|\\to\b'
+    + r'|\\[gl]eq?' + end_mac
+    + r'|\\su[bp]set(?:eq)?' + end_mac
+    + r'|\\Leftrightarrow' + end_mac
+    + r'|\\to' + end_mac
     + r'|\\stackrel\s*' + braced + r'\s*\{=\}'
-    + r'|\\c[au]p\b'
+    + r'|\\c[au]p' + end_mac
 )
 parms.mathpunct = r'(?:(?<!\\)[;,]|\.)'
 
@@ -848,13 +866,13 @@ def parse_equ(equ):
     # or later & are argument of a macro
     #
     for f in re.finditer(braced, equ):
-        if re.search(r'\\newline|(?<!\\)&', f.group(1)):
+        if re.search(r'\\newline' + end_mac + r'|(?<!\\)&', f.group(1)):
             warning('"\\\\" or "&" in {} braces (macro argument?):'
                         + ' not properly handled',
-                        re.sub(r'\\newline\b', r'\\\\', equ))
+                        re.sub(r'\\newline' + end_mac, r'\\\\', equ))
             break
     # important: non-greedy *? repetition
-    line = r'((.|\n)*?)(\\newline\b|\Z)'
+    line = r'((.|\n)*?)(\\newline' + end_mac + r'|\Z)'
     # return replacement for RE line
     def repl_line(m):
         # finally, split line into sections delimited by '&'
@@ -933,7 +951,7 @@ if parms.keep_item_labels:
 else:
     text = mysub(r'\\item\s*' + bracketed + eat_eol, eol2space, text)
 # finally, items without [...]
-text = mysub(r'\\item\b' + eat_eol, eol2space, text)
+text = mysub(r'\\item' + end_mac + eat_eol, eol2space, text)
 
 #   delete remaining \xxx macros unless given in --extr option;
 #   if followed by braced argument: copy its content
@@ -947,7 +965,7 @@ re_macro_arg = re_macro + r'\s*' + braced
 while mysearch(re_macro_arg, text):
     # macros with braced argument might be nested
     text = mysub(re_macro_arg, r'\1', text)
-text = mysub(r'\\newline\b', '', text)
+text = mysub(r'\\newline' + end_mac, '', text)
 text = mysub(re_macro + eat_eol, eol2space, text)
 
 
