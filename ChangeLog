@@ -1,3 +1,11 @@
+Release 1.0.0
+=============
+- added collection 'parms.project_macros' for project-specific macros,
+  renamed 'parms.the_macros' to 'parms.system_macros'
+- added helper Simple() for declaration of macros without arguments
+- macro names end at digits; for instance, \to0 is correctly recognized
+  as equivalent with \to 0 (this was a bug)
+
 Release 0.2.0
 =============
 - more flexible declaration of macros / environments with tailored treatment
