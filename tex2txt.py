@@ -796,34 +796,35 @@ parms.mathpunct = r'(?:(?<!\\)[;,]|\.)'
 #   replace a math part by suitable raw text
 #
 def math2txt(txt, first_on_line):
-    txt = txt.strip()
+    txt = txt.lstrip()  # lstrip: do not hide trailing mathspace r'\ '
     if not txt:
         return ''
 
     # check for leading operator, possibly after mathspace;
-    # there also might be a '{}' for making e.g. '-' binary
-    m = re.match(r'(' + parms.mathspace + r'|\{\}|\s)*'
+    # there also might be a '{}' or r'\mbox{}' for making e.g. '-' binary
+    m = re.match(r'(' + parms.mathspace + r'|(?:\\mbox\s*)?\{\}|\s)*'
                     + r'(' + parms.mathop + ')', txt)
     if m and not first_on_line:
         # starting with operator, not first on current line
         pre = parms.mathoptext.get(m.group(2), parms.mathoptext[None])
-        txt = txt[m.end(0):].strip()
+        txt = txt[m.end(0):]
     else:
         # check for leading mathspace
         m = re.match(r'((' + parms.mathspace + r'\s*)+)', txt)
         if m:
             pre = ' '
-            txt = txt[m.end(0):].strip()
+            txt = txt[m.end(0):]
         else:
             pre = ''
 
     # check for trailing mathspace
-    m = re.search(r'(\s*' + parms.mathspace + r')+\Z', txt)
+    m = re.search(r'(' + parms.mathspace + r'\s*)+\Z', txt)
     if m:
         post = ' '
-        txt = txt[:m.start(0)].strip()
+        txt = txt[:m.start(0)]
     else:
         post = ''
+    txt = txt.strip()
     if not txt:
         return pre + post
 
