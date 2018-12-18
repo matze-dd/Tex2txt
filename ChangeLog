@@ -1,3 +1,33 @@
+Next version (unreleased)
+============
+- replacements for math parts in equations are acronyms that change with
+  detection of an operator and with intermediate \text{...}
+- this avoids warnings due to word repetition in equations and gives better
+  error checks than simple replacement with '§§' (at least with German
+  LanguageTool: missing space now is better detected)
+- missing interpunction or operator is still detected due to word repetition
+
+# example:
+
+Thus,
+%
+\begin{align}
+\mu &= f(x) \quad\text{for all } \mu\in\Omega, \notag \\
+x   &= \begin{cases}
+        0 & \text{ for} \ y>0, \\
+        1 & \text{ in case} y\le 0.
+            \end{cases}     \label{lab}
+\end{align}
+
+# becomes with replacement set ('FBI', 'NSA', 'GCHQ')
+
+Thus,
+  FBI  equal NSA for all GCHQ, 
+  GCHQ  equal FBI  for NSA, 
+  NSA  in caseGCHQ. 
+
+# end
+
 Release 1.0.1
 =============
 - fixed bug: in equations, trailing space r'\ ' of math parts was
