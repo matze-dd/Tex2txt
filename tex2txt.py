@@ -521,11 +521,9 @@ if not cmdline.lang or cmdline.lang == 'de':
     # this allows e.g. '... mit einer Konstanten $C$ ...'
     #
     parms.inline_math = '$$'
-    # parts in displayed formulas, see LAB:EQUATIONS below;
-    # single '§' does not lead to LT warnings on missing
-    # interpunction between two equations of an equation array
+    # math parts in displayed formulas, see LAB:EQUATIONS below
     #
-    parms.display_math = '§§'
+    parms.display_math = ('FBI', 'NSA', 'GCHQ')
     # texts for math operators; default: key None
     parms.mathoptext = {'+': ' plus ', '-': ' minus ',
                         '*': ' mal ', '/': ' durch ',
@@ -538,8 +536,8 @@ if not cmdline.lang or cmdline.lang == 'de':
     parms.replace_frgn_lang_mac = '[englisch]'
 
 elif cmdline.lang == 'en':
-    parms.inline_math = 'FBI'
-    parms.display_math = 'NSA'
+    parms.inline_math = 'NATO'
+    parms.display_math = ('FBI', 'NSA', 'GCHQ')
     parms.mathoptext = {'+': ' plus ', '-': ' minus ',
                         '*': ' times ', '/': ' over ',
                         None: ' equal '}
@@ -748,25 +746,24 @@ for (name, args, repl) in (
 ##  becomes:
 #
 #       Thus,
-#         NSA  equal NSA for all NSA, 
-#         NSA  equal NSA  for NSA, 
-#         NSA  in caseNSA. 
+#         FBI  equal NSA for all GCHQ, 
+#         GCHQ  equal FBI  for NSA, 
+#         NSA  in caseGCHQ.
 #
 ##
 
 #   - argument of \text{...} (variable parms.macro_text) is reproduced
 #     without change
 #
-#   - intermediate math parts are replaced by '§§', see variable
-#     parms.display_math
-#     (§§ is suitable, since it avoids warnings, if an equation starting
-#     with §§ follows text ending with $$)
+#   - intermediate math parts are replaced by values from variable
+#     parms.display_math; values are changed on detection of operators
+#     and by \text{...} parts
 #   - interpunction signs (see variable parms.mathpunct) at end of a
-#     math part are appended to §§
+#     math part are appended
 #     (missing or wrong interpunction then is detected by LT)
 #   - relational operators at beginning of a math part are prepended
-#     as ' gleich §§', if math part is not first on line ('&' is a part);
-#     other operators like +, -, *, / are prepended e.g. as ' minus §§';
+#     as ' gleich ...', if math part is not first on line ('&' is a part);
+#     other operators like +, -, *, / are prepended e.g. as ' minus ...';
 #     see variables parms.mathop and parms.mathoptext
 #     (missing operators then are detected by LT)
 #
@@ -793,13 +790,22 @@ parms.mathop = (
 )
 parms.mathpunct = r'(?:(?<!\\)[;,]|\.)'
 
+#   change replacement for math part on preceding operator
+#   and with intermediate \text{...}
+#
+parms.display_math_cnt = 0
+def display_math_update():
+    parms.display_math_cnt = ((parms.display_math_cnt + 1)
+                                    % len(parms.display_math))
+def display_math_get(update):
+    if update:
+        display_math_update()
+    return parms.display_math[parms.display_math_cnt]
+
 #   replace a math part by suitable raw text
 #
 def math2txt(txt, first_on_line):
-    txt = txt.lstrip()  # lstrip: do not hide trailing mathspace r'\ '
-    if not txt:
-        return ''
-
+    update = False
     # check for leading operator, possibly after mathspace;
     # there also might be a '{}' or r'\mbox{}' for making e.g. '-' binary
     m = re.match(r'(' + parms.mathspace + r'|(?:\\mbox\s*)?\{\}|\s)*'
@@ -808,9 +814,10 @@ def math2txt(txt, first_on_line):
         # starting with operator, not first on current line
         pre = parms.mathoptext.get(m.group(2), parms.mathoptext[None])
         txt = txt[m.end(0):]
+        update = True
     else:
         # check for leading mathspace
-        m = re.match(r'((' + parms.mathspace + r'\s*)+)', txt)
+        m = re.match(r'(\s*' + parms.mathspace + r')+', txt)
         if m:
             pre = ' '
             txt = txt[m.end(0):]
@@ -831,10 +838,10 @@ def math2txt(txt, first_on_line):
     # check for trailing punctuation
     m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
     if not m:
-        return pre + parms.display_math + post
+        return pre + display_math_get(update) + post
     if txt == m.group(1):
         return pre + txt + post
-    return pre + parms.display_math + m.group(1) + post
+    return pre + display_math_get(update) + m.group(1) + post
 
 #   split a section between & delimiters into \text{...} and math parts
 #
@@ -849,6 +856,7 @@ def split_sec(txt, first_on_line):
         res += m.group(1)
         last = m.end(0)
         first_on_line = False
+        display_math_update()
     # math part after last \text
     res += math2txt(txt[last:], first_on_line)
     return res
