@@ -46,10 +46,12 @@
 #   - text in heading macros as \section{...} is extracted
 #   - placeholders for \ref, \eqref, \pageref, and \cite
 #   - "undeclared" macros are silently ignored
-#   - inline math $...$ is reduced to $$ (variable parms.inline_math)
+#   - inline math $...$ is replaced with text from rotating collection
+#     in variable parms.inline_math
 #   - equation environments are resolved in a way suitable for check of
 #     interpunction, argument of \text{...} is included into output text;
 #     see LAB:EQUATIONS below for example and detailed description
+#   - some treament for \item[...] labels, see LAB:ITEMS
 #   - rare LT warnings can be suppressed using \LTadd, \LTskip,
 #     and \LTalter (see below) in the LaTeX text with suitable macro
 #     definitions there, e.g. adding something for LT only:
@@ -420,7 +422,7 @@ def re_code_args(args, who, s):
 #   these RE match beginning and end of arbitrary "standard" environments,
 #   and those with arguments at \begin as declared above
 #
-re_begin_env, op = '', ''
+re_begin_env = op = ''
 for (name, args) in parms.environments_with_args():
     expr = begin_lbr + name + r'\}' + re_code_args(args, 'EnvBegArg', name)
     re_begin_env += op + r'(?:' + expr + r')'
@@ -517,27 +519,36 @@ cmdline = parser.parse_args()
 
 #   label LAB:LANGUAGE
 if not cmdline.lang or cmdline.lang == 'de':
-    # replacement for inline formulas;
-    # this allows e.g. '... mit einer Konstanten $C$ ...'
-    #
-    parms.inline_math = '$$'
-    # math parts in displayed formulas, see LAB:EQUATIONS below
-    #
-    parms.display_math = ('FBI', 'NSA', 'GCHQ')
+    # collection of replacements for inline formulas;
+    # with LT allows e.g. '... mit einer Konstanten $C$ ...',
+    # and output also can be searched for single letters (for German)
+    parms.inline_math = ('I1I', 'I2I', 'I3I', 'I4I', 'I5I', 'I6I')
+
+    # collection of replacements for math parts in displayed formulas,
+    # see LAB:EQUATIONS below; with LT this works, e.g., for
+    #   \text{ für alle } ...,
+    #   \text{ für ein } ...,
+    # missing leading or trailing space is detected,
+    # and output also can be searched for single letters (for German)
+    parms.display_math = ('D1D', 'D2D', 'D3D', 'D4D', 'D5D', 'D6D')
+
     # texts for math operators; default: key None
     parms.mathoptext = {'+': ' plus ', '-': ' minus ',
                         '*': ' mal ', '/': ' durch ',
                         None: ' gleich '}
+
     # proof environment:
     parms.proof_title = 'Beweis'
+
     # macro to mark foreign language:
     parms.foreign_lang_mac = 'engl'
+
     # replacement for this macro:
     parms.replace_frgn_lang_mac = '[englisch]'
 
 elif cmdline.lang == 'en':
-    parms.inline_math = 'NATO'
-    parms.display_math = ('FBI', 'NSA', 'GCHQ')
+    parms.inline_math = ('A', 'B', 'C', 'D', 'E', 'F')
+    parms.display_math = ('U', 'V', 'W', 'X', 'Y', 'Z')
     parms.mathoptext = {'+': ' plus ', '-': ' minus ',
                         '*': ' times ', '/': ' over ',
                         None: ' equal '}
@@ -668,14 +679,20 @@ for s in parms.theorem_environments:
         (end_lbr + s + r'\}' + eat_eol, eol2space),
     ]
 
-# replace $...$ by variable parms.inline_math
+# replace $...$ by text from variable parms.inline_math
 # BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
 #
+inline_math_counter = 0
+if type(parms.inline_math) is not tuple:
+    fatal("parms.inline_math has to be tuple, e.g. ('$$',)")
 def f(m):
     if re.search(r'(?<!\\)\$', m.group(1)):
         warning('"$" in {} braces (macro argument?): not properly handled',
                     m.group(0))
-    return parms.inline_math
+    global inline_math_counter
+    inline_math_counter = (
+        (inline_math_counter + 1) % len(parms.inline_math))
+    return parms.inline_math[inline_math_counter]
 actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)*)\$', f)]
 
 #   proof environment with optional [...]:
@@ -731,44 +748,49 @@ for (name, args, repl) in (
 #
 ##################################################################
 
-##  example with --lang en:
-#
-#       Thus,
-#       %
-#       \begin{align}
-#       \mu &= f(x) \quad\text{for all } \mu\in\Omega, \notag \\
-#       x   &= \begin{cases}
-#               0 & \text{ for} \ y>0, \\
-#               1 & \text{ in case} y\le 0.
-#                   \end{cases}     \label{lab}
-#       \end{align}
-#
-##  becomes:
-#
-#       Thus,
-#         FBI  equal NSA for all GCHQ, 
-#         GCHQ  equal FBI  for NSA, 
-#         NSA  in caseGCHQ.
-#
-##
+#   example:
 
+"""
+Thus,
+%
+\begin{align}
+\mu &= f(x) \quad\text{for all } \mu\in\Omega, \notag \\
+x   &= \begin{cases}
+        0 & \text{ for} \ y>0 \\
+        1 & \text{ in case} y\le 0.
+            \end{cases}     \label{lab}
+\end{align}
+"""
+
+#   becomes with parms.change_repl_after_punct == True
+#   and --lang en:
+
+"""
+Thus,
+  U  equal V for all W, 
+  X  equal Y  for Z 
+  Z  in caseU. 
+"""
+
+#   1. split equation environment into 'lines' delimited by \\
+#   2. split each 'line' into 'sections' delimited by &
+#   3. split each 'section' into math and \text parts
+#
 #   - argument of \text{...} (variable parms.macro_text) is reproduced
 #     without change
-#
-#   - intermediate math parts are replaced by values from variable
-#     parms.display_math; values are changed on detection of operators
-#     and by \text{...} parts
+#   - math parts are replaced by values from variable parms.display_math
 #   - interpunction signs (see variable parms.mathpunct) at end of a
-#     math part are appended
-#     (missing or wrong interpunction then is detected by LT)
+#     math part, ignoring parms.mathspace, are appended to replacement
 #   - relational operators at beginning of a math part are prepended
-#     as ' gleich ...', if math part is not first on line ('&' is a part);
-#     other operators like +, -, *, / are prepended e.g. as ' minus ...';
-#     see variables parms.mathop and parms.mathoptext
-#     (missing operators then are detected by LT)
-#
-#   - math space (see variable parms.mathspace) like \quad
-#     is replaced by ' '
+#     as ' gleich ...', if math part is not first on line ('&' is a part)
+#   - other operators like +, -, *, / are prepended e.g. as ' minus ...'
+#   - see variables parms.mathop and parms.mathoptext for text replacements
+#   - basic replacement steps to next value from parms.display_math,
+#       if part includes a leading operator,
+#       after intermediate \text{...},
+#       and if last math part ended with interpunction
+#           (the latter for parms.change_repl_after_punct == True)
+#   - math space (variable parms.mathspace) like \quad is replaced by ' '
 
 #   Assumptions:
 #   - \\ has been changed to \newline
@@ -789,26 +811,27 @@ parms.mathop = (
     + r'|\\c[au]p' + end_mac
 )
 parms.mathpunct = r'(?:(?<!\\)[;,]|\.)'
+parms.change_repl_after_punct = True
 
-#   change replacement for math part on preceding operator
-#   and with intermediate \text{...}
-#
-parms.display_math_cnt = 0
+if type(parms.display_math) is not tuple:
+    fatal("parms.display_math has to be tuple, e.g. ('§§',)")
+
+display_math_counter = 0
 def display_math_update():
-    parms.display_math_cnt = ((parms.display_math_cnt + 1)
-                                    % len(parms.display_math))
+    global display_math_counter
+    display_math_counter = (
+        (display_math_counter + 1) % len(parms.display_math))
 def display_math_get(update):
     if update:
         display_math_update()
-    return parms.display_math[parms.display_math_cnt]
+    return parms.display_math[display_math_counter]
 
 #   replace a math part by suitable raw text
 #
 def math2txt(txt, first_on_line):
-    update = False
     # check for leading operator, possibly after mathspace;
     # there also might be a '{}' or r'\mbox{}' for making e.g. '-' binary
-    m = re.match(r'(' + parms.mathspace + r'|(?:\\mbox\s*)?\{\}|\s)*'
+    m = re.search(r'\A(' + parms.mathspace + r'|(?:\\mbox\s*)?\{\}|\s)*'
                     + r'(' + parms.mathop + ')', txt)
     if m and not first_on_line:
         # starting with operator, not first on current line
@@ -817,12 +840,13 @@ def math2txt(txt, first_on_line):
         update = True
     else:
         # check for leading mathspace
-        m = re.match(r'(\s*' + parms.mathspace + r')+', txt)
+        m = re.search(r'\A(\s*' + parms.mathspace + r')+', txt)
         if m:
             pre = ' '
             txt = txt[m.end(0):]
         else:
             pre = ''
+        update = False
 
     # check for trailing mathspace
     m = re.search(r'(' + parms.mathspace + r'\s*)+\Z', txt)
@@ -835,13 +859,18 @@ def math2txt(txt, first_on_line):
     if not txt:
         return pre + post
 
-    # check for trailing punctuation
+    # check for trailing interpunction
     m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
     if not m:
         return pre + display_math_get(update) + post
     if txt == m.group(1):
-        return pre + txt + post
-    return pre + display_math_get(update) + m.group(1) + post
+        ret = pre + txt + post
+    else:
+        ret = pre + display_math_get(update) + m.group(1) + post
+    if parms.change_repl_after_punct:
+        # after interpunction: next part with different replacement
+        display_math_update()
+    return ret
 
 #   split a section between & delimiters into \text{...} and math parts
 #
