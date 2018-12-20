@@ -1,5 +1,6 @@
-Version 1.1.0 (unreleased)
+Release 1.1.0
 =============
+- shifted language settings to "declaration" section
 - replacements for inline equations and math parts in displayed equations
   rotate from given collections;
   this avoids unnecessary warnings due to word repetition;
