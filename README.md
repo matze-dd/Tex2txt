@@ -58,6 +58,7 @@ python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
     <li> equation environments are resolved in a way suitable for check of
         interpunction, argument of \text{...} is included into output text;
         see LAB:EQUATIONS in script for example and detailed description
+        (one can, of course, also delete or replace these "declared" environments)
     </li>
     <li> some treatment for \item[...] labels, see LAB:ITEMS in script
     </li>
