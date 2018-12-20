@@ -77,8 +77,8 @@
 #                                   Matthias Baumann, December 2018
 #
 
-class Parms: pass
-parms = Parms()
+class Aux: pass
+parms = Aux()
 
 #   these are macros with tailored treatment;
 #   replacement only if not given in option --extr
@@ -187,6 +187,8 @@ parms.system_macros = lambda: (
 #   copy content of {...} and add '.' if not ending with interpunction
 #
 parms.heading_macros_punct = '!?'
+        # do not add '.' if ending with that;
+        # title already ends with '.' --> '..' will lead to warning
 parms.heading_macros = (
     r'chapter\*?',
     r'part\*?',
@@ -295,6 +297,55 @@ parms.keep_item_labels = True
 #   message on warnings / errors that should be found by LT
 #
 parms.warning_error_msg = '\n\nWARNINGORERROR\n\n'
+
+#   LAB:LANGUAGE
+#
+def set_language_de():
+    # properties of these replacements for inline formulas:
+    #   - no need to add to LT dictionary
+    #   - absent leading / trailing space causes spelling erros
+    #   - LT accepts e.g. 'mit einer Konstanten $C$ folgt', 'für alle $x$',
+    #     'für ein $x$'
+    #   - LT recognizes mistakes like 'die $\epsilon$-Argument'
+    #   - word repetitions are detected
+    #   - resulting text can be checked for single letters (German)
+    # other variant: AInlA, BInlB, ... (but has to be added to dictionary)
+    parms.inline_math = ('I1I', 'I2I', 'I3I', 'I4I', 'I5I', 'I6I')
+    # parms.inline_math = ('$$',)
+
+    # replacements for math parts in displayed formulas
+    parms.display_math = ('D1D', 'D2D', 'D3D', 'D4D', 'D5D', 'D6D')
+    # parms.display_math = ('§§',)
+
+    # LAB:CHECK_EQU_REPLS
+    # this check is important if replacements had to be added to dictionary
+    parms.check_equation_replacements = True
+
+    # texts for math operators; default: key None
+    parms.mathoptext = {'+': ' plus ', '-': ' minus ',
+                        '*': ' mal ', '/': ' durch ',
+                        None: ' gleich '}
+
+    # proof environment:
+    parms.proof_title = 'Beweis'
+
+    # macro to mark foreign language:
+    parms.foreign_lang_mac = 'engl'
+
+    # replacement for this macro:
+    parms.replace_frgn_lang_mac = '[englisch]'
+
+def set_language_en():
+    # see comments in set_language_de()
+    parms.inline_math = ('A', 'B', 'C', 'D', 'E', 'F')
+    parms.display_math = ('U', 'V', 'W', 'X', 'Y', 'Z')
+    parms.check_equation_replacements = False
+    parms.mathoptext = {'+': ' plus ', '-': ' minus ',
+                        '*': ' times ', '/': ' over ',
+                        None: ' equal '}
+    parms.proof_title = 'Proof'
+    parms.foreign_lang_mac = 'foreign'
+    parms.replace_frgn_lang_mac = '[foreign]'
 
 #   further replacements performed below:
 #
@@ -504,10 +555,15 @@ def mysearch(expr, text, flags=0):
         fatal('wrong arg for mysearch()')
     return re.search(expr, text[0], flags=flags)
 
+def text_get_txt(text):
+    return text[0]
+def text_get_num(text):
+    return text[1]
+
 
 #######################################################################
 #
-#   parse command line, set language-dependent variables
+#   parse command line, read complete input into 'text'
 #
 parser = argparse.ArgumentParser()
 parser.add_argument('file', nargs='?')
@@ -517,45 +573,10 @@ parser.add_argument('--extr')
 parser.add_argument('--lang')
 cmdline = parser.parse_args()
 
-#   label LAB:LANGUAGE
 if not cmdline.lang or cmdline.lang == 'de':
-    # collection of replacements for inline formulas;
-    # with LT allows e.g. '... mit einer Konstanten $C$ ...',
-    # and output also can be searched for single letters (for German)
-    parms.inline_math = ('I1I', 'I2I', 'I3I', 'I4I', 'I5I', 'I6I')
-
-    # collection of replacements for math parts in displayed formulas,
-    # see LAB:EQUATIONS below; with LT this works, e.g., for
-    #   \text{ für alle } ...,
-    #   \text{ für ein } ...,
-    # missing leading or trailing space is detected,
-    # and output also can be searched for single letters (for German)
-    parms.display_math = ('D1D', 'D2D', 'D3D', 'D4D', 'D5D', 'D6D')
-
-    # texts for math operators; default: key None
-    parms.mathoptext = {'+': ' plus ', '-': ' minus ',
-                        '*': ' mal ', '/': ' durch ',
-                        None: ' gleich '}
-
-    # proof environment:
-    parms.proof_title = 'Beweis'
-
-    # macro to mark foreign language:
-    parms.foreign_lang_mac = 'engl'
-
-    # replacement for this macro:
-    parms.replace_frgn_lang_mac = '[englisch]'
-
+    set_language_de()
 elif cmdline.lang == 'en':
-    parms.inline_math = ('A', 'B', 'C', 'D', 'E', 'F')
-    parms.display_math = ('U', 'V', 'W', 'X', 'Y', 'Z')
-    parms.mathoptext = {'+': ' plus ', '-': ' minus ',
-                        '*': ' times ', '/': ' over ',
-                        None: ' equal '}
-    parms.proof_title = 'Proof'
-    parms.foreign_lang_mac = 'foreign'
-    parms.replace_frgn_lang_mac = '[foreign]'
-
+    set_language_en()
 else:
     fatal('unrecognized language "' + cmdline.lang
             + '" given in option')
@@ -567,11 +588,6 @@ if cmdline.extr:
 else:
     cmdline.extr_list = []
 
-
-#######################################################################
-#
-#   read complete input into 'text'
-#
 if cmdline.file:
     text = open(cmdline.file).read()
 else:
@@ -619,13 +635,13 @@ text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
 #   test, whether the innermost group matches
 #
 for m in re.finditer(re_braced(max_depth_br + 1, '(?P<inner>', ')'),
-                            text[0]):
+                            text_get_txt(text)):
     if m.group('inner'):
         # innermost {} braces did match
         fatal('maximum nesting depth for {} braces exceeded,'
                 + ' max_depth_br=' + str(max_depth_br), m.group(0))
 for m in re.finditer(re_bracketed(max_depth_br + 1, '(?P<inner>', ')'),
-                            text[0]):
+                            text_get_txt(text)):
     if m.group('inner'):
         fatal('maximum nesting depth for [] brackets exceeded,'
                 + ' max_depth_br=' + str(max_depth_br), m.group(0))
@@ -635,10 +651,21 @@ for env in (
     + parms.environments()
 ):
     expr = re_nested_env(env[0], max_depth_env + 1, '')
-    for m in re.finditer(expr, text[0]):
+    for m in re.finditer(expr, text_get_txt(text)):
         if m.group('inner'):
             fatal('maximum nesting depth for environments exceeded,'
                     + ' max_depth_env=' + str(max_depth_env), m.group(0))
+
+#   check whether equation replacements appear in original text
+#
+if parms.check_equation_replacements:
+    for repl in parms.inline_math + parms.display_math:
+        m = re.search(r'^.*?' + re.escape(repl) + r'.*$',
+                        text_get_txt(text), flags=re.M)
+        if m:
+            warning('equation replacement "' + repl
+                + '" found in input text,'
+                + ' see LAB:CHECK_EQU_REPLS in script', m.group(0))
 
 
 #######################################################################
@@ -916,14 +943,14 @@ def parse_equ(equ):
         # finally, split line into sections delimited by '&'
         # important: non-greedy *? repetition
         sec = r'((.|\n)*?)((?<!\\)&|\Z)'
-        first_on_line = True
+        flag = Aux()
+        flag.first_on_line = True
         def repl_sec(m):
-            nonlocal first_on_line
             # split this section into math and text parts
             # BUG (without warning):
             # we assume that '&' always creates white space
-            ret = split_sec(m.group(1), first_on_line) + ' '
-            first_on_line = False
+            ret = split_sec(m.group(1), flag.first_on_line) + ' '
+            flag.first_on_line = False
             return ret
         return '  ' + re.sub(sec, repl_sec, m.group(1)) + '\n'
 
@@ -1089,8 +1116,8 @@ while mysearch(braced, text):
 
 #   write text to stdout
 #
-txt = text[0]
-numbers = text[1]
+txt = text_get_txt(text)
+numbers = text_get_num(text)
 sys.stdout.write(txt)
 
 #   if option --nums given: write line number information
