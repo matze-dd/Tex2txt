@@ -1,9 +1,13 @@
 # Tex2txt
+## Problem
+Unfortunately, there is a naming conflict with the related Haskell package.
+
+## Description
 This is a Python script for extracting raw text from LaTeX documents.
 
-In some sense, it compares to tools like OpenDetex and TeXtidote. As in TeXtidote, we make an effort to track line numbers. The file shell.sh shows an example for filtering messages from a language checker.
+In some sense, it compares to tools like OpenDetex, TeXtidote and the obove-mentioned Haskell program. As in TeXtidote, we make an effort to track line numbers. The file shell.sh shows an example for filtering messages from a language checker.
 
-A speciality is some parsing of LaTeX environments for displayed equations. Therefore, one can check embedded \text{...} macros (LaTeX package amsmath) and interpunction in -- not too complex -- displayed equations. An example is shown in file 'Example', operation is summarized in the script at label LAB:EQUATIONS.
+An optional speciality is some parsing of LaTeX environments for displayed equations. Therefore, one can check embedded \text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations. An example is shown in file 'Example', operation is summarized in the script at label LAB:EQUATIONS.
 
 The starting section of the script lists macros and environments with tailored treatment. This should ease adaptation to own needs.
 
@@ -57,8 +61,9 @@ python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
     </li>
     <li> equation environments are resolved in a way suitable for check of
         interpunction, argument of \text{...} is included into output text;
-        see LAB:EQUATIONS in script for example and detailed description
-        (one can, of course, also delete or replace these "declared" environments)
+        see file 'Example' and LAB:EQUATIONS in the script for example and
+        detailed description (one can, of course, also delete or replace
+        these "declared" environments)
     </li>
     <li> some treatment for \item[...] labels, see LAB:ITEMS in script
     </li>
