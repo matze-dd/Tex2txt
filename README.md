@@ -12,7 +12,7 @@ An optional speciality is some parsing of LaTeX environments for displayed equat
 
 The starting section of the script lists macros and environments with tailored treatment. This should ease adaptation to own needs.
 
-In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we check for instance, whether nested {} braces of the actual text do overrun the corresponding regular expression. In that case, an error message is generated and the controlling variable has to be changed.
+In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression. In that case, an error message is generated and the variable for maximum nesting depth has to be changed.
 
 A more complete shell script for language checking of a whole document tree is checks.sh.
 
