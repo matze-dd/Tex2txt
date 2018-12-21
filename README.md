@@ -5,7 +5,7 @@ Unfortunately, there is a naming conflict with the related Haskell package.
 ## Description
 This is a Python script for extracting raw text from LaTeX documents.
 
-In some sense, it compares to tools like OpenDetex, TeXtidote and the obove-mentioned Haskell program. As in TeXtidote, we make an effort to track line numbers. The file shell.sh shows an example for filtering messages from a language checker.
+In some sense, it compares to tools like OpenDetex, TeXtidote and the above-mentioned Haskell program. As in TeXtidote, we make an effort to track line numbers. The file shell.sh shows an example for filtering messages from a language checker.
 
 An optional speciality is some parsing of LaTeX environments for displayed equations. Therefore, one can check embedded \text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations. An example is shown in file 'Example', operation is summarized in the script at label LAB:EQUATIONS.
 
