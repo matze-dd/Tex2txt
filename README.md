@@ -1,6 +1,7 @@
 # Tex2txt
 ## Problem
 Unfortunately, there is a naming conflict with the related Haskell package.
+We ask for apology.
 
 ## Description
 This is a Python script for extracting raw text from LaTeX documents.
