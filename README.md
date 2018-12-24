@@ -12,9 +12,12 @@ An optional speciality is some parsing of LaTeX environments for displayed equat
 
 The starting section of the script lists macros and environments with tailored treatment. This should ease adaptation to own needs.
 
-In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression. In that case, an error message is generated and the variable for maximum nesting depth has to be changed.
-
 A more complete shell script for language checking of a whole document tree is checks.sh.
+
+## Implementation
+With around 580 lines of "real code" for version 1.1.0, the script is not very large.
+
+In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression. In that case, an error message is generated and the variable for maximum nesting depth has to be changed.
 
 ## Usage
 python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
@@ -57,7 +60,7 @@ python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
     </li>
     <li> "undeclared" macros are silently ignored (keeping arguments)
     </li>
-    <li> inline math $...$ is replaced with rotating text from collection
+    <li> inline math $...$ is replaced with text from rotating collection
         in variable parms.inline_math
     </li>
     <li> equation environments are resolved in a way suitable for check of
