@@ -30,7 +30,7 @@
 #     can be used later to correct line numbers in messages
 #   - option --repl file:   (file name)
 #     file with replacements performed at the end, namely after
-#     changing, e.g., inline maths to $$, and german hyphen "= to - ;
+#     changing, e.g., inline maths to text and german hyphen "= to - ;
 #     see LAB:SPELLING below for line syntax
 #   - option --extr ma[,mb,...]:    (list of macro names)
 #     extract only arguments of these macros;
@@ -51,7 +51,7 @@
 #   - equation environments are resolved in a way suitable for check of
 #     interpunction, argument of \text{...} is included into output text;
 #     see LAB:EQUATIONS below for example and detailed description
-#   - some treament for \item[...] labels, see LAB:ITEMS
+#   - some treatment for \item[...] labels, see LAB:ITEMS
 #   - rare LT warnings can be suppressed using \LTadd, \LTskip,
 #     and \LTalter (see below) in the LaTeX text with suitable macro
 #     definitions there, e.g. adding something for LT only:
@@ -166,6 +166,7 @@ parms.system_macros = lambda: (
     Macro('includegraphics', 'OA'),
     Macro('input', 'A'),
     Macro('newcommand', 'AOA'),
+    Macro('texorpdfstring', 'AA', r'\1'),
     Macro('textcolor', 'AA', r'\2'),
     Macro('usepackage', 'OA'),
     Macro(r'vspace\*?', 'A'),
@@ -188,7 +189,7 @@ parms.system_macros = lambda: (
 #
 parms.heading_macros_punct = '!?'
         # do not add '.' if ending with that;
-        # title already ends with '.' --> '..' will lead to warning
+        # title mistakenly ends with '.' --> '..' will lead to LT warning
 parms.heading_macros = (
     r'chapter\*?',
     r'part\*?',
@@ -311,11 +312,13 @@ def set_language_de():
     #   - resulting text can be checked for single letters (German)
     # other variant: AInlA, BInlB, ... (but has to be added to dictionary)
     parms.inline_math = ('I1I', 'I2I', 'I3I', 'I4I', 'I5I', 'I6I')
-    # parms.inline_math = ('$$',)
+    # parms.inline_math = ('AInlA', 'BInlB', 'CInlC',
+    #                       'DInlD', 'EInlE', 'FInlF')
 
     # replacements for math parts in displayed formulas
     parms.display_math = ('D1D', 'D2D', 'D3D', 'D4D', 'D5D', 'D6D')
-    # parms.display_math = ('§§',)
+    # parms.display_math = ('ADsplA', 'BDsplB', 'CDsplC',
+    #                       'DDsplD', 'EDsplE', 'FDsplF')
 
     # LAB:CHECK_EQU_REPLS
     # this check is important if replacements had to be added to dictionary
@@ -353,7 +356,7 @@ def set_language_en():
 #   - proof environment
 #   - macros for cross references
 #   - handling of displayed equations including \[ ... \]
-#   - some treatment of \item[...] labels (see LAB:ITEMS)
+#   - some treatment of \item[...] labels
 #   - environments not listed above: \begin{...} and \end{...} deleted
 #   - macros not listed:
 #     \xxx is deleted, content of a possible braced argument is copied
@@ -573,6 +576,9 @@ parser.add_argument('--extr')
 parser.add_argument('--lang')
 cmdline = parser.parse_args()
 
+if cmdline.nums:
+    cmdline.nums = open(cmdline.nums, mode='w')
+
 if not cmdline.lang or cmdline.lang == 'de':
     set_language_de()
 elif cmdline.lang == 'en':
@@ -660,7 +666,7 @@ for env in (
 #
 if parms.check_equation_replacements:
     for repl in parms.inline_math + parms.display_math:
-        m = re.search(r'^.*?' + re.escape(repl) + r'.*$',
+        m = re.search(r'^.*' + re.escape(repl) + r'.*$',
                         text_get_txt(text), flags=re.M)
         if m:
             warning('equation replacement "' + repl
@@ -709,17 +715,12 @@ for s in parms.theorem_environments:
 # replace $...$ by text from variable parms.inline_math
 # BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
 #
-inline_math_counter = 0
-if type(parms.inline_math) is not tuple:
-    fatal("parms.inline_math has to be tuple, e.g. ('$$',)")
 def f(m):
     if re.search(r'(?<!\\)\$', m.group(1)):
         warning('"$" in {} braces (macro argument?): not properly handled',
                     m.group(0))
-    global inline_math_counter
-    inline_math_counter = (
-        (inline_math_counter + 1) % len(parms.inline_math))
-    return parms.inline_math[inline_math_counter]
+    parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
+    return parms.inline_math[0]
 actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)*)\$', f)]
 
 #   proof environment with optional [...]:
@@ -840,18 +841,12 @@ parms.mathop = (
 parms.mathpunct = r'(?:(?<!\\)[;,]|\.)'
 parms.change_repl_after_punct = True
 
-if type(parms.display_math) is not tuple:
-    fatal("parms.display_math has to be tuple, e.g. ('§§',)")
-
-display_math_counter = 0
 def display_math_update():
-    global display_math_counter
-    display_math_counter = (
-        (display_math_counter + 1) % len(parms.display_math))
+    parms.display_math = parms.display_math[1:] + parms.display_math[:1]
 def display_math_get(update):
     if update:
         display_math_update()
-    return parms.display_math[display_math_counter]
+    return parms.display_math[0]
 
 #   replace a math part by suitable raw text
 #
@@ -1008,8 +1003,8 @@ text = mysub(parms.mathspace, ' ', text)
 #     but before removal of \item
 #
 if parms.keep_item_labels:
-    # first try with preceding interpunction [.,;:] ...
-    text = mysub(r'(((?<!\\)[.,;:])\s*)\\item\s*' + bracketed,
+    # first try with preceding interpunction [.,;:!?] ...
+    text = mysub(r'(((?<!\\)[.,;:!?])\s*)\\item\s*' + bracketed,
                     r'\1\3\2', text)
     # ... otherwise simply extract the text in \item[...]
     text = mysub(r'\\item\s*' + bracketed, r'\1', text)
@@ -1022,7 +1017,7 @@ text = mysub(r'\\item' + end_mac + eat_eol, eol2space, text)
 #   if followed by braced argument: copy its content
 #
 if cmdline.extr:
-    re_macro = r'\\(?!(?:' + cmdline.extr_re + r'))[a-zA-Z]+'
+    re_macro = r'\\(?!(?:' + cmdline.extr_re + r')' + end_mac + r')[a-zA-Z]+'
         # 'x(?!y)' matches 'x' not followed by 'y'
 else:
     re_macro = r'\\[a-zA-Z]+'
@@ -1081,11 +1076,21 @@ if cmdline.repl:
 #
 ##################################################################
 
+def write_numbers(nums, mx):
+    if not cmdline.nums:
+        return
+    for i in range(mx):
+        if i < len(nums):
+            s = str(abs(nums[i]))
+            if nums[i] < 0:
+                s += '+'
+        else:
+            s = '?'
+        cmdline.nums.write(s + '\n')
+
 #   on option --extr: only print arguments of these macros
 #
 if cmdline.extr:
-    if cmdline.nums:
-        fn = open(cmdline.nums, mode='w')
     def extr(t, n):
         global extract_list
         extract_list += [(t,n)]
@@ -1096,23 +1101,13 @@ if cmdline.extr:
     for (txt, nums) in extract_list:
         txt = txt.rstrip('\n') + '\n\n'
         sys.stdout.write(txt)
-        if not cmdline.nums:
-            continue
-        for i in range(len(re.findall(r'\n', txt))):
-            if i < len(nums):
-                s = str(abs(nums[i]))
-                if nums[i] < 0:
-                    s += '+'
-            else:
-                s = '?'
-            fn.write(s + '\n')
+        write_numbers(nums, len(re.findall(r'\n', txt)))
     exit()
 
 #   if braces {...} did remain somewhere: delete
 #
 while mysearch(braced, text):
     text = mysub(braced, r'\1', text)
-
 
 #   write text to stdout
 #
@@ -1122,11 +1117,5 @@ sys.stdout.write(txt)
 
 #   if option --nums given: write line number information
 #
-if cmdline.nums:
-    f = open(cmdline.nums, mode='w')
-    for n in numbers:
-        if n > 0:
-            f.write(str(n) + '\n')
-        else:
-            f.write(str(-n) + '+\n')
+write_numbers(numbers, len(numbers))
 
