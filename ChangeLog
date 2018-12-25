@@ -1,3 +1,12 @@
+Release 1.1.1
+=============
+- fixed bug (missing recognition of macro name boundary):
+  with option '--extr m', the input 'aa\m{\mm{xyz}}bb' produced output
+  '\mm{xyz}' instead of 'xyz'
+- check for interpunction '!' and '?' at LAB:ITEMS
+- simpler implementation of rotating equation replacements
+- reduced code redundancy for creation of line number file
+
 Release 1.1.0
 =============
 - shifted language settings to "declaration" section
