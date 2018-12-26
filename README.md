@@ -14,11 +14,6 @@ The starting section of the script lists macros and environments with tailored t
 
 A more complete shell script for language checking of a whole document tree is checks.sh.
 
-## Implementation
-With around 580 lines of "real code" for version 1.1.0, including 130 lines in the "declaration section", the script is not very large.
-
-In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression. In that case, an error message is generated and the variable for maximum nesting depth has to be changed.
-
 ## Usage
 python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
 
@@ -78,4 +73,9 @@ python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
         \newcommand{\LTadd}[1]{}
     </li>
 </ul>
+
+## Implementation
+With around 580 lines of "real code" for version 1.1.0, including 130 lines in the "declaration section", the script is not very large.
+
+In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression. In that case, an error message is generated and the variable for maximum nesting depth has to be changed.
 
