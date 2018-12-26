@@ -8,8 +8,9 @@ We ask for apology.
 Description
 -----------
 This is a Python script for extracting raw text from LaTeX documents with focus on mathematics.
+The aim is to produce only few "false" warnings when feeding the text into a language checker.
 
-In some sense, it compares to tools like OpenDetex, TeXtidote and the above-mentioned Haskell software.
+In some sense, the script compares to tools like OpenDetex, TeXtidote and the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
 Unnecessary creation of empty lines is avoided, paragraphs and sentences remain intact.
 The Bash script shell.sh shows an example for filtering messages from a language checker.
