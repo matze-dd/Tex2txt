@@ -6,11 +6,18 @@ We ask for apology.
 ## Description
 This is a Python script for extracting raw text from LaTeX documents.
 
-In some sense, it compares to tools like OpenDetex, TeXtidote and the above-mentioned Haskell program. As in TeXtidote, we make an effort to track line numbers. The file shell.sh shows an example for filtering messages from a language checker.
+In some sense, it compares to tools like OpenDetex, TeXtidote and the above-mentioned Haskell program.
+As in TeXtidote, we make an effort to track line numbers.
+Therefore, unnecessary creation of empty new lines can be avoided,
+paragraphs and sentences remain intact.
+The file shell.sh shows an example for filtering messages from a language checker.
 
-An optional speciality is some parsing of LaTeX environments for displayed equations. Therefore, one can check embedded \text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations. An example is shown in file Example, operation is summarized in the script at label LAB:EQUATIONS.
+An optional speciality is some parsing of LaTeX environments for displayed equations.
+Therefore, one can check embedded \text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations.
+An example is shown in file Example, operation is summarized in the script at label LAB:EQUATIONS.
 
-The starting section of the script lists macros and environments with tailored treatment. This should ease adaptation to own needs.
+The starting section of the script lists macros and environments with tailored treatment.
+This should ease adaptation to own needs.
 
 A more complete shell script for language checking of a whole document tree is checks.sh.
 
@@ -77,5 +84,7 @@ python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
 ## Implementation
 With around 580 lines of "real code" for version 1.1.0, including 130 lines in the "declaration section", the script is not very large.
 
-In order to parse with regular expressions, some of them are constructed by iteration. At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression. In that case, an error message is generated and the variable for maximum nesting depth has to be changed.
+In order to parse with regular expressions, some of them are constructed by iteration.
+At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression.
+In that case, an error message is generated and the variable for maximum nesting depth has to be changed.
 
