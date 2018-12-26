@@ -8,7 +8,7 @@ This is a Python script for extracting raw text from LaTeX documents.
 
 In some sense, it compares to tools like OpenDetex, TeXtidote and the above-mentioned Haskell program.
 As in TeXtidote, we make an effort to track line numbers.
-Therefore, unnecessary creation of empty new lines can be avoided,
+Therefore, unnecessary creation of empty lines can be avoided,
 paragraphs and sentences remain intact.
 The file shell.sh shows an example for filtering messages from a language checker.
 
