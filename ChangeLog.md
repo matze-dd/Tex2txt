@@ -1,5 +1,5 @@
 ## Next Version (unreleased)
-- simpler treatment of \[ ... \]: just replaced by begin/end of equation*
+- simpler treatment of \\[ ... \\]: just replaced by begin/end of equation*
   (allows to better tailor its replacement)
 - explicit title names for environments from parms.theorem_environments
   (was: capitalized version of environment name)
