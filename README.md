@@ -15,7 +15,7 @@ Unnecessary creation of empty lines is avoided, paragraphs and sentences remain 
 The Bash script shell.sh shows an example for filtering messages from a language checker.
 
 An optional speciality is some parsing of LaTeX environments for displayed equations.
-Therefore, one can check embedded \\text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations.
+Therefore, one can check embedded \text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations.
 An example is shown in file Example, operation is summarized in the script at label LAB:EQUATIONS.
 
 The starting section of the Python script lists macros and environments with tailored treatment.
@@ -25,7 +25,7 @@ A more complete Bash script for language checking of a whole document tree is ch
 
 Usage
 -----
-python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
+python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\] \[file\]
 
 - without argument file: read standard input
 - option --nums file<br>
@@ -35,7 +35,7 @@ python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
   file with phrase replacements performed at the end, namely after
   changing inline maths to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
-- option --extr ma[,mb,...] (list of macro names)<br>
+- option --extr ma\[,mb,...\] (list of macro names)<br>
   extract only arguments of these macros;
   useful, e.g., for check of foreign-language text and footnotes
 - option --lang xy<br>
@@ -46,25 +46,25 @@ python3 tex2txt.py [--nums file] [--repl file] [--extr list] [--lang xy] [file]
 
 Selected actions
 ----------------
-- frames \\begin{...} and \\end{...} of environments are deleted;
+- frames \begin{...} and \end{...} of environments are deleted;
   tailored behaviour for environment types listed in script
 - flexible treatment of own macros with arbitrary arguments
-- text in heading macros as \\section{...} is extracted with
+- text in heading macros as \section{...} is extracted with
   added interpunction
-- suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
+- suitable placeholders for \ref, \eqref, \pageref, and \cite
 - "undeclared" macros are silently ignored, keeping their arguments
 - inline math $...$ is replaced with text from rotating collection
   in variable parms.inline_math
 - equation environments are resolved in a way suitable for check of
-  interpunction, argument of \\text{...} is included into output text;
+  interpunction, argument of \text{...} is included into output text;
   \\[ ... \\] is same as environment equation*; <br>
   see file Example and LAB:EQUATIONS in the script for example and
   detailed description
-- some treatment for \\item[...] labels, see LAB:ITEMS in script
-- rare warnings can be suppressed using \\LTadd{}, \\LTskip{},
-  \\LTalter{}{} in the LaTeX text with suitable macro definition there;
+- some treatment for \item\[...\] labels, see LAB:ITEMS in script
+- rare warnings can be suppressed using \LTadd{}, \LTskip{},
+  \LTalter{}{} in the LaTeX text with suitable macro definition there;
   e.g., adding something that only the language checker should see:<br>
-  \\newcommand{\\LTadd}[1]{}
+  \newcommand{\LTadd}\[1\]{}
 
 Implementation
 --------------
