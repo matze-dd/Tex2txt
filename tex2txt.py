@@ -65,7 +65,8 @@
 #   - in order to treat nested braces / brackets and some nested
 #     environments, we construct regular expressions by iteration;
 #     maximum recognized nesting depth (and thus length of these expressions)
-#     is controlled by the variables max_depth_br and max_depth_env
+#     is controlled by the variables parms.max_depth_br and
+#     parms.max_depth_env
 #
 #   Bugs:
 #   - parsing with regular expressions is fun, but limited; as the
@@ -191,7 +192,7 @@ parms.system_macros = lambda: (
 parms.heading_macros_punct = '!?'
         # do not add '.' if ending with that;
         # title mistakenly ends with '.' --> '..' will lead to LT warning
-parms.heading_macros = (
+parms.heading_macros = lambda: (
     r'chapter\*?',
     r'part\*?',
     r'section\*?',
@@ -202,14 +203,15 @@ parms.heading_macros = (
 #   theorem environments from package amsthm with optional argument [...]:
 #   display a title and text in optional argument as (...) with final dot
 #
-parms.theorem_environments = (
-    'Anmerkung',
-    'Beispiel',
-    'Definition',
-    'Korollar',
-    'Nachweis',
-    'Proposition',
-    'Satz',
+parms.theorem_environments = lambda: (
+    # (environment name, text title)
+    ('Anmerkung', 'Anmerkung'),
+    ('Beispiel', 'Beispiel'),
+    ('Definition', 'Definition'),
+    ('Korollar', 'Korollar'),
+    ('Nachweis', 'Nachweis'),
+    ('Proposition', 'Proposition'),
+    ('Satz', 'Satz'),
 )
 
 #   equation environments, partly from LaTeX package amsmath;
@@ -296,6 +298,11 @@ parms.misc_replace = lambda: [
 #   its argument will be copied, see LAB:EQUATIONS below
 #
 parms.text_macro = 'text'           # LaTeX package amsmath
+
+#   maximum nesting depths
+#
+parms.max_depth_br = 20         # for {} braces and [] brackets
+parms.max_depth_env = 10        # for environments of the same type
 
 #   see LAB:ITEMS below
 #
@@ -408,8 +415,6 @@ end_lbr = r'\\end\s*\{'
 #   regular expression for nested {} braces
 #   BUG (but error message on overrun): the nesting limit is unjustified
 #
-max_depth_br = 20
-    # maximum nesting depth
 def re_braced(max_depth, inner_beg, inner_end):
     atom = r'[^\\{}]|\\.'
     braced = inner_beg + r'\{(?:' + atom + r')*\}' + inner_end
@@ -420,7 +425,7 @@ def re_braced(max_depth, inner_beg, inner_end):
         # outer-most (...) for reference at substitutions below
         # '(?<!x)y' matches 'y' not preceded by 'x'
     return braced
-braced = re_braced(max_depth_br, '', '')
+braced = re_braced(parms.max_depth_br, '', '')
 
 #   the same for [] brackets
 #   BUG (without warning): enclosed {} pairs are not recognized
@@ -432,12 +437,11 @@ def re_bracketed(max_depth, inner_beg, inner_end):
         bracketed = r'\[(?:' + atom + r'|' + bracketed + r')*\]'
     bracketed = r'(?<!\\)\[((?:' + atom + r'|' + bracketed + r')*)\]'
     return bracketed
-bracketed = re_bracketed(max_depth_br, '', '')
+bracketed = re_bracketed(parms.max_depth_br, '', '')
 
 #   regular expression for an environment
 #   BUG (but error message on overrun): the nesting limit is unjustified
 #
-max_depth_env = 10
 def re_nested_env(s, max_depth, arg):
     env_begin = begin_lbr + s + r'\}'
     env_end = end_lbr + s + r'\}'
@@ -646,27 +650,28 @@ text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
 #   we construct regular expressions for a larger nesting depth and
 #   test, whether the innermost group matches
 #
-for m in re.finditer(re_braced(max_depth_br + 1, '(?P<inner>', ')'),
+for m in re.finditer(re_braced(parms.max_depth_br + 1, '(?P<inner>', ')'),
                             text_get_txt(text)):
     if m.group('inner'):
         # innermost {} braces did match
         fatal('maximum nesting depth for {} braces exceeded,'
-                + ' max_depth_br=' + str(max_depth_br), m.group(0))
-for m in re.finditer(re_bracketed(max_depth_br + 1, '(?P<inner>', ')'),
+            + ' parms.max_depth_br=' + str(parms.max_depth_br), m.group(0))
+for m in re.finditer(re_bracketed(parms.max_depth_br + 1, '(?P<inner>', ')'),
                             text_get_txt(text)):
     if m.group('inner'):
         fatal('maximum nesting depth for [] brackets exceeded,'
-                + ' max_depth_br=' + str(max_depth_br), m.group(0))
+            + ' parms.max_depth_br=' + str(parms.max_depth_br), m.group(0))
 
 for env in (
     parms.equation_environments()
     + parms.environments()
 ):
-    expr = re_nested_env(env[0], max_depth_env + 1, '')
+    expr = re_nested_env(env[0], parms.max_depth_env + 1, '')
     for m in re.finditer(expr, text_get_txt(text)):
         if m.group('inner'):
             fatal('maximum nesting depth for environments exceeded,'
-                    + ' max_depth_env=' + str(max_depth_env), m.group(0))
+                    + ' parms.max_depth_env=' + str(parms.max_depth_env),
+                        m.group(0))
 
 #   check whether equation replacements appear in original text
 #
@@ -690,7 +695,7 @@ if parms.check_equation_replacements:
 actions = parms.misc_replace()
 
 for (name, repl) in parms.environments():
-    env = re_nested_env(name, max_depth_env, '')
+    env = re_nested_env(name, parms.max_depth_env, '')
     if repl:
         actions += [(env, repl)]
     else:
@@ -701,19 +706,18 @@ def f(m):
     if txt and txt[-1] not in parms.heading_macros_punct:
         txt += '.'
     return txt
-for s in parms.heading_macros:
+for s in parms.heading_macros():
     actions += [(
         r'\\' + s + r'\s*(?:' + bracketed + r')?\s*' + braced,
         f
     )]
 
-for s in parms.theorem_environments:
-    thm_text = s.capitalize()
+for (s, t) in parms.theorem_environments():
     actions += [
         # first try with option ...
-        (begin_lbr + s + r'\}\s*' + bracketed, thm_text + r' 1.2 (\1).'),
+        (begin_lbr + s + r'\}\s*' + bracketed, t + r' 1.2 (\1).'),
         # ... and then without
-        (begin_lbr + s + r'\}', thm_text + r' 1.2.'),
+        (begin_lbr + s + r'\}', t + r' 1.2.'),
         # delete \end{...}
         (end_lbr + s + r'\}' + eat_eol, eol2space),
     ]
@@ -962,11 +966,11 @@ def parse_equ(equ):
 for (name, args, replacement) in parms.equation_environments():
     if not replacement:
         re_args = re_code_args(args, 'EquEnv', name)
-        expr = re_nested_env(name, max_depth_env, re_args) + eat_eol
+        expr = re_nested_env(name, parms.max_depth_env, re_args) + eat_eol
         text = mysub(expr, lambda m: parse_equ(m.group('body')), text)
         continue
     # environment with fixed replacement and added interpunction
-    env = re_nested_env(name, max_depth_env, '')
+    env = re_nested_env(name, parms.max_depth_env, '')
     def f(m):
         txt = parse_equ(m.group('body')).strip()
         s = replacement
