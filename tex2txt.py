@@ -50,6 +50,7 @@
 #     in variable parms.inline_math
 #   - equation environments are resolved in a way suitable for check of
 #     interpunction, argument of \text{...} is included into output text;
+#     \[ ... \] is same as environment equation*;
 #     see LAB:EQUATIONS below for example and detailed description
 #   - some treatment for \item[...] labels, see LAB:ITEMS
 #   - rare LT warnings can be suppressed using \LTadd, \LTskip,
@@ -268,6 +269,11 @@ parms.misc_replace = lambda: [
     # delete "-
     (r'(?<!\\)"-', ''),     # r'(?<!x)y' matches 'y' not preceded by 'x'
 
+    # \[    ==> ... 
+    (r'\\\[', r'\\begin{equation*}'),
+    # \]    ==> ... 
+    (r'\\\]', r'\\end{equation*}'),
+
     # "=    ==> -
     (r'(?<!\\)"=', '-'),
     # ~     ==> <space>
@@ -355,7 +361,7 @@ def set_language_en():
 #   - replacement of $...$ inline math
 #   - proof environment
 #   - macros for cross references
-#   - handling of displayed equations including \[ ... \]
+#   - handling of displayed equations
 #   - some treatment of \item[...] labels
 #   - environments not listed above: \begin{...} and \end{...} deleted
 #   - macros not listed:
@@ -969,12 +975,6 @@ for (name, args, replacement) in parms.equation_environments():
             s += m.group(1)
         return s
     text = mysub(env, f, text)
-
-#   replace \[ ... \] displayed equation
-#
-text = mysub(r'\\\[((.|\n)*?)\\\]' + eat_eol,
-                lambda m: parse_equ(m.group(1)), text)
-        # important: non-greedy *? repetition
 
 
 #######################################################################
