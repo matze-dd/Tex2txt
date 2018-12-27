@@ -633,12 +633,9 @@ text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
 #   - if no space in front of first unescaped %:
 #     join current and next lines (except after \\ alias \newline)
 #
-text = mysub(r'^(([^\n\\%]|\\.)*[^ \t\n\\%])(?<!\\newline)%.*\n',
-                r'\1', text, flags=re.M)
-    # r'(?<!x)y' matches 'y' not preceded by 'x'
-    # the previous replacement does not join lines on '\%%'
-    # --> re-try
-text = mysub(r'^(([^\n\\%]|\\.)*\\%)%.*\n', r'\1', text, flags=re.M)
+text = mysub(r'^(([^\n\\%]|\\.)*(?<![ \t\n\\]))(?<!\\newline)%.*\n',
+                                    r'\1', text, flags=re.M)
+                # r'(?<!x)y' matches 'y' not preceded by 'x'
 
 #   - "normal case": just remove rest of line, keeping the line break
 #
@@ -812,7 +809,7 @@ Thus,
   Z  in caseU. 
 """
 
-#   1. split equation environment into 'lines' delimited by \\
+#   1. split equation environment into 'lines' delimited by \\ alias \newline
 #   2. split each 'line' into 'sections' delimited by &
 #   3. split each 'section' into math and \text parts
 #
