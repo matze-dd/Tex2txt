@@ -37,7 +37,7 @@ python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\]
   changing inline maths to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
 - option --extr ma\[,mb,...\] (list of macro names)<br>
-  extract only arguments of these macros;
+  extract only first braced argument of these macros;
   useful, e.g., for check of foreign-language text and footnotes
 - option --lang xy<br>
   language de or en, default: de;
@@ -58,7 +58,7 @@ Selected actions
   in variable parms.inline_math
 - equation environments are resolved in a way suitable for check of
   interpunction, argument of \text{...} is included into output text;
-  \\[ ... \\] is same as environment equation*; <br>
+  \\[...\\] is same as environment equation*; <br>
   see file Example and LAB:EQUATIONS in the script for example and
   detailed description
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
