@@ -1,11 +1,13 @@
 Next Version (unreleased)
 -------------------------
-- simpler treatment of \\[ ... \\]: equivalent to begin/end of equation*
-  environment (allows to better tailor its replacement)
-- declaration of title names for environments in parms.theorem_environments
-  (used before: capitalized version of environment name)
+- simpler treatment of \\[...\\]: equivalent to begin/end of equation*
+  environment; allows to better tailor equation replacement
+- with option --extr, optional macro arguments \[...\] are skipped;
+  e.g., for extracting from \footnote\[n\]{...}
+- declaration of title names for environments in parms.theorem_environments;
+  used before: capitalized version of environment name
 - for consistency, all collections parms.xyz use lambdas
-- variables max_depth_* for maximum nesting depths shifted to parms
+- variables max_depth_xyz for maximum nesting depths shifted to object parms
 
 Release 1.1.1
 -------------
@@ -44,7 +46,7 @@ Release 1.0.0
 Release 0.2.0
 -------------
 - more flexible declaration of macros / environments with tailored treatment
-- recognize \\[ ... \\] displayed equations
+- recognize \\[...\\] displayed equations
 - only delete environment \begin{...} with option or argument, if declared
   (was a bit sloppy before)
 - check nesting depths of {} braces, \[\] brackets, and environments
