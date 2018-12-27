@@ -1,5 +1,5 @@
-Tex2txt
-=======
+Tex2txt, a filter for mathematical texts
+========================================
 Problem
 -------
 Unfortunately, there is a naming conflict with the related Haskell package.
