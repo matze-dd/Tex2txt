@@ -33,7 +33,7 @@
 #     changing, e.g., inline maths to text and german hyphen "= to - ;
 #     see LAB:SPELLING below for line syntax
 #   - option --extr ma[,mb,...]:    (list of macro names)
-#     extract only arguments of these macros;
+#     extract only first braced argument of these macros;
 #     useful, e.g., for check of foreign-language text and footnotes
 #   - option --lang xy:     (language de or en, default: de)
 #     used for adaptation of equation replacements, math operator names,
@@ -161,8 +161,9 @@ parms.system_macros = lambda: (
     Macro('colorbox', 'AA', r'\2'),
     Macro('documentclass', 'OA'),
     Macro('fcolorbox', 'AAA', r'\3'),
-    Macro('footnote', 'A'),
-    Macro('footnotetext', 'A'),
+    Macro('footnote', 'OA'),
+    Macro('footnotemark', 'O'),
+    Macro('footnotetext', 'OA'),
     Macro('framebox', 'OOA', r'\3'),
     Macro(r'hspace\*?', 'A'),
     Macro('includegraphics', 'OA'),
@@ -777,6 +778,7 @@ for (name, args, repl) in (
             fatal('inavlid "\\' + m.group(1) + '" in replacement for "'
                                         + name + '"')
     while mysearch(expr, text):
+        # macro might be nested
         text = mysub(expr, repl, text)
 
 
@@ -1099,8 +1101,8 @@ if cmdline.extr:
         global extract_list
         extract_list += [(t,n)]
     extract_list = []
-    mysub(r'\\(?:' + cmdline.extr_re + r')\s*' + braced,
-            r'\1', text, extract=extr)
+    mysub(r'\\(?:' + cmdline.extr_re + r')(?:\s*' + bracketed
+                    + r')*\s*' + braced, r'\2', text, extract=extr)
 
     for (txt, nums) in extract_list:
         txt = txt.rstrip('\n') + '\n\n'
