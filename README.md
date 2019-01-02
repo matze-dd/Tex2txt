@@ -26,7 +26,7 @@ A more complete Bash script for language checking of a whole document tree is ch
 
 Usage
 -----
-python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\] \[file\]
+python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\] \[--unkn\] \[file\]
 
 - without argument file: read standard input
 - option --nums file<br>
@@ -44,6 +44,8 @@ python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\]
   used for adaptation of equation replacements, math operator names,
   proof titles, and replacement of foreign-language text;
   see LAB:LANGUAGE in script
+- option --unkn<br>
+  print list of "undeclared" macros and environments
 
 Selected actions
 ----------------
