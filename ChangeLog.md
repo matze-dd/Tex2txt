@@ -1,3 +1,19 @@
+Release 1.3.0
+-------------
+- fixed bug: between macro name and its arguments no paragraph break allowed;
+  the same holds for elements of an environment frame
+  (arbitrary space was accepted before)
+- fixed bug: after a macro without arguments, now arbitrary white space in
+  current paragraph is consumed (was before: only space removal if rest of
+  line is empty)
+- related: now replacement of space from parms.mathspace and ~ by ' '
+  as well as deletion of \!, \- and "- only after macro treatment
+- fixed bug: \item[...] will skip arbitrary following white space
+- introduced variable parms.default_item_lab
+- re-work of mechanism for suppression of new empty lines
+  (eat_eol and eol2space)
+- added option --unkn: print list of "undeclared" macros and environments
+
 Release 1.2.0
 -------------
 - simpler treatment of \\[...\\]: equivalent to begin/end of equation*
