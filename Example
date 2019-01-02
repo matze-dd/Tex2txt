@@ -24,15 +24,14 @@ OK.
 this becomes with option --lang en:
 ###########################################
 We see
-     that all is acceptable andx
-    that it can be improved.
- Thus, with a constant B and a domain C,
+  that all is acceptable andx
+  that it can be improved.
+Thus, with a constant B and a domain C,
   U  equal V for all W, 
   X  equal Y  for Z 
   Z  in caseU. 
 
 OK.
-
 
 ###########################################
 
@@ -40,8 +39,4 @@ With the filter from the script shell.sh, the typo 'andx' will be
 related to line 6. The problems in the equation (missing comma leads to
 word repetition, missing space to spelling error) will be related
 to line 13+, which is \begin{align}.
-
-The additional indents stem from deleted line breaks that are replaced
-by ' ' for safety, unless next line starts with space (keeping really
-empty lines).
 
