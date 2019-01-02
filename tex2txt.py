@@ -163,13 +163,8 @@ parms.system_macros = lambda: (
     Macro('colorbox', 'AA', r'\2'),
     Macro('documentclass', 'OA'),
     Macro('fcolorbox', 'AAA', r'\3'),
-#XXX
-#   Macro('footnote', 'OA', '5'),
-#   Macro('footnotemark', 'O', '5'),
-#XXX
-    Macro('footnote', 'OA'),
-    Macro('footnotemark', 'O'),
-#XXX
+    Macro('footnote', 'OA', '5'),
+    Macro('footnotemark', 'O', '5'),
     Macro('footnotetext', 'OA'),
     Macro('framebox', 'OOA', r'\3'),
     Simple('hfill', r'\\ '),        # replaced by ' ' at the end
