@@ -1,3 +1,10 @@
+Release 1.3.1
+-------------
+- fixed bug: macro without argument won't consume leading space that is part
+  of a subsequent environment
+  (see also section 'Inplementation issues' in REAMDE.md)
+- before ouptut: resolve backslash escapes for {, }, $, %
+
 Release 1.3.0
 -------------
 - fixed bug: between macro name and its arguments no paragraph break allowed;
