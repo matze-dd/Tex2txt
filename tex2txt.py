@@ -107,6 +107,7 @@ parms = Aux()
 parms.project_macros = lambda: (
     Simple('Arzela', 'Arzela'),
     Simple('bzw', 'bzw. '),
+    Macro('comment', 'A'),
 #   Simple('dphp', 'd.' + utf8_nbsp + 'h. '),
 #   Simple('dphpkomma', 'd.' + utf8_nbsp + 'h., '),
             # LT only recognizes missing comma in fully written version
@@ -137,15 +138,13 @@ parms.project_macros = lambda: (
     Simple('Sp', 'Seite '),
     Simple('year', '2018'),
     Simple('TBD', '[Hilfe]: '),
+    Macro('TBDoff', 'A'),
     Simple('Thomee', 'Thomee'),
     Simple('upap', 'u.' + utf8_nbsp + 'a. '),
     Simple('usw', 'usw. '),
     Simple('vgl', 'vgl. '),
     Simple('vgV', 'v.' + utf8_nbsp + 'g.' + utf8_nbsp + 'V.'),
     Simple('zB', 'z.' + utf8_nbsp + 'B. '),
-
-    Macro('comment', 'A'),
-    Macro('TBDoff', 'A'),
 
     # suppress some LT warnings by altering the LaTeX text
     Macro('LTadd', 'A', r'\1'),
@@ -499,9 +498,9 @@ for (name, args) in parms.environments_with_args():
     expr = begin_lbr + name + r'\}' + re_code_args(args, 'EnvBegArg', name)
     re_begin_env += op + r'(?:' + expr + r')'
     op = r'|'
-re_begin_env += op + r'(?:' + begin_lbr + r'[a-zA-Z]+\})'
+re_begin_env += op + r'(?:' + begin_lbr + r'[^\\{}]+\})'
 re_begin_env = r'(?:' + re_begin_env + r')'
-re_end_env = end_lbr + r'[a-zA-Z]+' + r'\}'
+re_end_env = end_lbr + r'[^\\{}]+\}'
 
 #   UTF-8 characters;
 #   name lookup, if char given e.g. from copy-and-paste:
@@ -702,10 +701,9 @@ actions = parms.misc_replace()
 
 for (name, repl) in parms.environments():
     env = re_nested_env(name, parms.max_depth_env, '')
-    if repl:
-        actions += [(env, repl)]
-    else:
-        actions += [(eat_eol(env), eol2space)]
+    # add \begin{%} in order to avoid consumption of leading space
+    # by a preceding macro
+    actions += [(env, r'\\begin{%}' + repl + r'\\end{%}')]
 
 def f(m):
     txt = m.group(2)
@@ -983,9 +981,10 @@ def parse_equ(equ):
 for (name, args, replacement) in parms.equation_environments():
     if not replacement:
         re_args = re_code_args(args, 'EquEnv', name)
-        expr = (re_nested_env(name, parms.max_depth_env, re_args)
-                            + r'(?:[ \t]*\n)?')
-        text = mysub(expr, lambda m: parse_equ(m.group('body')), text)
+        expr = re_nested_env(name, parms.max_depth_env, re_args)
+        def f(m):
+            return r'\begin{%}' + parse_equ(m.group('body')) + r'\end{%}'
+        text = mysub(expr, f, text)
         continue
     # environment with fixed replacement and added interpunction
     env = re_nested_env(name, parms.max_depth_env, '')
@@ -995,7 +994,7 @@ for (name, args, replacement) in parms.equation_environments():
         m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
         if m:
             s += m.group(1)
-        return s
+        return r'\begin{%}' + s + r'\end{%}'
     text = mysub(env, f, text)
 
 
@@ -1023,8 +1022,8 @@ if cmdline.unkn:
         if m not in macsknown:
             print('\\' + m)
     envs = []
-    envsknown = tuple(e[0] for e in parms.environments_with_args())
-    for m in re.finditer(begin_lbr + r'([^}]+)\}', text_get_txt(text)):
+    envsknown = ('%',) + tuple(e[0] for e in parms.environments_with_args())
+    for m in re.finditer(begin_lbr + r'([^\\{}]+)\}', text_get_txt(text)):
         if m.group(1) not in envs:
             envs += [m.group(1)]
     envs.sort()
@@ -1033,8 +1032,25 @@ if cmdline.unkn:
             print(r'\begin{' + e + '}')
     exit()
 
-#   delete remaining environments outside of equations,
+#   delete remaining \xxx macros unless given in --extr option;
+#   if followed by braced argument: copy its content
+#
+excl = r'begin|end|item'
+if cmdline.extr:
+    excl += r'|' + cmdline.extr_re
+re_macro = r'\\(?!(?:' + excl + r')' + end_mac + r')[a-zA-Z]+'
+            # 'x(?!y)' matches 'x' not followed by 'y'
+re_macro_arg = re_macro + sp_braced
+while mysearch(re_macro_arg, text):
+    # macros with braced argument might be nested
+    text = mysub(re_macro_arg, r'\1', text)
+text = mysub(r'\\newline' + end_mac, '', text)
+text = mysub(eat_eol(re_macro + skip_space_macro), eol2space, text)
+
+#   delete remaining environment frames outside of equations,
 #   possibly with argument and option at \begin{...}
+#   - only after treatment of macros: protect line break before \begin;
+#     here we also delete placeholders \begin{%} from above
 #
 text = mysub(eat_eol(re_begin_env), eol2space, text)
 text = mysub(eat_eol(re_end_env), eol2space, text)
@@ -1045,8 +1061,7 @@ text = mysub(eat_eol(re_end_env), eol2space, text)
 #   - one can look backwards in the text and repeat a present interpunction
 #     sign after the item label
 #       --> this also checks text in the label
-#   - this should be done after removal of \begin{itemize},
-#     but before removal of \item
+#   - this should be done after removal of \begin{itemize}
 #   \item[...] may skip arbitrary space
 #
 if parms.keep_item_labels:
@@ -1062,24 +1077,6 @@ else:
 # finally, items without [...]
 text = mysub(r'\\item' + end_mac + r'\s*',
                         ' ' + parms.default_item_lab + ' ', text)
-
-#   delete remaining \xxx macros unless given in --extr option;
-#   if followed by braced argument: copy its content
-#
-if cmdline.extr:
-    re_macro = r'\\(?!(?:' + cmdline.extr_re + r')' + end_mac + r')[a-zA-Z]+'
-        # 'x(?!y)' matches 'x' not followed by 'y'
-else:
-    re_macro = r'\\[a-zA-Z]+'
-re_macro_arg = re_macro + sp_braced
-while mysearch(re_macro_arg, text):
-    # macros with braced argument might be nested
-    text = mysub(re_macro_arg, r'\1', text)
-text = mysub(r'\\newline' + end_mac, '', text)
-# BUG: we alreayd have resolved \begin
-#   --> protection of line break won't work
-#   --> shift deletetion of \begin and \end to later point?
-text = mysub(eat_eol(re_macro + skip_space_macro), eol2space, text)
 
 #   replace space macros including '~'
 #
@@ -1149,6 +1146,9 @@ def write_numbers(nums, mx):
             s = '?'
         cmdline.nums.write(s + '\n')
 
+def resolve_escapes(txt):
+    return re.sub(r'\\([{}$%])', r'\1', txt)
+
 #   on option --extr: only print arguments of these macros
 #
 if cmdline.extr:
@@ -1161,7 +1161,7 @@ if cmdline.extr:
 
     for (txt, nums) in extract_list:
         txt = txt.rstrip('\n') + '\n\n'
-        sys.stdout.write(txt)
+        sys.stdout.write(resolve_escapes(txt))
         write_numbers(nums, len(re.findall(r'\n', txt)))
     exit()
 
@@ -1174,7 +1174,7 @@ while mysearch(braced, text):
 #
 txt = text_get_txt(text)
 numbers = text_get_num(text)
-sys.stdout.write(txt)
+sys.stdout.write(resolve_escapes(txt))
 
 #   if option --nums given: write line number information
 #
