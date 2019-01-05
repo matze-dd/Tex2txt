@@ -45,7 +45,7 @@ python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\]
   proof titles, and replacement of foreign-language text;
   see LAB:LANGUAGE in script
 - option --unkn<br>
-  print list of "undeclared" macros and environments
+  print list of "undeclared" macros and environments outside of equations
 
 Selected actions
 ----------------
@@ -69,12 +69,25 @@ Selected actions
   e.g., adding something that only the language checker should see:<br>
   \newcommand{\LTadd}\[1\]{}
 
-Implementation
---------------
+Implementation issues
+---------------------
 With around 580 lines of "real code" for version 1.1.0, including 130 lines in the "declaration section", the script is not very large.
 
 In order to parse with regular expressions, some of them are constructed by iteration.
 At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression.
 In that case, an error message is generated and the variable parms.max_depth_br for maximum brace nesting depth has to be changed.
 Setting control variables for instance to 100 does work, but also increases resource consumption.
+
+A severe general problem is order of macro resolution.
+While TeX strictly evaluates from left to right, the order of treatment by
+regular expressions is completely different.
+This calls for hacks like the regular expression in skip_space_macro together
+with the placeholder \begin{%};
+it aims to avoid that a macro without arguments consumes leading space
+inside of an already resolved following environment.
+
+Overall, parsing with regular expressions is fun, but remains a rather coarse
+approximation of the "real thing".
+Nevertheless, it seems to work quite well in practice, and it gives good
+flexibility.
 
