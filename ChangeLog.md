@@ -1,3 +1,10 @@
+Release 1.3.2
+-------------
+- fixed similar bug as in 1.3.1; avoid for instance that<br>
+  'A\notag \color{red} B' produces 'AB',<br>
+  since '\color' is removed first and '\notag consumes the space till 'B'
+- simplified mechanism for suppression of new empty lines
+
 Release 1.3.1
 -------------
 - fixed bug: macro without argument won't consume leading space that is part
