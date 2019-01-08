@@ -76,6 +76,10 @@
 #     some programming, however
 #   - several related shortcomings are marked with BUG (for some
 #     of them, warnings are generated)
+#   - severe general problem: resolution of macros not in the order of
+#     TeX (strictly left to right in the text);
+#     work-arounds with hacks \begin{%} and %%% are used to avoid consumption
+#     of too much space by macros without argument
 #
 #
 #                                   Matthias Baumann, 2018-2019
@@ -396,13 +400,15 @@ def warning(msg, detail=None):
 
 #   when deleting macros or environment frames, we do not want to create
 #   new empty lines that break sentences for LT;
-#   thus consume complete line, if argument expr is lonely on line
+#   thus replace deleted text with tag in mark_deleted which is removed
+#   at the end;
+#   this also protects space behind a macro already resolved from being
+#   consumed by a macro in front
 #
+mark_deleted = '%%%'
 def eat_eol(expr):
-    return r'((?<=\n)[ \t]*|\A[ \t]*)?' + expr + r'(?(1)[ \t]*\n)?'
-def eol2space(m):
-    # function "for historical reasons"
-    return ''
+    return expr
+eol2space = mark_deleted
 
 #   space allowed inside of current paragraph, at most one line break
 #
@@ -780,9 +786,6 @@ for (name, args, repl) in (
         expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'[[{])'
                     + skip_space_macro + r')|(?:'
                     + expr + re_code_args(args, 'Macro', name) + r'))')
-    if not repl:
-        text = mysub(eat_eol(expr), eol2space, text)
-        continue
     for m in re.finditer(r'\\(\d)', repl):
         # make error messages more accessible (hopefully)
         n = int(m.group(1))
@@ -791,7 +794,7 @@ for (name, args, repl) in (
                                         + name + '"')
     while mysearch(expr, text):
         # macro might be nested
-        text = mysub(expr, repl, text)
+        text = mysub(expr, mark_deleted + repl, text)
 
 
 ##################################################################
@@ -944,6 +947,8 @@ def parse_equ(equ):
     # to see interpunction
     equ = re.sub(re_begin_env, '', equ)
     equ = re.sub(re_end_env, '', equ)
+    # remove mark_deleted
+    equ = re.sub(r'(?<!\\)' + mark_deleted, '', equ)
 
     # then split into lines delimited by \newline
     # BUG (with warning for braced macro arguments):
@@ -1043,9 +1048,9 @@ re_macro = r'\\(?!(?:' + excl + r')' + end_mac + r')[a-zA-Z]+'
 re_macro_arg = re_macro + sp_braced
 while mysearch(re_macro_arg, text):
     # macros with braced argument might be nested
-    text = mysub(re_macro_arg, r'\1', text)
-text = mysub(r'\\newline' + end_mac, '', text)
-text = mysub(eat_eol(re_macro + skip_space_macro), eol2space, text)
+    text = mysub(re_macro_arg, mark_deleted + r'\1', text)
+text = mysub(r'\\newline' + end_mac, mark_deleted, text)
+text = mysub(re_macro + skip_space_macro, mark_deleted, text)
 
 #   delete remaining environment frames outside of equations,
 #   possibly with argument and option at \begin{...}
@@ -1066,8 +1071,8 @@ text = mysub(eat_eol(re_end_env), eol2space, text)
 #
 if parms.keep_item_labels:
     # first try with preceding interpunction [.,;:!?] ...
-    text = mysub(r'(((?<!\\)[.,;:!?])\s*)\\item' + sp_bracketed + r'\s*',
-                            r'\1 \3\2 ', text)
+    text = mysub(r'(((?<!\\)[.,;:!?])(?:\s|' + mark_deleted
+                + r')*)\\item' + sp_bracketed + r'\s*', r'\1 \3\2 ', text)
     # ... otherwise simply extract the text in \item[...]
     text = mysub(r'\\item' + sp_bracketed + r'\s*', r' \1 ', text)
 else:
@@ -1085,6 +1090,12 @@ text = mysub(parms.mathspace + r'|(?<!\\)~' , ' ', text)
 #   delete \!, \-, "-
 #
 text = mysub(r'\\[!-]|(?<!\\)"-', '', text)
+
+#   finally remove mark_deleted;
+#   delete a line, if it only contains such marks
+#
+text = mysub(r'^([ \t]*' + mark_deleted + r'[ \t]*)+\n', '', text, flags=re.M)
+text = mysub(r'(?<!\\)' + mark_deleted, '', text)
 
 
 ##################################################################
