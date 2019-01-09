@@ -1,3 +1,13 @@
+Release 1.3.3
+-------------
+- added argument code 'P' for Macro(), allows for instance simpler handling
+  of \cite macro
+- related: harmonized treatment of theorem environments, proof environment,
+  and environments with arguments at \begin
+- added English theorem environments
+- removed introductory Python script comments that are duplicated in README
+- Bash script checks.sh: subdirectories in $txtdir created, if necessary
+
 Release 1.3.2
 -------------
 - fixed similar bug as in 1.3.1; avoid for instance that<br>
