@@ -13,52 +13,13 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+#######################################################################
+#
 #   Python3:
 #   Extract raw text from LaTeX file, write result to standard output
 #
-#   . output suitable for check, e.g., with LanguageTool (LT)
-#   . we make an effort to avoid creation of additional empty lines that
-#     break sentences for LT; this keeps number of "false" LT warnings low
-#   . line number changes caused by this approach can be compensated by
-#     a small filter for LT messages using the file from option --nums
-#   . interpunction in displayed equations can be checked to a certain extent
-#
-#   - argument:
-#     name of file with input text; read standard input if missing
-#   - option --nums file:   (file name)
-#     file for storing original line numbers;
-#     can be used later to correct line numbers in messages
-#   - option --repl file:   (file name)
-#     file with replacements performed at the end, namely after
-#     changing, e.g., inline maths to text and german hyphen "= to - ;
-#     see LAB:SPELLING below for line syntax
-#   - option --extr ma[,mb,...]:    (list of macro names)
-#     extract only first braced argument of these macros;
-#     useful, e.g., for check of foreign-language text and footnotes
-#   - option --lang xy:     (language de or en, default: de)
-#     used for adaptation of equation replacements, math operator names,
-#     proof titles, and replacement of foreign-language text;
-#     see LAB:LANGUAGE below
-#   - option --unkn:
-#     print list of "undeclared" macros and environments
-#
-#   Some actions:
-#   - \begin{...} and \end{...} of environments are deleted;
-#     tailored behaviour for some environment types listed below
-#   - text in heading macros as \section{...} is extracted
-#   - placeholders for \ref, \eqref, \pageref, and \cite
-#   - "undeclared" macros are silently ignored
-#   - inline math $...$ is replaced with text from rotating collection
-#     in variable parms.inline_math
-#   - equation environments are resolved in a way suitable for check of
-#     interpunction, argument of \text{...} is included into output text;
-#     \[ ... \] is same as environment equation*;
-#     see LAB:EQUATIONS below for example and detailed description
-#   - some treatment for \item[...] labels, see LAB:ITEMS
-#   - rare LT warnings can be suppressed using \LTadd, \LTskip,
-#     and \LTalter (see below) in the LaTeX text with suitable macro
-#     definitions there, e.g. adding something for LT only:
-#       \newcommand{\LTadd}[1]{}
+#   Usage and main operations:
+#   - see README
 #
 #   Principle of operation:
 #   - read complete input text into a string, then make replacements
@@ -98,6 +59,7 @@ parms = Aux()
 #   args:
 #       - A: mandatory {...} argument
 #       - O: optional [...] argument
+#       - P: mandatory [...] argument, see for instance \cite
 #   repl:
 #       - replacement pattern, r'\d' (d: single digit) extracts text
 #         from position d in args (counting from 1);
@@ -162,9 +124,12 @@ parms.project_macros = lambda: (
 #   BUG: quite probably, some macro is missing here ;-)
 #
 parms.system_macros = lambda: (
+    Macro('cite', 'A', '[1]'),
+    Macro('cite', 'PA', r'[1, \1]'),
     Macro('color', 'A'),
     Macro('colorbox', 'AA', r'\2'),
     Macro('documentclass', 'OA'),
+    Macro('eqref', 'A', '(7)'),
     Macro('fcolorbox', 'AAA', r'\3'),
     Macro('footnote', 'OA', '5'),
     Macro('footnotemark', 'O', '5'),
@@ -175,6 +140,8 @@ parms.system_macros = lambda: (
     Macro('includegraphics', 'OA'),
     Macro('input', 'A'),
     Macro('newcommand', 'AOA'),
+    Macro('pageref', 'A', '99'),
+    Macro('ref', 'A', '13'),
     Macro('texorpdfstring', 'AA', r'\1'),
     Macro('textcolor', 'AA', r'\2'),
     Macro('usepackage', 'OA'),
@@ -205,20 +172,6 @@ parms.heading_macros = lambda: (
     r'section\*?',
     r'subsection\*?',
     r'subsubsection\*?',
-)
-
-#   theorem environments from package amsthm with optional argument [...]:
-#   display a title and text in optional argument as (...) with final dot
-#
-parms.theorem_environments = lambda: (
-    # (environment name, text title)
-    ('Anmerkung', 'Anmerkung'),
-    ('Beispiel', 'Beispiel'),
-    ('Definition', 'Definition'),
-    ('Korollar', 'Korollar'),
-    ('Nachweis', 'Nachweis'),
-    ('Proposition', 'Proposition'),
-    ('Satz', 'Satz'),
 )
 
 #   equation environments, partly from LaTeX package amsmath;
@@ -257,15 +210,49 @@ parms.environments = lambda: (
 )
 
 #   at the end, we delete all unknown "standard" environment frames;
-#   these are environments with options / arguments at \begin{...}
+#   here are environments with options / arguments at \begin{...},
+#   or with a replacement text for \begin{...}
 #
-#   EnvBegArg(name, args)
+#   EnvBegin(name, args='', repl='')
 #   - args: as for Macro()
+#   - repl: as for Macro()
 #
-parms.environments_with_args = lambda: (
-    EnvBegArg('figure', 'O'),
-    EnvBegArg('minipage', 'A'),
-    EnvBegArg('tabular', 'A'),
+parms.environment_begins = lambda: (
+    EnvBegin('figure', 'O'),
+    EnvBegin('minipage', 'A'),
+    EnvBegin('tabular', 'A'),
+
+    # proof: try replacement with option, and only after that without
+    EnvBegin('proof', 'P', r'\1.'),
+    EnvBegin('proof', '', parms.proof_title + '.'),
+
+    # theorems: same order as for proof
+    ) + tuple(EnvBegin(env, 'P', title + r' 1.2 (\1).')
+                    for (env, title) in parms.theorem_environments()
+    ) + tuple(EnvBegin(env, '', title + ' 1.2.')
+                    for (env, title) in parms.theorem_environments()
+)
+
+#   theorem environments from package amsthm with optional argument [...]:
+#   display a title and text in optional argument as (...) with final dot
+#
+parms.theorem_environments = lambda: (
+    # (environment name, text title)
+    ('Anmerkung', 'Anmerkung'),
+    ('Beispiel', 'Beispiel'),
+    ('Definition', 'Definition'),
+    ('Korollar', 'Korollar'),
+    ('Nachweis', 'Nachweis'),
+    ('Proposition', 'Proposition'),
+    ('Satz', 'Satz'),
+
+    ('corollary', 'Corollary'),
+    ('definition', 'Definition'),
+    ('example', 'Example'),
+    ('lemma', 'Lemma'),
+    ('proposition', 'Proposition'),
+    ('remark', 'Remark'),
+    ('theorem', 'Theorem'),
 )
 
 #   a list of 2-tuples for other things to be replaced
@@ -367,8 +354,6 @@ def set_language_en():
 #   further replacements performed below:
 #
 #   - replacement of $...$ inline math
-#   - proof environment
-#   - macros for cross references
 #   - handling of displayed equations
 #   - some treatment of \item[...] labels
 #   - environments not listed above: \begin{...} and \end{...} deleted
@@ -470,8 +455,8 @@ def EquEnv(name, args='', repl=''):
     return (name, args, repl)
 def EnvRepl(name, repl=''):
     return (name, repl)
-def EnvBegArg(name, args=''):
-    return (name, args)
+def EnvBegin(name, args='', repl=''):
+    return (name, args, repl)
 def re_code_args(args, who, s):
     # return regular expression for 'OAA' code
     ret = ''
@@ -480,9 +465,17 @@ def re_code_args(args, who, s):
             ret += sp_braced
         elif a == 'O':
             ret += r'(?:' + sp_bracketed + r')?'
+        elif a == 'P':
+            ret += sp_bracketed
         else:
             fatal(who + "('" + s + "',...): bad argument code '" + args + "'")
     return ret
+def check_repl_string(args, repl, who, s):
+    for m in re.finditer(r'\\(\d)', repl):
+        n = int(m.group(1))
+        if n < 1 or n > len(args):
+            fatal('invalid "\\' + m.group(1) + '" in replacement for '
+                        + who + "('" + s + "', ...)")
 
 #   the expression r'\\to\b' does not work as expected on \to0
 #   --> use r'\\to' + end_mac
@@ -496,16 +489,9 @@ end_mac = r'(?![a-zA-Z])'
 skip_space_macro = (r'(?:[ \t]*(?:\n(?=[ \t]*\S)(?![ \t]*\\begin'
                             + end_mac + r'))?[ \t]*)')
 
-#   these RE match beginning and end of arbitrary "standard" environments,
-#   and those with arguments at \begin as declared above
+#   these RE match beginning and end of arbitrary "standard" environments
 #
-re_begin_env = op = ''
-for (name, args) in parms.environments_with_args():
-    expr = begin_lbr + name + r'\}' + re_code_args(args, 'EnvBegArg', name)
-    re_begin_env += op + r'(?:' + expr + r')'
-    op = r'|'
-re_begin_env += op + r'(?:' + begin_lbr + r'[^\\{}]+\})'
-re_begin_env = r'(?:' + re_begin_env + r')'
+re_begin_env = begin_lbr + r'[^\\{}]+\}'
 re_end_env = end_lbr + r'[^\\{}]+\}'
 
 #   UTF-8 characters;
@@ -722,15 +708,10 @@ for s in parms.heading_macros():
         f
     )]
 
-for (s, t) in parms.theorem_environments():
-    actions += [
-        # first try with option ...
-        (begin_lbr + s + r'\}' + sp_bracketed, t + r' 1.2 (\1).'),
-        # ... and then without
-        (begin_lbr + s + r'\}', t + r' 1.2.'),
-        # delete \end{...}
-        (eat_eol(end_lbr + s + r'\}'), eol2space),
-    ]
+for (name, args, repl) in parms.environment_begins():
+    expr = begin_lbr + name + r'\}' + re_code_args(args, 'EnvBegin', name)
+    check_repl_string(args, repl, 'EnvBegin', name)
+    actions += [(expr, r'\\begin{%}' + repl)]
 
 # replace $...$ by text from variable parms.inline_math
 # BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
@@ -742,27 +723,6 @@ def f(m):
     parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
     return parms.inline_math[0]
 actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)*)\$', f)]
-
-#   proof environment with optional [...]:
-#   extract text in [...] and append '.'
-#
-actions += [
-    # first try version with option ...
-    (begin_lbr + r'proof\}' + sp_bracketed, r'\1.'),
-    # ... then without
-    (begin_lbr + r'proof\}', parms.proof_title + '.'),
-    (eat_eol(end_lbr + r'proof\}'), eol2space)
-]
-
-#   replace \cite, \eqref, \ref, \pageref
-#
-actions += [
-    (r'\\cite' + sp_bracketed + sp_braced, r'[1, \1]'),
-    (r'\\cite' + sp_braced, '[1]'),
-    (r'\\eqref' + sp_braced, '(7)'),
-    (r'\\ref' + sp_braced, '13'),
-    (r'\\pageref' + sp_braced, '99')
-]
 
 #   now perform the collected replacement actions
 #
@@ -786,12 +746,7 @@ for (name, args, repl) in (
         expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'[[{])'
                     + skip_space_macro + r')|(?:'
                     + expr + re_code_args(args, 'Macro', name) + r'))')
-    for m in re.finditer(r'\\(\d)', repl):
-        # make error messages more accessible (hopefully)
-        n = int(m.group(1))
-        if n < 1 or n > len(args):
-            fatal('inavlid "\\' + m.group(1) + '" in replacement for "'
-                                        + name + '"')
+    check_repl_string(args, repl, 'Macro', name)
     while mysearch(expr, text):
         # macro might be nested
         text = mysub(expr, mark_deleted + repl, text)
@@ -804,28 +759,24 @@ for (name, args, repl) in (
 ##################################################################
 
 #   example:
-
-"""
-Thus,
-%
-\begin{align}
-\mu &= f(x) \quad\text{for all } \mu\in\Omega, \notag \\
-x   &= \begin{cases}
-        0 & \text{ for} \ y>0 \\
-        1 & \text{ in case} y\le 0.
-            \end{cases}     \label{lab}
-\end{align}
-"""
-
+#
+#       Thus,
+#       %
+#       \begin{align}
+#       \mu &= f(x) \quad\text{for all } \mu\in\Omega, \notag \\
+#       x   &= \begin{cases}
+#               0 & \text{ for} \ y>0 \\
+#               1 & \text{ in case} y\le 0.
+#                   \end{cases}     \label{lab}
+#       \end{align}
+#
 #   becomes with parms.change_repl_after_punct == True
 #   and --lang en:
-
-"""
-Thus,
-  U  equal V for all W, 
-  X  equal Y  for Z 
-  Z  in caseU. 
-"""
+#
+#       Thus,
+#         U  equal V for all W, 
+#         X  equal Y  for Z 
+#         Z  in caseU. 
 
 #   1. split equation environment into 'lines' delimited by \\ alias \newline
 #   2. split each 'line' into 'sections' delimited by &
@@ -1027,13 +978,12 @@ if cmdline.unkn:
         if m not in macsknown:
             print('\\' + m)
     envs = []
-    envsknown = ('%',) + tuple(e[0] for e in parms.environments_with_args())
     for m in re.finditer(begin_lbr + r'([^\\{}]+)\}', text_get_txt(text)):
         if m.group(1) not in envs:
             envs += [m.group(1)]
     envs.sort()
     for e in envs:
-        if e not in envsknown:
+        if e != '%':
             print(r'\begin{' + e + '}')
     exit()
 
