@@ -1,7 +1,7 @@
 
 #
 #   Bash:
-#   Do for the given LaTex files:
+#   Do for the given LaTeX files:
 #
 #   . convert to raw text (our Python script tex2txt.py)
 #   . call LanguageTool (LT)
@@ -16,7 +16,7 @@
 #   - without arguments: check "all" files
 #
 #
-#                                   Matthias Baumann, November 2018
+#                                   Matthias Baumann, 2018-2019
 #
 
 if [ X$1 == X--nolt ]
@@ -32,8 +32,7 @@ else
     args=$*
 fi
 
-LTprefix=../LT/LanguageTool-4.3
-LTprefix=../LT/LanguageTool-4.4-SNAPSHOT
+LTprefix=../LT/LanguageTool-4.4
 LTcommand="$LTprefix/languagetool-commandline.jar \
     --language de-DE --encoding utf-8 \
     --disable \
@@ -42,7 +41,7 @@ KOMMA_VOR_UND_ODER"
 
 tooldir=Tools/LT            # Python scripts and private dictionaries
 txtdir=$tooldir/Tex2txt     # place for extraction of raw text 
-                            # assumption: necessary subdirectories exist
+                            # (subdirectories will be created if necessary)
 ext=txt                     # file name extension for raw text
 num=lin                     # ... for line number information
 engl=en                     # ... for Englisch text
@@ -79,7 +78,7 @@ priv_prohib=$tooldir/prohibit.de
 ##########################################################
 ##########################################################
 
-# find $txtdir -type f -exec rm {} \;
+# rm -fr $txtdir/*
 # exit
 
 trap exit SIGINT
@@ -131,8 +130,17 @@ for i in $args
 do
     if [ ! -r $i ]
     then
-        echo "$0: kann '$i' nicht lesen"
-        exit
+        echo "$0: cannot read file '$i'"
+        exit 1
+    fi
+    dir=$(dirname $txtdir/$i)
+    if [ ! -d $dir ]
+    then
+        if ! mkdir -p $dir
+        then
+            echo "$0: cannot create directory '$dir'"
+            exit 1
+        fi
     fi
 
     #####################################################
