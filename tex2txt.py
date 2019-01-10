@@ -147,6 +147,19 @@ parms.system_macros = lambda: (
     Macro('usepackage', 'OA'),
     Macro(r'vspace\*?', 'A'),
 
+    Simple('ss', 'ß'),
+    Simple('S', '§'),
+    Simple('l', 'ł'),
+    Simple('L', 'Ł'),
+    Simple('aa', 'å'),
+    Simple('AA', 'Å'),
+    Simple('ae', 'æ'),
+    Simple('AE', 'Æ'),
+    Simple('oe', 'œ'),
+    Simple('OE', 'Œ'),
+    Simple('o', 'ø'),
+    Simple('O', 'Ø'),
+
     # macro for foreign-language text
     Macro(parms.foreign_lang_mac, 'A', parms.replace_frgn_lang_mac),
 
@@ -364,7 +377,10 @@ def set_language_en():
 #######################################################################
 #######################################################################
 
-import argparse, re, sys
+import argparse
+import re
+import sys
+import unicodedata
 
 #   first of all ...
 #
@@ -750,6 +766,54 @@ for (name, args, repl) in (
     while mysearch(expr, text):
         # macro might be nested
         text = mysub(expr, mark_deleted + repl, text)
+
+##################################################################
+#
+#   treat accents
+#
+def replace_accent(mac, accent, text):
+    def f(m):
+        # find the UTF8 character for the matched letter [a-zA-Z]
+        # with the accent given in argument of replace_accent()
+        c = m.group(2)
+        if c.islower():
+            t = 'SMALL'
+        else:
+            t = 'CAPITAL'
+        u = 'LATIN ' + t + ' LETTER ' + c.upper() + ' WITH ' + accent
+        try:
+            return unicodedata.lookup(u)
+        except:
+            warning('could not find UTF8 character "' + u
+                    + '"\nfor accent macro "' + m.group(0) + '"')
+            return c
+    if mac.isalpha():
+        # ensure space or brace after macro name
+        mac += end_mac
+    else:
+        mac = re.escape(mac)
+    # accept versions with and without {} braces
+    return mysub(r'\\' + mac + skip_space + r'(\{)?([a-zA-Z])(?(1)\})',
+                                f, text)
+
+for (mac, acc) in (
+    ("'", 'ACUTE'),
+    ('`', 'GRAVE'),
+    ('^', 'CIRCUMFLEX'),
+    ('v', 'CARON'),
+    ('~', 'TILDE'),
+    ('"', 'DIAERESIS'),
+    ('r', 'RING ABOVE'),
+    ('=', 'MACRON'),
+    ('b', 'LINE BELOW'),
+    ('u', 'BREVE'),
+    ('H', 'DOUBLE ACUTE'),
+    ('.', 'DOT ABOVE'),
+    ('d', 'DOT BELOW'),
+    ('c', 'CEDILLA'),
+    ('k', 'OGONEK'),
+):
+    text = replace_accent(mac, acc, text)
 
 
 ##################################################################
