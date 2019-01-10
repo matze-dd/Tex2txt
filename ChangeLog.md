@@ -1,6 +1,6 @@
 Next version (unreleased)
 -------------------------
-- added accents as \', \v, ... in text mode;
+- added accents as \\', \v, ... in text mode;
   warning is created if corresponding UTF8 character not available
 - added macros as \ae, \L, ...
 
