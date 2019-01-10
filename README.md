@@ -64,6 +64,8 @@ Selected actions
   see file Example and LAB:EQUATIONS in the script for example and
   detailed description
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
+- characters with text mode accents as \\' are translated into 
+  corresponding UTF8 characters
 - rare warnings can be suppressed using \LTadd{}, \LTskip{},
   \LTalter{}{} in the LaTeX text with suitable macro definition there;
   e.g., adding something that only the language checker should see:<br>
@@ -71,8 +73,6 @@ Selected actions
 
 Implementation issues
 ---------------------
-With around 580 lines of "real code" for version 1.1.0, including 130 lines in the "declaration section", the script is not very large.
-
 In order to parse with regular expressions, some of them are constructed by iteration.
 At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression.
 In that case, an error message is generated and the variable parms.max_depth_br for maximum brace nesting depth has to be changed.
