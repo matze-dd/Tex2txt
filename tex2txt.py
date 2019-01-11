@@ -71,7 +71,6 @@ parms = Aux()
 #         yields empty string); otherwise re module may raise exceptions
 #
 parms.project_macros = lambda: (
-    Simple('Arzela', 'Arzela'),
     Simple('bzw', 'bzw. '),
     Macro('comment', 'A'),
 #   Simple('dphp', 'd.' + utf8_nbsp + 'h. '),
@@ -80,12 +79,11 @@ parms.project_macros = lambda: (
     Simple('dphp', 'das heißt '),
     Simple('dphpkomma', 'das heißt, '),
     Simple('fpuep', 'f.' + utf8_nbsp + 'ü. '),
-    Simple('Han', 'Han-Name'),
-            # place 'Han-Name' instead of 'Han' in private dictionary
+    Simple('Han', 'XXXHanXXX'),
     Simple('ipap', 'i.' + utf8_nbsp + 'A. '),
     Simple('LaTeX', 'Latex'),
     Simple('monthname', 'Oktober'),
-    Simple('Necas', 'Necas'),
+    Simple('Necas', 'Nečas'),
     Simple('numbera', 'B1'),
             # during later checks, we also look for single letters
     Simple('numberb', 'B2'),
@@ -100,12 +98,10 @@ parms.project_macros = lambda: (
     Simple('numberv', 'N5'),
     Simple('numberI', 'N1'),
     Simple('numberII', 'N2'),
-    Simple('Poincare', 'Poincare'),
     Simple('Sp', 'Seite '),
     Simple('year', '2018'),
     Simple('TBD', '[Hilfe]: '),
     Macro('TBDoff', 'A'),
-    Simple('Thomee', 'Thomee'),
     Simple('upap', 'u.' + utf8_nbsp + 'a. '),
     Simple('usw', 'usw. '),
     Simple('vgl', 'vgl. '),
@@ -309,9 +305,10 @@ parms.max_depth_env = 10        # for environments of the same type
 parms.keep_item_labels = True
 parms.default_item_lab = ''
 
-#   message on warnings / errors that should be found by LT
+#   message on warnings / errors that should be found by LT;
+#   don't include line breaks: will disrupt line number tracking
 #
-parms.warning_error_msg = '\n\nWARNINGORERROR\n\n'
+parms.warning_error_msg = ' WARNINGORERROR '
 
 #   LAB:LANGUAGE
 #
@@ -769,7 +766,9 @@ for (name, args, repl) in (
 
 ##################################################################
 #
-#   treat accents
+#   LAB:ACCENTS
+#   translate text-mode accents to corresponding UTF8 characters
+#   - if not found: raise warning and keep accent macro in text
 #
 def replace_accent(mac, accent, text):
     def f(m):
@@ -786,7 +785,7 @@ def replace_accent(mac, accent, text):
         except:
             warning('could not find UTF8 character "' + u
                     + '"\nfor accent macro "' + m.group(0) + '"')
-            return c
+            return m.group(0)
     if mac.isalpha():
         # ensure space or brace after macro name
         mac += end_mac
@@ -880,7 +879,7 @@ parms.mathop = (
     + r'|\\stackrel' + sp_braced + skip_space + r'\{=\}'
     + r'|\\c[au]p' + end_mac
 )
-parms.mathpunct = r'(?:(?<!\\)[;,]|\.)'
+parms.mathpunct = r'(?:(?<!\\)[;,.])'
 parms.change_repl_after_punct = True
 
 def display_math_update():
