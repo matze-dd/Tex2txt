@@ -3,7 +3,7 @@ Release 1.3.4
 - added accents as \\', \v, ... in text mode;
   warning, if corresponding UTF8 character is not available
 - added macros as \ae, \L, ... for special characters and ligatures
-- fixed bug: parms.mathspace did not exclude \\.
+- fixed bug: parms.mathpunct did not exclude \\.
 - changed variable parms.warning_error_msg
 
 Release 1.3.3
