@@ -64,8 +64,8 @@ Selected actions
   see file Example and LAB:EQUATIONS in the script for example and
   detailed description
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
-- characters with text mode accents as \\' are translated into 
-  corresponding UTF8 characters
+- characters with text-mode accents as \\' or \v are translated to 
+  corresponding UTF8 characters, see LAB:ACCENTS in script
 - rare warnings can be suppressed using \LTadd{}, \LTskip{},
   \LTalter{}{} in the LaTeX text with suitable macro definition there;
   e.g., adding something that only the language checker should see:<br>
@@ -88,6 +88,6 @@ inside of an already resolved following environment.
 
 Overall, parsing with regular expressions is fun, but remains a rather coarse
 approximation of the "real thing".
-Nevertheless, it seems to work quite well in practice, and it gives good
-flexibility.
+Nevertheless, it seems to work quite well in practice, and it inherits high
+flexibility from Python.
 
