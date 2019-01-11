@@ -1,8 +1,10 @@
-Next version (unreleased)
--------------------------
+Release 1.3.4
+-------------
 - added accents as \\', \v, ... in text mode;
-  warning is created if corresponding UTF8 character not available
-- added macros as \ae, \L, ...
+  warning, if corresponding UTF8 character is not available
+- added macros as \ae, \L, ... for special characters and ligatures
+- fixed bug: parms.mathspace did not exclude \\.
+- changed variable parms.warning_error_msg
 
 Release 1.3.3
 -------------
@@ -110,3 +112,4 @@ Release 0.1.0
 Initial Version
 ---------------
 - first upload
+
