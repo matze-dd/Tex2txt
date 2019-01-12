@@ -13,6 +13,8 @@
 #   - option --nolt:
 #     do not call LT, instead only use hunspell
 #     (replace before: variable repls_hunspell below)
+#   - option --del:
+#     remove auxiliary directory $txtdir, and exit
 #   - without arguments: check "all" files
 #
 #
@@ -64,13 +66,14 @@ acronyms=$(echo -n $acronyms | sed -E "s/ /$utf8_nbsp/g")
 
 
 #   append private hunspell dictionary to LT's spelling.txt
-#   XXX: or better ignore.txt?
+#   ATTENTION: LT does not like empty lines
 #
 lt_dic_de=$LTprefix/org/languagetool/resource/de/hunspell/spelling.txt
 priv_dic_de=$tooldir/hunspell.de
 priv_dic_en=$tooldir/hunspell.en
 
 #   prohibit certain words
+#   ATTENTION: LT does not like empty lines
 #
 lt_prohib=$LTprefix/org/languagetool/resource/de/hunspell/prohibit.txt
 priv_prohib=$tooldir/prohibit.de
@@ -78,8 +81,15 @@ priv_prohib=$tooldir/prohibit.de
 ##########################################################
 ##########################################################
 
-# rm -fr $txtdir/*
-# exit
+if [ X$1 == X--del ]
+then
+    read -p "YES: remove directory '$txtdir': " repl
+    if [ "$repl" == YES ]
+    then
+        rm -fr $txtdir
+    fi
+    exit
+fi
 
 trap exit SIGINT
 
