@@ -23,28 +23,32 @@ The starting section of the Python script lists macros and environments with tai
 This should ease adaptation to own needs.
 
 A more complete Bash script for language checking of a whole document tree is checks.sh.
+For instance, the command<br>
+<tt>bash checks.sh Banach/\*.tex \> errs</tt><br>
+will check in all these files the main text, extracted footnotes and foreign-language text.
+The result file errs will contain names of files with problems together with filtered messages from the language checker.
 
 Usage
 -----
-python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\] \[--unkn\] \[file\]
+<tt>python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\] \[--unkn\] \[file\]</tt>
 
 - without argument file: read standard input
-- option --nums file<br>
+- option <tt>--nums file</tt><br>
   file for storing original line numbers;
   can be used later to correct line numbers in messages
-- option --repl file<br>
+- option <tt>--repl file</tt><br>
   file with phrase replacements performed at the end, namely after
   changing inline maths to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
-- option --extr ma\[,mb,...\] (list of macro names)<br>
+- option <tt>--extr ma\[,mb,...\]</tt> (list of macro names)<br>
   extract only first braced argument of these macros;
   useful, e.g., for check of foreign-language text and footnotes
-- option --lang xy<br>
+- option <tt>--lang xy</tt><br>
   language de or en, default: de;
   used for adaptation of equation replacements, math operator names,
   proof titles, and replacement of foreign-language text;
   see LAB:LANGUAGE in script
-- option --unkn<br>
+- option <tt>--unkn</tt><br>
   print list of "undeclared" macros and environments outside of equations
 
 Selected actions
@@ -90,4 +94,3 @@ Overall, parsing with regular expressions is fun, but remains a rather coarse
 approximation of the "real thing".
 Nevertheless, it seems to work quite well in practice, and it inherits high
 flexibility from Python.
-
