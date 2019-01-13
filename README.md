@@ -19,14 +19,19 @@ An optional speciality is some parsing of LaTeX environments for displayed equat
 Therefore, one can check embedded \text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations.
 An example is shown in file Example, operation is summarized in the script at label LAB:EQUATIONS.
 
-The starting section of the Python script lists macros and environments with tailored treatment.
+The starting section of the Python script lists macros and environments
+with tailored treatment.
 This should ease adaptation to own needs.
 
-A more complete Bash script for language checking of a whole document tree is checks.sh.
+A more complete Bash script for language checking of a whole document tree
+is checks.sh.
 For instance, the command<br>
 <tt>bash checks.sh Banach/\*.tex \> errs</tt><br>
-will check the main text, extracted footnotes and foreign-language text in all these files.
-The result file errs will contain names of files with problems together with filtered messages from the language checker.
+will check the main text, extracted footnotes and foreign-language text
+in all these files.
+The result file errs will contain names of files with problems together
+with filtered messages from the language checker.<br>
+Remark: Before application, variables in this script have to be customized.
 
 Usage
 -----
