@@ -1,3 +1,8 @@
+Release 1.3.5
+-------------
+- fixed bug: $...$ must contain at least one character
+- $$...$$ handled like equation* environment
+
 Release 1.3.4
 -------------
 - added accents as \\', \v, ... in text mode;
