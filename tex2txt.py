@@ -120,6 +120,7 @@ parms.project_macros = lambda: (
 #   BUG: quite probably, some macro is missing here ;-)
 #
 parms.system_macros = lambda: (
+    Macro('caption', 'OA', r'\2'),
     Macro('cite', 'A', '[1]'),
     Macro('cite', 'PA', r'[1, \1]'),
     Macro('color', 'A'),
@@ -215,7 +216,7 @@ parms.equation_environments = lambda: (
 #
 parms.environments = lambda: (
     EnvRepl('table', '[Tabelle].'),
-#   EnvRepl('XXX'),
+    EnvRepl('comment'),
 )
 
 #   at the end, we delete all unknown "standard" environment frames;
@@ -267,6 +268,7 @@ parms.theorem_environments = lambda: (
 #   a list of 2-tuples for other things to be replaced
 #       [0]: search pattern as regular expression
 #       [1]: replacement text
+#   see also LAB:SMALLMACS below
 #
 parms.misc_replace = lambda: [
     # \[    ==> ... 
@@ -275,7 +277,7 @@ parms.misc_replace = lambda: [
     (r'\\\]', r'\\end{equation*}'),
 
     # "=    ==> -
-    (r'(?<!\\)"=', '-'),
+    (r'(?<!\\)"=', '-'),        # (?<!x)y matches y not preceded by x
     # ---    ==> UTF-8 emdash
     (r'(?<!\\)---', utf8_emdash),
     # --    ==> UTF-8 endash
@@ -363,7 +365,9 @@ def set_language_en():
 
 #   further replacements performed below:
 #
+#   - translation of $$...$$ to equation* environment
 #   - replacement of $...$ inline math
+#   - treatment of text-mode accents
 #   - handling of displayed equations
 #   - some treatment of \item[...] labels
 #   - environments not listed above: \begin{...} and \end{...} deleted
@@ -371,6 +375,11 @@ def set_language_en():
 #     \xxx is deleted, content of a possible braced argument is copied
 
 
+#######################################################################
+#######################################################################
+#
+#   Implementation part
+#
 #######################################################################
 #######################################################################
 
@@ -726,6 +735,17 @@ for (name, args, repl) in parms.environment_begins():
     check_repl_string(args, repl, 'EnvBegin', name)
     actions += [(expr, r'\\begin{%}' + repl)]
 
+#   replace $$...$$ by equation* environment
+#
+dollar_dollar_flag = False
+def f(m):
+    global dollar_dollar_flag
+    dollar_dollar_flag = not dollar_dollar_flag
+    if dollar_dollar_flag:
+        return r'\begin{equation*}'
+    return r'\end{equation*}'
+actions += [(r'(?<!\\)\$\$', f)]
+
 # replace $...$ by text from variable parms.inline_math
 # BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
 #
@@ -735,7 +755,7 @@ def f(m):
                     m.group(0))
     parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
     return parms.inline_math[0]
-actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)*)\$', f)]
+actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)+)\$', f)]
 
 #   now perform the collected replacement actions
 #
@@ -763,6 +783,7 @@ for (name, args, repl) in (
     while mysearch(expr, text):
         # macro might be nested
         text = mysub(expr, mark_deleted + repl, text)
+
 
 ##################################################################
 #
@@ -821,26 +842,8 @@ for (mac, acc) in (
 #
 ##################################################################
 
-#   example:
+#   example: see file Example
 #
-#       Thus,
-#       %
-#       \begin{align}
-#       \mu &= f(x) \quad\text{for all } \mu\in\Omega, \notag \\
-#       x   &= \begin{cases}
-#               0 & \text{ for} \ y>0 \\
-#               1 & \text{ in case} y\le 0.
-#                   \end{cases}     \label{lab}
-#       \end{align}
-#
-#   becomes with parms.change_repl_after_punct == True
-#   and --lang en:
-#
-#       Thus,
-#         U  equal V for all W, 
-#         X  equal Y  for Z 
-#         Z  in caseU. 
-
 #   1. split equation environment into 'lines' delimited by \\ alias \newline
 #   2. split each 'line' into 'sections' delimited by &
 #   3. split each 'section' into math and \text parts
@@ -1096,12 +1099,11 @@ else:
 text = mysub(r'\\item' + end_mac + r'\s*',
                         ' ' + parms.default_item_lab + ' ', text)
 
+#   LAB:SMALLMACS
 #   replace space macros including '~'
-#
-text = mysub(parms.mathspace + r'|(?<!\\)~' , ' ', text)
-
 #   delete \!, \-, "-
 #
+text = mysub(parms.mathspace + r'|(?<!\\)~' , ' ', text)
 text = mysub(r'\\[!-]|(?<!\\)"-', '', text)
 
 #   finally remove mark_deleted;
