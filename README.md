@@ -25,7 +25,7 @@ This should ease adaptation to own needs.
 A more complete Bash script for language checking of a whole document tree is checks.sh.
 For instance, the command<br>
 <tt>bash checks.sh Banach/\*.tex \> errs</tt><br>
-will check in all these files the main text, extracted footnotes and foreign-language text.
+will check the main text, extracted footnotes and foreign-language text in all these files.
 The result file errs will contain names of files with problems together with filtered messages from the language checker.
 
 Usage
@@ -64,11 +64,11 @@ Selected actions
   in variable parms.inline_math
 - equation environments are resolved in a way suitable for check of
   interpunction, argument of \text{...} is included into output text;
-  \\[...\\] is same as environment equation*; <br>
+  \\[...\\] and $$...$$ are same as environment equation\*;<br>
   see file Example and LAB:EQUATIONS in the script for example and
   detailed description
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
-- characters with text-mode accents as \\' or \v are translated to 
+- letters with text-mode accents as \\' or \v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
 - rare warnings can be suppressed using \LTadd{}, \LTskip{},
   \LTalter{}{} in the LaTeX text with suitable macro definition there;
