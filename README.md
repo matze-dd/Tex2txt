@@ -17,6 +17,7 @@ The Bash script shell.sh shows an example for filtering messages from a language
 
 An optional speciality is some parsing of LaTeX environments for displayed equations.
 Therefore, one can check embedded \text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations.
+Comments on that can be found below.
 An example is shown in file Example, operation is summarized in the script at label LAB:EQUATIONS.
 
 The starting section of the Python script lists macros and environments
@@ -100,3 +101,56 @@ approximation of the "real thing".
 Nevertheless, it seems to work quite well in practice, and it inherits high
 flexibility from Python.
 
+Handling of displayed equations
+-------------------------------
+*Rationale*<br>
+Displayed equations should be part of the text flow and include the
+necessary interpunction. At least the German version of LanguageTool (LT)
+will detect a missing dot in the following snippet
+(We conclude math Therefore,...).
+```
+Wir folgern
+\begin{align}
+    a   &= b \\
+    c   &= d
+\end{align}
+Daher ...
+```
+In fact, LT will complain about the capital 'Daher' that should start a
+new sentence.
+
+*Simple version*<br>
+With the entry
+```
+    EquEnv('align', repl='  Relation')
+```
+in parms.equation_environments of the Python script, one gets the
+following ouptut.
+```
+Wir folgern
+  Relation
+Daher ...
+```
+Adding a dot '= d.' will lead to 'Relation.'
+
+*Enhanced version*<br>
+With the entry
+```
+    EquEnv('align')
+```
+we obtain (gleich means equal):
+```
+Wir folgern
+  D1D  gleich D2D
+  D2D  gleich D3D.
+Daher ...
+```
+Now, LT will complain about repetition of D2D. Writing '= b,' leads to:
+```
+Wir folgern
+  D1D  gleich D2D,
+  D3D  gleich D4D.
+Daher ...
+```
+The rules for this equation parsing are described at LAB:EQUATIONS
+in the Python script.
