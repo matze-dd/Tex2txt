@@ -5,8 +5,8 @@ Problem
 Unfortunately, there is a naming conflict with the related Haskell package.
 We ask for apology.
 
-Description
------------
+General Description
+-------------------
 This is a Python script for extracting raw text from LaTeX documents with focus on mathematics.
 The aim is to produce only few "false" warnings when feeding the text into a language checker.
 
@@ -15,10 +15,14 @@ As in TeXtidote, we make an effort to track line numbers.
 Unnecessary creation of empty lines is avoided, paragraphs and sentences remain intact.
 The Bash script shell.sh shows an example for filtering messages from a language checker.
 
-An optional speciality is some parsing of LaTeX environments for displayed equations.
-Therefore, one can check embedded \text{...} parts (LaTeX package amsmath) and interpunction in—not too complex—displayed equations.
+An optional speciality is some parsing of LaTeX environments for displayed
+equations.
+Therefore, one can check embedded \text{...} parts (LaTeX package amsmath)
+and interpunction in the text flow including—not too complex—displayed
+equations.
 Comments on that can be found below.
-An example is shown in file Example, operation is summarized in the script at label LAB:EQUATIONS.
+An example is shown in file Example, operation is summarized in the script at
+label LAB:EQUATIONS.
 
 The starting section of the Python script lists macros and environments
 with tailored treatment.
@@ -33,6 +37,29 @@ in all these files.
 The result file errs will contain names of files with problems together
 with filtered messages from the language checker.<br>
 Remark: Before application, variables in this script have to be customized.
+
+Selected actions
+----------------
+- frames \begin{...} and \end{...} of environments are deleted;
+  tailored behaviour for environment types listed in script
+- flexible treatment of own macros with arbitrary arguments
+- text in heading macros as \section{...} is extracted with
+  added interpunction
+- suitable placeholders for \ref, \eqref, \pageref, and \cite
+- "undeclared" macros are silently ignored, keeping their arguments
+- inline math $...$ is replaced with text from rotating collection
+  in variable parms.inline_math
+- equation environments are resolved in a way suitable for check of
+  interpunction, argument of \text{...} is included into output text;
+  \\[...\\] and $$...$$ are same as environment equation\*;<br>
+  see below, file Example, and LAB:EQUATIONS in the script
+- some treatment for \item\[...\] labels, see LAB:ITEMS in script
+- letters with text-mode accents as \\' or \v are translated to 
+  corresponding UTF8 characters, see LAB:ACCENTS in script
+- rare warnings can be suppressed using \LTadd{}, \LTskip{},
+  \LTalter{}{} in the LaTeX text with suitable macro definition there;
+  e.g., adding something that only the language checker should see:<br>
+  \newcommand{\LTadd}\[1\]{}
 
 Usage
 -----
@@ -57,53 +84,9 @@ Usage
 - option <tt>--unkn</tt><br>
   print list of "undeclared" macros and environments outside of equations
 
-Selected actions
-----------------
-- frames \begin{...} and \end{...} of environments are deleted;
-  tailored behaviour for environment types listed in script
-- flexible treatment of own macros with arbitrary arguments
-- text in heading macros as \section{...} is extracted with
-  added interpunction
-- suitable placeholders for \ref, \eqref, \pageref, and \cite
-- "undeclared" macros are silently ignored, keeping their arguments
-- inline math $...$ is replaced with text from rotating collection
-  in variable parms.inline_math
-- equation environments are resolved in a way suitable for check of
-  interpunction, argument of \text{...} is included into output text;
-  \\[...\\] and $$...$$ are same as environment equation\*;<br>
-  see file Example and LAB:EQUATIONS in the script for example and
-  detailed description
-- some treatment for \item\[...\] labels, see LAB:ITEMS in script
-- letters with text-mode accents as \\' or \v are translated to 
-  corresponding UTF8 characters, see LAB:ACCENTS in script
-- rare warnings can be suppressed using \LTadd{}, \LTskip{},
-  \LTalter{}{} in the LaTeX text with suitable macro definition there;
-  e.g., adding something that only the language checker should see:<br>
-  \newcommand{\LTadd}\[1\]{}
-
-Implementation issues
----------------------
-In order to parse with regular expressions, some of them are constructed by iteration.
-At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression.
-In that case, an error message is generated and the variable parms.max_depth_br for maximum brace nesting depth has to be changed.
-Setting control variables for instance to 100 does work, but also increases resource consumption.
-
-A severe general problem is order of macro resolution.
-While TeX strictly evaluates from left to right, the order of treatment by
-regular expressions is completely different.
-This calls for hacks like the regular expression in skip_space_macro together
-with the placeholder \begin{%};
-it aims to avoid that a macro without arguments consumes leading space
-inside of an already resolved following environment.
-
-Overall, parsing with regular expressions is fun, but remains a rather coarse
-approximation of the "real thing".
-Nevertheless, it seems to work quite well in practice, and it inherits high
-flexibility from Python.
-
 Handling of displayed equations
 -------------------------------
-*Rationale*<br>
+### Rationale
 Displayed equations should be part of the text flow and include the
 necessary interpunction. At least the German version of LanguageTool (LT)
 will detect a missing dot in the following snippet
@@ -119,7 +102,7 @@ Daher ...
 In fact, LT will complain about the capital 'Daher' that should start a
 new sentence.
 
-*Simple version*<br>
+### Simple version
 With the entry
 ```
     EquEnv('align', repl='  Relation')
@@ -133,7 +116,7 @@ Daher ...
 ```
 Adding a dot '= d.' will lead to 'Relation.'
 
-*Enhanced version*<br>
+### Full version
 With the entry
 ```
     EquEnv('align')
@@ -154,3 +137,23 @@ Daher ...
 ```
 The rules for this equation parsing are described at LAB:EQUATIONS
 in the Python script.
+
+Implementation issues
+---------------------
+In order to parse with regular expressions, some of them are constructed by iteration.
+At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression.
+In that case, an error message is generated and the variable parms.max_depth_br for maximum brace nesting depth has to be changed.
+Setting control variables for instance to 100 does work, but also increases resource consumption.
+
+A severe general problem is order of macro resolution.
+While TeX strictly evaluates from left to right, the order of treatment by
+regular expressions is completely different.
+This calls for hacks like the regular expression in skip_space_macro together
+with the placeholder \begin{%};
+it aims to avoid that a macro without arguments consumes leading space
+inside of an already resolved following environment.
+
+Overall, parsing with regular expressions is fun, but remains a rather coarse
+approximation of the "real thing".
+Nevertheless, it seems to work quite well in practice, and it inherits high
+flexibility from Python.
