@@ -99,7 +99,7 @@ Wir folgern
 \end{align}
 Daher ...
 ```
-In fact, LT will complain about the capital 'Daher' that should start a
+In fact, LT complains about the capital 'Daher' that should start a
 new sentence.
 
 ### Simple version
@@ -108,13 +108,13 @@ With the entry
     EquEnv('align', repl='  Relation')
 ```
 in parms.equation_environments of the Python script, one gets the
-following ouptut.
+following script ouptut.
 ```
 Wir folgern
   Relation
 Daher ...
 ```
-Adding a dot '= d.' will lead to 'Relation.'
+Adding a dot '= d.' in the equation will lead to 'Relation.' in the output.
 
 ### Full version
 With the entry
@@ -128,7 +128,8 @@ Wir folgern
   D2D  gleich D3D.
 Daher ...
 ```
-Now, LT will complain about repetition of D2D. Writing '= b,' leads to:
+Now, LT will complain about repetition of D2D. Writing '= b,' in the equation
+leads to:
 ```
 Wir folgern
   D1D  gleich D2D,
@@ -137,6 +138,32 @@ Daher ...
 ```
 The rules for this equation parsing are described at LAB:EQUATIONS
 in the Python script.
+They ensure that variations like
+```
+\begin{align}
+    a   &= b \\
+        &= c.
+\end{align}
+```
+and
+```
+\begin{align}
+    a   &= b \\
+        &\qquad -c.
+\end{align}
+```
+also will work properly.
+In contrast, the text
+```
+\begin{align}
+    a   &= b \\
+    -c  &= d.
+\end{align}
+```
+again will produce an LT warning due to the missing comma after b,
+since the script replaces both b and -c by D2D without intermediate text.
+In rare cases, manipulation with \LTadd{} or \LTskip{} may be necessary
+to avoid false warnings.
 
 Implementation issues
 ---------------------
