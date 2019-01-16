@@ -39,8 +39,8 @@
 #     of them, warnings are generated)
 #   - severe general problem: resolution of macros not in the order of
 #     TeX (strictly left to right in the text);
-#     work-arounds with hacks \begin{%} and %%% are used to avoid consumption
-#     of too much space by macros without argument
+#     work-arounds with hacks \begin{%} and %%D%% are used to avoid
+#     consumption of too much space by macros without argument
 #
 #
 #                                   Matthias Baumann, 2018-2019
@@ -137,7 +137,7 @@ parms.system_macros = lambda: (
     Macro('includegraphics', 'OA'),
     Macro('input', 'A'),
     Macro('newcommand', 'AOA'),
-    Simple('newline', r' '),
+    Simple('newline', ' '),
     Macro('pageref', 'A', '99'),
     Macro('ref', 'A', '13'),
     Macro('texorpdfstring', 'AA', r'\1'),
@@ -277,9 +277,6 @@ parms.misc_replace = lambda: [
     # \]    ==> ... 
     (r'\\\]', r'\\end{equation*}'),
 
-    # \_    ==> _
-    (r'\\_', '_'),
-
     # "=    ==> -
     (r'(?<!\\)"=', '-'),        # (?<!x)y matches y not preceded by x
     # ---    ==> UTF-8 emdash
@@ -416,7 +413,7 @@ def warning(msg, detail=None):
 #   this also protects space behind a macro already resolved from being
 #   consumed by a macro in front
 #
-mark_deleted = '%%%'
+mark_deleted = '%%D%%'
 def eat_eol(expr):
     return expr
 eol2space = mark_deleted
@@ -659,12 +656,11 @@ numbers = tuple(range(1, len(re.findall(r'\n', text)) + 1))
 #
 text = (text, numbers)
 
-#   first replace \\ and \\[...] by ___; ___ is needed for
-#   parsing of equation environments below
-#   --> afterwards, no double \ anymore
+#   first replace \\ --> afterwards, no double \ anymore
+#   - repl_linebreak_tmp only used during comment removal
 #
-repl_linebreak = r'___'
-text = mysub(r'\\\\(\[[\w.]+\])?', repl_linebreak, text)
+repl_linebreak_tmp = r'__^^__'
+text = mysub(r'\\\\', repl_linebreak_tmp, text)
 
 #   then remove % comments
 #   - line beginning with % is completely removed
@@ -687,6 +683,13 @@ text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n\\])%.*\n(?![ \t]*\n)',
 #   - "normal case": just remove rest of line, keeping the line break
 #
 text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
+
+#   now we can remove [...] option for \\ and replace with repl_linebreak
+#   which is needed for parsing of equation environments below
+#
+repl_linebreak = '%%L%%'
+text = mysub(re.escape(repl_linebreak_tmp) + r'(' + sp_bracketed + r')?',
+                        repl_linebreak, text)
 
 
 #######################################################################
@@ -866,9 +869,10 @@ for (mac, acc) in (
 #
 ##################################################################
 
-#   example: see file Example
+#   example: see file Example.md
 #
-#   1. split equation environment into 'lines' delimited by \\ alias ___
+#   1. split equation environment into 'lines' delimited by \\
+#      alias repl_linebreak
 #   2. split each 'line' into 'sections' delimited by &
 #   3. split each 'section' into math and \text parts
 #
@@ -889,7 +893,7 @@ for (mac, acc) in (
 #   - math space (variable parms.mathspace) like \quad is replaced by ' '
 
 #   Assumptions:
-#   - \\ has been changed to ___
+#   - \\ has been changed to repl_linebreak
 #   - macros from LAB:EQU:MACROS already have been deleted
 #   - \text{...} has been resolved not yet
 #   - mathematical space as \; and \quad (variable parms.mathspace)
@@ -993,9 +997,9 @@ def parse_equ(equ):
     # remove mark_deleted
     equ = re.sub(r'(?<!\\)' + mark_deleted, '', equ)
 
-    # then split into lines delimited by \\ alias ___
+    # then split into lines delimited by \\ alias repl_linebreak
     # BUG (with warning for braced macro arguments):
-    # repl_line() and later repl_sec() may fail if \\ alias ___
+    # repl_line() and later repl_sec() may fail if \\ alias repl_linebreak
     # or later & are argument of a macro
     #
     for f in re.finditer(braced, equ):
@@ -1200,10 +1204,10 @@ def write_numbers(nums, mx):
             s = '?'
         cmdline.nums.write(s + '\n')
 
-#   resolve backslash escapes for {, }, $, %
+#   resolve backslash escapes for {, }, $, %, _
 #
 def resolve_escapes(txt):
-    return re.sub(r'\\([{}$%])', r'\1', txt)
+    return re.sub(r'\\([{}$%_])', r'\1', txt)
 
 #   on option --extr: only print arguments of these macros
 #
