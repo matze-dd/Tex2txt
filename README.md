@@ -25,8 +25,8 @@ Therefore, one can check embedded \text{...} parts (LaTeX package amsmath)
 and interpunction in the text flow including—not too complex—displayed
 equations.
 Comments on that can be found [below](#equations).
-An example is shown in file Example, operation is summarized in the script at
-label LAB:EQUATIONS.
+An example is shown in file Example.md, operation is summarized in the script
+at label LAB:EQUATIONS.
 
 The starting section of the Python script lists macros and environments
 with tailored treatment.
@@ -55,7 +55,7 @@ Remark: Before application, variables in this script have to be customized.
 - equation environments are resolved in a way suitable for check of
   interpunction, argument of \text{...} is included into output text;
   \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
-  see [below](#equations), file Example, and LAB:EQUATIONS in the script
+  see [below](#equations), file Example.md, and LAB:EQUATIONS in the script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
