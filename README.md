@@ -1,12 +1,16 @@
-Tex2txt, a filter for mathematical texts
-========================================
-Problem
--------
+# Tex2txt, a filter for mathematical texts
+## Table of contents
+[General description](#description)<br>
+[Selected actions](#actions)<br>
+[Usage](#usage)<br>
+[Handling of displayed equations](#equations)<br>
+[Implementation issues](#implementation)
+
+## Problem
 Unfortunately, there is a naming conflict with the related Haskell package.
 We ask for apology.
 
-General Description
--------------------
+## General description<a name="description"></a>
 This is a Python script for extracting raw text from LaTeX documents with focus on mathematics.
 The aim is to produce only few "false" warnings when feeding the text into a language checker.
 
@@ -20,7 +24,7 @@ equations.
 Therefore, one can check embedded \text{...} parts (LaTeX package amsmath)
 and interpunction in the text flow including—not too complex—displayed
 equations.
-Comments on that can be found below.
+Comments on that can be found [below](#equations).
 An example is shown in file Example, operation is summarized in the script at
 label LAB:EQUATIONS.
 
@@ -38,8 +42,7 @@ The result file errs will contain names of files with problems together
 with filtered messages from the language checker.<br>
 Remark: Before application, variables in this script have to be customized.
 
-Selected actions
-----------------
+## Selected actions<a name=actions></a>
 - frames \begin{...} and \end{...} of environments are deleted;
   tailored behaviour for environment types listed in script
 - flexible treatment of own macros with arbitrary arguments
@@ -51,8 +54,8 @@ Selected actions
   in variable parms.inline_math
 - equation environments are resolved in a way suitable for check of
   interpunction, argument of \text{...} is included into output text;
-  \\[...\\] and $$...$$ are same as environment equation\*;<br>
-  see below, file Example, and LAB:EQUATIONS in the script
+  \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
+  see [below](#equations), file Example, and LAB:EQUATIONS in the script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
@@ -61,8 +64,7 @@ Selected actions
   e.g., adding something that only the language checker should see:<br>
   \newcommand{\LTadd}\[1\]{}
 
-Usage
------
+## Usage<a name="usage"></a>
 <tt>python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\] \[--unkn\] \[file\]</tt>
 
 - without argument file: read standard input
@@ -84,8 +86,7 @@ Usage
 - option <tt>--unkn</tt><br>
   print list of "undeclared" macros and environments outside of equations
 
-Handling of displayed equations
--------------------------------
+## Handling of displayed equations<a name="equations"></a>
 ### Rationale
 Displayed equations should be part of the text flow and include the
 necessary interpunction. At least the German version of LanguageTool (LT)
@@ -140,33 +141,26 @@ The rules for this equation parsing are described at LAB:EQUATIONS
 in the Python script.
 They ensure that variations like
 ```
-\begin{align}
     a   &= b \\
         &= c.
-\end{align}
 ```
 and
 ```
-\begin{align}
     a   &= b \\
         &\qquad -c.
-\end{align}
 ```
 also will work properly.
 In contrast, the text
 ```
-\begin{align}
     a   &= b \\
     -c  &= d.
-\end{align}
 ```
 again will produce an LT warning due to the missing comma after b,
 since the script replaces both b and -c by D2D without intermediate text.
 In rare cases, manipulation with \LTadd{} or \LTskip{} may be necessary
 to avoid false warnings.
 
-Implementation issues
----------------------
+## Implementation issues<a name="implementation"></a>
 In order to parse with regular expressions, some of them are constructed by iteration.
 At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression.
 In that case, an error message is generated and the variable parms.max_depth_br for maximum brace nesting depth has to be changed.
