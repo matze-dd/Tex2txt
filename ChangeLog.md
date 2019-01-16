@@ -1,3 +1,9 @@
+Next version (unreleased)
+-------------------------
+- fixed bug: handling of option \[...\] for \\\\ was restricted
+- internal representation of \\\\ changed \[again :-(\] to now %%L%%
+- resolution of \\\_ shifted to resolve\_escapes()
+
 Release 1.3.6
 -------------
 - fixed bug: internal representation of '\\\\' was '\\newline';
