@@ -132,11 +132,12 @@ parms.system_macros = lambda: (
     Macro('footnotemark', 'O', '5'),
     Macro('footnotetext', 'OA'),
     Macro('framebox', 'OOA', r'\3'),
-    Simple('hfill', r'\\ '),        # replaced by ' ' at the end
+    Simple('hfill', ' '),
     Macro(r'hspace\*?', 'A'),
     Macro('includegraphics', 'OA'),
     Macro('input', 'A'),
     Macro('newcommand', 'AOA'),
+    Simple('newline', r' '),
     Macro('pageref', 'A', '99'),
     Macro('ref', 'A', '13'),
     Macro('texorpdfstring', 'AA', r'\1'),
@@ -275,6 +276,9 @@ parms.misc_replace = lambda: [
     (r'\\\[', r'\\begin{equation*}'),
     # \]    ==> ... 
     (r'\\\]', r'\\end{equation*}'),
+
+    # \_    ==> _
+    (r'\\_', '_'),
 
     # "=    ==> -
     (r'(?<!\\)"=', '-'),        # (?<!x)y matches y not preceded by x
@@ -417,6 +421,16 @@ def eat_eol(expr):
     return expr
 eol2space = mark_deleted
 
+#   after resolution of an environment frame, we leave this mark;
+#   it will avoid that a preceding macro that is treated later will
+#   consume too much space;
+#   see also variable skip_space_macro
+#
+mark_begin_env = r'\begin{%}'
+mark_begin_env_sub = r'\\begin{%}'   # if argument of ..sub()
+mark_end_env = r'\end{%}'
+mark_end_env_sub = r'\\end{%}'
+
 #   space allowed inside of current paragraph, at most one line break
 #
 skip_space = r'(?:[ \t]*\n?[ \t]*)'
@@ -493,13 +507,18 @@ def re_code_args(args, who, s):
             fatal(who + "('" + s + "',...): bad argument code '" + args + "'")
     return ret
 def check_repl_string(args, repl, who, s):
+    # avoid exceptions from re module
     for m in re.finditer(r'\\(\d)', repl):
         n = int(m.group(1))
         if n < 1 or n > len(args):
             fatal('invalid "\\' + m.group(1) + '" in replacement for '
                         + who + "('" + s + "', ...)")
 
-#   the expression r'\\to\b' does not work as expected on \to0
+#   this is an eligible name of a "normal" macro
+#
+macro_name = r'[a-zA-Z]+'
+
+#   the expression r'\\to\b' does not work as necessary for \to0
 #   --> use r'\\to' + end_mac
 #
 end_mac = r'(?![a-zA-Z])'
@@ -640,22 +659,29 @@ numbers = tuple(range(1, len(re.findall(r'\n', text)) + 1))
 #
 text = (text, numbers)
 
-#   first replace \\ and \\[...] by \newline; \newline is needed for
+#   first replace \\ and \\[...] by ___; ___ is needed for
 #   parsing of equation environments below
 #   --> afterwards, no double \ anymore
 #
-text = mysub(r'\\\\(\[[\w.]+\])?', r'\\newline', text)
+repl_linebreak = r'___'
+text = mysub(r'\\\\(\[[\w.]+\])?', repl_linebreak, text)
 
 #   then remove % comments
 #   - line beginning with % is completely removed
 #
 text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
 
-#   - if no space in front of first unescaped %:
-#     join current and next lines (except after \\ alias \newline)
+#   - join current and next lines, if no space before first unescaped %
+#       + not, if next line is empty
+#       + not, if \macro call directly before %
 #
-text = mysub(r'^(([^\n\\%]|\\.)*(?<![ \t\n\\]))(?<!\\newline)%.*\n',
-                                    r'\1', text, flags=re.M)
+def f(m):
+    if re.search(r'\\' + macro_name + r'\Z', m.group(1)):
+        # \macro call before %: do no remove line break
+        return m.group(0)
+    return m.group(1)
+text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n\\])%.*\n(?![ \t]*\n)',
+                        f, text, flags=re.M)
                 # r'(?<!x)y' matches 'y' not preceded by 'x'
 
 #   - "normal case": just remove rest of line, keeping the line break
@@ -715,9 +741,7 @@ actions = parms.misc_replace()
 
 for (name, repl) in parms.environments():
     env = re_nested_env(name, parms.max_depth_env, '')
-    # add \begin{%} in order to avoid consumption of leading space
-    # by a preceding macro
-    actions += [(env, r'\\begin{%}' + repl + r'\\end{%}')]
+    actions += [(env, mark_begin_env_sub + repl + mark_end_env_sub)]
 
 def f(m):
     txt = m.group(2)
@@ -733,7 +757,7 @@ for s in parms.heading_macros():
 for (name, args, repl) in parms.environment_begins():
     expr = begin_lbr + name + r'\}' + re_code_args(args, 'EnvBegin', name)
     check_repl_string(args, repl, 'EnvBegin', name)
-    actions += [(expr, r'\\begin{%}' + repl)]
+    actions += [(expr, mark_begin_env_sub + repl)]
 
 #   replace $$...$$ by equation* environment
 #
@@ -844,7 +868,7 @@ for (mac, acc) in (
 
 #   example: see file Example
 #
-#   1. split equation environment into 'lines' delimited by \\ alias \newline
+#   1. split equation environment into 'lines' delimited by \\ alias ___
 #   2. split each 'line' into 'sections' delimited by &
 #   3. split each 'section' into math and \text parts
 #
@@ -865,11 +889,13 @@ for (mac, acc) in (
 #   - math space (variable parms.mathspace) like \quad is replaced by ' '
 
 #   Assumptions:
-#   - \\ has been changed to \newline
+#   - \\ has been changed to ___
 #   - macros from LAB:EQU:MACROS already have been deleted
 #   - \text{...} has been resolved not yet
 #   - mathematical space as \; and \quad (variable parms.mathspace)
 #     is still present
+#   - math macros like \epsilon or \Omega that might constitute a
+#     math part: still present or replaced with non-space
 
 parms.mathspace = r'(?:\\[ ,;:]|\\q?quad' + end_mac + r')'
 parms.mathop = (
@@ -967,19 +993,19 @@ def parse_equ(equ):
     # remove mark_deleted
     equ = re.sub(r'(?<!\\)' + mark_deleted, '', equ)
 
-    # then split into lines delimited by \newline
+    # then split into lines delimited by \\ alias ___
     # BUG (with warning for braced macro arguments):
-    # repl_line() and later repl_sec() may fail if \\ alias \newline
+    # repl_line() and later repl_sec() may fail if \\ alias ___
     # or later & are argument of a macro
     #
     for f in re.finditer(braced, equ):
-        if re.search(r'\\newline' + end_mac + r'|(?<!\\)&', f.group(1)):
+        if re.search(repl_linebreak + r'|(?<!\\)&', f.group(1)):
             warning('"\\\\" or "&" in {} braces (macro argument?):'
                         + ' not properly handled',
-                        re.sub(r'\\newline' + end_mac, r'\\\\', equ))
+                        re.sub(repl_linebreak, r'\\\\', equ))
             break
     # important: non-greedy *? repetition
-    line = r'((.|\n)*?)(\\newline' + end_mac + r'|\Z)'
+    line = r'((.|\n)*?)(' + repl_linebreak + r'|\Z)'
     # return replacement for RE line
     def repl_line(m):
         # finally, split line into sections delimited by '&'
@@ -1005,7 +1031,7 @@ for (name, args, replacement) in parms.equation_environments():
         re_args = re_code_args(args, 'EquEnv', name)
         expr = re_nested_env(name, parms.max_depth_env, re_args)
         def f(m):
-            return r'\begin{%}' + parse_equ(m.group('body')) + r'\end{%}'
+            return mark_begin_env + parse_equ(m.group('body')) + mark_end_env
         text = mysub(expr, f, text)
         continue
     # environment with fixed replacement and added interpunction
@@ -1016,7 +1042,7 @@ for (name, args, replacement) in parms.equation_environments():
         m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
         if m:
             s += m.group(1)
-        return r'\begin{%}' + s + r'\end{%}'
+        return mark_begin_env + s + mark_end_env
     text = mysub(env, f, text)
 
 
@@ -1033,10 +1059,9 @@ if cmdline.unkn:
         'begin', 
         'end',
         'item',
-        'newline',
     )
     macs = []
-    for m in re.finditer(r'\\([a-zA-Z]+)', text_get_txt(text)):
+    for m in re.finditer(r'\\(' + macro_name + r')', text_get_txt(text)):
         if m.group(1) not in macs:
             macs += [m.group(1)]
     macs.sort()
@@ -1049,7 +1074,7 @@ if cmdline.unkn:
             envs += [m.group(1)]
     envs.sort()
     for e in envs:
-        if e != '%':
+        if e != '%':                    # see variable mark_begin_env
             print(r'\begin{' + e + '}')
     exit()
 
@@ -1059,17 +1084,15 @@ if cmdline.unkn:
 excl = r'begin|end|item'
 if cmdline.extr:
     excl += r'|' + cmdline.extr_re
-re_macro = r'\\(?!(?:' + excl + r')' + end_mac + r')[a-zA-Z]+'
+re_macro = r'\\(?!(?:' + excl + r')' + end_mac + r')' + macro_name
             # 'x(?!y)' matches 'x' not followed by 'y'
 re_macro_arg = re_macro + sp_braced
 while mysearch(re_macro_arg, text):
     # macros with braced argument might be nested
     text = mysub(re_macro_arg, mark_deleted + r'\1', text)
-text = mysub(r'\\newline' + end_mac, mark_deleted, text)
 text = mysub(re_macro + skip_space_macro, mark_deleted, text)
 
-#   delete remaining environment frames outside of equations,
-#   possibly with argument and option at \begin{...}
+#   delete remaining environment frames outside of equations
 #   - only after treatment of macros: protect line break before \begin;
 #     here we also delete placeholders \begin{%} from above
 #
@@ -1100,17 +1123,20 @@ text = mysub(r'\\item' + end_mac + r'\s*',
                         ' ' + parms.default_item_lab + ' ', text)
 
 #   LAB:SMALLMACS
-#   replace space macros including '~'
-#   delete \!, \-, "-
+#   actions only after macro resolution: preceding macro could eat space
+#   - replace space macros including '~'
+#   - delete \!, \-, "-
 #
 text = mysub(parms.mathspace + r'|(?<!\\)~' , ' ', text)
 text = mysub(r'\\[!-]|(?<!\\)"-', '', text)
 
-#   finally remove mark_deleted;
-#   delete a line, if it only contains such marks
+#   - finally remove mark_deleted,
+#     delete a line, if it only contains such marks;
+#   - replace \\ placeholder
 #
 text = mysub(r'^([ \t]*' + mark_deleted + r'[ \t]*)+\n', '', text, flags=re.M)
 text = mysub(r'(?<!\\)' + mark_deleted, '', text)
+text = mysub(repl_linebreak, ' ', text)
 
 
 ##################################################################
@@ -1160,6 +1186,8 @@ if cmdline.repl:
 #
 ##################################################################
 
+#   if option --nums: write line number information
+#
 def write_numbers(nums, mx):
     if not cmdline.nums:
         return
@@ -1172,6 +1200,8 @@ def write_numbers(nums, mx):
             s = '?'
         cmdline.nums.write(s + '\n')
 
+#   resolve backslash escapes for {, }, $, %
+#
 def resolve_escapes(txt):
     return re.sub(r'\\([{}$%])', r'\1', txt)
 
