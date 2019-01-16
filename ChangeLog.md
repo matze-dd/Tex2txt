@@ -1,3 +1,16 @@
+Release 1.3.6
+-------------
+- fixed bug: internal representation of '\\\\' was '\\newline';
+  changed to '\_\_\_'
+    - 'X\\\\Y' internally became 'X\\newlineY' und then quite probably 'X'
+    - '\\\\' could consume white space till braced text on next line
+    - confusion with real macro \\newline
+- fixed bug: do not join lines at unescaped % sign that follows non-space
+    - if next line is empty
+    - if a \\macro is just in front of %
+- centralized more regular expressions in variables
+- README: added section on handling of displayed equations
+
 Release 1.3.5
 -------------
 - fixed bug: $...$ must contain at least one character
