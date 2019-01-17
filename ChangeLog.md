@@ -1,8 +1,11 @@
-Next version (unreleased)
--------------------------
+Release 1.3.7
+-------------
+- fixed bug: line number tracking was incorrect when joining lines
 - fixed bug: handling of option \[...\] for \\\\ was restricted
 - internal representation of \\\\ changed \[again :-(\] to now %%L%%
+  (this is save, because unescaped % signs are deleted at the beginning)
 - resolution of \\\_ shifted to resolve\_escapes()
+- removed "historical" eat\_eol and eol2space
 
 Release 1.3.6
 -------------
