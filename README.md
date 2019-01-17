@@ -160,11 +160,17 @@ since the script replaces both b and -c by D2D without intermediate text.
 In rare cases, manipulation with \LTadd{} or \LTskip{} may be necessary
 to avoid false warnings.
 
+See also file Example.md.
+
 ## Implementation issues<a name="implementation"></a>
-In order to parse with regular expressions, some of them are constructed by iteration.
-At the beginning, we hence check for instance, whether nested {} braces of the actual input text do overrun the corresponding regular expression.
-In that case, an error message is generated and the variable parms.max_depth_br for maximum brace nesting depth has to be changed.
-Setting control variables for instance to 100 does work, but also increases resource consumption.
+In order to parse with regular expressions, some of them are constructed by
+iteration.
+At the beginning, we hence check for instance, whether nested {} braces of
+the actual input text do overrun the corresponding regular expression.
+In that case, an error message is generated, and the variable
+parms.max\_depth\_br for maximum brace nesting depth has to be changed.
+Setting control variables for instance to 100 does work, but also increases
+resource usage.
 
 A severe general problem is order of macro resolution.
 While TeX strictly evaluates from left to right, the order of treatment by
