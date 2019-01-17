@@ -269,7 +269,10 @@ parms.theorem_environments = lambda: (
 #   a list of 2-tuples for other things to be replaced
 #       [0]: search pattern as regular expression
 #       [1]: replacement text
-#   see also LAB:SMALLMACS below
+#   see also resolve_escapes() and LAB:SMALLMACS below
+#
+#   ATTENTION:  prepend mark_deleted, if replacement may evaluate to
+#               empty string or white space
 #
 parms.misc_replace = lambda: [
     # \[    ==> ... 
@@ -414,9 +417,6 @@ def warning(msg, detail=None):
 #   consumed by a macro in front
 #
 mark_deleted = '%%D%%'
-def eat_eol(expr):
-    return expr
-eol2space = mark_deleted
 
 #   after resolution of an environment frame, we leave this mark;
 #   it will avoid that a preceding macro that is treated later will
@@ -563,13 +563,6 @@ utf8_nbsp = '\N{NO-BREAK SPACE}'
 #   list are removed. On creation of an additional line, a negative
 #   placeholder is inserted in the number list.
 #
-#   BUG (without warning): for joined lines as e.g. in
-#       This i%     (original line number: 5)
-#       s a te%     (original line number: 6)
-#       st          (original line number: 7)
-#   the resulting one-line text 'This is a test' is related to
-#   line number 7 (instead of 5+).
-#
 def mysub(expr, repl, text, flags=0, extract=None):
     if type(text) is not tuple:
         fatal('wrong arg for mysub()')
@@ -597,7 +590,11 @@ def mysub(expr, repl, text, flags=0, extract=None):
         if nt != 0 or nr != 0:
             # ll: original line number of line lin
             ll = abs(numbers[lin])
-            numbers = numbers[:lin] + (-ll,) * nr + numbers[lin+nt:]
+            if nr > 0 or not r:
+                numbers = numbers[:lin] + (-ll,) * nr + numbers[lin+nt:]
+            else:
+                # join to single line: keep correct line number
+                numbers = numbers[:lin] + (-ll,) + numbers[lin+nt+1:]
     return (res + txt[last:], numbers)
 
 def mysearch(expr, text, flags=0):
@@ -658,8 +655,9 @@ text = (text, numbers)
 
 #   first replace \\ --> afterwards, no double \ anymore
 #   - repl_linebreak_tmp only used during comment removal
+#   - in a valid LaTeX source, this mark only may appear in comments
 #
-repl_linebreak_tmp = r'__^^__'
+repl_linebreak_tmp = r'__L__'
 text = mysub(r'\\\\', repl_linebreak_tmp, text)
 
 #   then remove % comments
@@ -688,7 +686,7 @@ text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
 #   which is needed for parsing of equation environments below
 #
 repl_linebreak = '%%L%%'
-text = mysub(re.escape(repl_linebreak_tmp) + r'(' + sp_bracketed + r')?',
+text = mysub(repl_linebreak_tmp + r'(' + sp_bracketed + r')?',
                         repl_linebreak, text)
 
 
@@ -789,7 +787,14 @@ actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)+)\$', f)]
 for (expr, repl) in actions:
     text = mysub(expr, repl, text, flags=re.M)
 
+##################################################################
+#
 #   treat macros listed above
+#   ( possible improvement:
+#     - gather macros with same argument pattern and replacement string:
+#       lists of names in a dictionary with tuple (args, repl) as key
+#     - handle macros in a dictionary entry with one replacement run
+#   )
 #
 for (name, args, repl) in (
     parms.system_macros()
@@ -995,7 +1000,7 @@ def parse_equ(equ):
     equ = re.sub(re_begin_env, '', equ)
     equ = re.sub(re_end_env, '', equ)
     # remove mark_deleted
-    equ = re.sub(r'(?<!\\)' + mark_deleted, '', equ)
+    equ = re.sub(mark_deleted, '', equ)
 
     # then split into lines delimited by \\ alias repl_linebreak
     # BUG (with warning for braced macro arguments):
@@ -1100,8 +1105,8 @@ text = mysub(re_macro + skip_space_macro, mark_deleted, text)
 #   - only after treatment of macros: protect line break before \begin;
 #     here we also delete placeholders \begin{%} from above
 #
-text = mysub(eat_eol(re_begin_env), eol2space, text)
-text = mysub(eat_eol(re_end_env), eol2space, text)
+text = mysub(re_begin_env, mark_deleted, text)
+text = mysub(re_end_env, mark_deleted, text)
 
 #   LAB:ITEMS
 #   item lists may pose problems with interpunction checking
@@ -1139,7 +1144,7 @@ text = mysub(r'\\[!-]|(?<!\\)"-', '', text)
 #   - replace \\ placeholder
 #
 text = mysub(r'^([ \t]*' + mark_deleted + r'[ \t]*)+\n', '', text, flags=re.M)
-text = mysub(r'(?<!\\)' + mark_deleted, '', text)
+text = mysub(mark_deleted, '', text)
 text = mysub(repl_linebreak, ' ', text)
 
 
