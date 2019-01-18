@@ -3,11 +3,13 @@
 #   Bash:
 #   Do for the given LaTeX files:
 #
-#   . convert to raw text (our Python script tex2txt.py)
-#   . call LanguageTool (LT)
+#   . convert to raw text (Python script tex2txt.py)
+#   . call LanguageTool (LT) for native-language main text and
+#     separately for footnotes
 #   . look for single letters (exclude: variable acronyms below)
-#   . check arguments of \engl{...} using hunspell (english)
-#   . at beginning: append our private dictionary to LT's spelling.txt,
+#     (if check_for_single_letters set to yes)
+#   . check foreign-language text using hunspell
+#   . at beginning: append private dictionary to LT's spelling.txt,
 #     and create entries in LT's prohibit.txt
 #
 #   - option --nolt:
@@ -34,6 +36,8 @@ else
     args=$*
 fi
 
+#   LanguageTool for check of native-language text
+#
 LTprefix=../LT/LanguageTool-4.4
 LTcommand="$LTprefix/languagetool-commandline.jar \
     --language de-DE --encoding utf-8 \
@@ -42,15 +46,21 @@ WHITESPACE_RULE,\
 KOMMA_VOR_UND_ODER"
 
 tooldir=Tools/LT            # Python scripts and private dictionaries
-txtdir=$tooldir/Tex2txt     # place for extraction of raw text 
+txtdir=$tooldir/Tex2txt     # directory for extraction of raw text 
                             # (subdirectories will be created if necessary)
 ext=txt                     # file name extension for raw text
 num=lin                     # ... for line number information
-engl=en                     # ... for Englisch text
+foreign=en                  # ... for foreign-language text
 foot=foot                   # ... for footnote text
-ori=ori                     # ... for original files in LT tree
+ori=ori                     # ... for original dictionary files in LT tree
 
-#   sed filter for hunspell:
+#   Tex2txt script,
+#   file with phrase replacements for option --repls
+#
+tex2txt_py=$tooldir/tex2txt.py
+tex2txt_repls=$tooldir/repls.txt
+
+#   sed filter for hunspell (on option --nolt):
 #   '0' --> 'Null'
 #
 repls_hunspell=' -e s/\<0\>/Null/g'
@@ -59,24 +69,31 @@ repls_hunspell=' -e s/\<0\>/Null/g'
 #   list of accepted acronyms during search for single letters;
 #   use normal space here (is replaced by nbsp)
 #
+check_for_single_letters=yes
 acronyms='d\. h\.|f\. ü\.|i\. A\.|u\. a\.|v\. g\. V\.|z\. B\.'
 
 utf8_nbsp=$(python3 -c 'print("\N{NO-BREAK SPACE}", end="")')
 acronyms=$(echo -n $acronyms | sed -E "s/ /$utf8_nbsp/g")
 
-
 #   append private hunspell dictionary to LT's spelling.txt
 #   ATTENTION: LT does not like empty lines
 #
-lt_dic_de=$LTprefix/org/languagetool/resource/de/hunspell/spelling.txt
-priv_dic_de=$tooldir/hunspell.de
-priv_dic_en=$tooldir/hunspell.en
+lt_dic_native=$LTprefix/org/languagetool/resource/de/hunspell/spelling.txt
+priv_dic_native=$tooldir/hunspell.de
 
 #   prohibit certain words
 #   ATTENTION: LT does not like empty lines
 #
-lt_prohib=$LTprefix/org/languagetool/resource/de/hunspell/prohibit.txt
-priv_prohib=$tooldir/prohibit.de
+lt_prohib_native=$LTprefix/org/languagetool/resource/de/hunspell/prohibit.txt
+priv_prohib_native=$tooldir/prohibit.de
+
+#   check of foreign-language text
+#
+foreign_macro=engl          # name of macro for foreign-language text
+hunsp_foreign_lang=en_GB    # foreign-language code for hunspell -d ...
+priv_dic_foreign=$tooldir/hunspell.en
+                            # private hunspell dictionary
+
 
 ##########################################################
 ##########################################################
@@ -97,20 +114,22 @@ trap exit SIGINT
 #
 if [ -z "$option_nolt" ]
 then
-    if [ -f $lt_dic_de.$ori ]
+    if [ -f $lt_dic_native.$ori ]
     then
-        cp $lt_dic_de.$ori $lt_dic_de
-    else    # create backup copy, if not yet present
-        cp $lt_dic_de $lt_dic_de.$ori
-    fi
-    cat $priv_dic_de >> $lt_dic_de
-    if [ -f $lt_prohib.$ori ]
-    then
-        cp $lt_prohib.$ori $lt_prohib
+        cp $lt_dic_native.$ori $lt_dic_native
     else
-        cp $lt_prohib $lt_prohib.$ori
+        # create backup copy, if not yet present
+        cp $lt_dic_native $lt_dic_native.$ori
     fi
-    cat $priv_prohib >> $lt_prohib
+    cat $priv_dic_native >> $lt_dic_native
+    if [ -f $lt_prohib_native.$ori ]
+    then
+        cp $lt_prohib_native.$ori $lt_prohib_native
+    else
+        # create backup copy, if not yet present
+        cp $lt_prohib_native $lt_prohib_native.$ori
+    fi
+    cat $priv_prohib_native >> $lt_prohib_native
 fi
 
 #   Python3:
@@ -157,12 +176,12 @@ do
     # extract raw text, save line numbers
     #####################################################
 
-    python3 $tooldir/tex2txt.py \
-        --repl $tooldir/repls.txt --nums $txtdir/$i.$num $i \
+    python3 $tex2txt_py \
+        --repl $tex2txt_repls --nums $txtdir/$i.$num $i \
         > $txtdir/$i.$ext
-    python3 $tooldir/tex2txt.py \
+    python3 $tex2txt_py \
         --extr footnote,footnotetext \
-        --repl $tooldir/repls.txt --nums $txtdir/$i.$foot.$num $i \
+        --repl $tex2txt_repls --nums $txtdir/$i.$foot.$num $i \
         > $txtdir/$i.$foot.$ext
     foot_text_size=$(wc -c < $txtdir/$i.$foot.$ext)
 
@@ -205,11 +224,11 @@ do
         fi
     else
         errs_hunspell=$(sed -E $repls_hunspell $txtdir/$i.$ext \
-                | hunspell -l -p $priv_dic_de)
+                | hunspell -l -p $priv_dic_native)
         if (( $foot_text_size > 0 ))
         then
             errs_hunspell_foot=$(sed -E $repls_hunspell $txtdir/$i.$foot.$ext \
-                    | hunspell -l -p $priv_dic_de)
+                    | hunspell -l -p $priv_dic_native)
         else
             errs_hunspell_foot=
         fi
@@ -219,33 +238,36 @@ do
     #   check for single letters
     #####################################################
 
-    single_letters=$(grep -n '^' $txtdir/$i.$ext \
-        | sed -E "s/\\<$acronyms//g" \
-        | grep -E '\<[[:alpha:]]\>')
-    if (( $foot_text_size > 0 ))
+    if [ "$check_for_single_letters" == yes ]
     then
-        single_letters_foot=$(grep -n '^' $txtdir/$i.$foot.$ext \
+        single_letters=$(grep -n '^' $txtdir/$i.$ext \
             | sed -E "s/\\<$acronyms//g" \
             | grep -E '\<[[:alpha:]]\>')
-    else
-        single_letters_foot=
+        if (( $foot_text_size > 0 ))
+        then
+            single_letters_foot=$(grep -n '^' $txtdir/$i.$foot.$ext \
+                | sed -E "s/\\<$acronyms//g" \
+                | grep -E '\<[[:alpha:]]\>')
+        else
+            single_letters_foot=
+        fi
     fi
 
     #####################################################
-    #   check English text with hunspell
+    #   check foreign-language text with hunspell
     #####################################################
 
-    errs_engl=$(python3 $tooldir/tex2txt.py \
-        --extr engl --nums $txtdir/$i.$engl.$num $i \
+    errs_foreign=$(python3 $tex2txt_py \
+        --extr $foreign_macro --nums $txtdir/$i.$foreign.$num $i \
         | grep -n '^' \
-        | hunspell -L -d en_GB -p $priv_dic_en)
+        | hunspell -L -d $hunsp_foreign_lang -p $priv_dic_foreign)
 
     #####################################################
     #   output of results
     #####################################################
 
     if [[ ( -n "$single_letters$single_letters_foot" ) \
-            || ( -n "$errs_engl" ) \
+            || ( -n "$errs_foreign" ) \
             || ( "$LT_output_lines" >  1 ) \
             || ( "$LT_foot_output_lines" >  1 ) \
             || ( -n "$errs_hunspell$errs_hunspell_foot" ) ]]
@@ -257,22 +279,22 @@ do
     fi
     if [ -n "$single_letters$single_letters_foot" ]
     then
-        echo '==================='
-        echo 'einzelne Buchstaben'
-        echo '==================='
+        echo '=============='
+        echo 'Single letters'
+        echo '=============='
         echo "$single_letters" \
             | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$num
         echo "$single_letters_foot" \
             | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$foot.$num
         echo
     fi
-    if [ -n "$errs_engl" ]
+    if [ -n "$errs_foreign" ]
     then
-        echo '========================='
-        echo 'Fehler im englischen Text'
-        echo '========================='
-        echo "$errs_engl" \
-            | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$engl.$num
+        echo '==============================='
+        echo 'Errors in foreign-language text'
+        echo '==============================='
+        echo "$errs_foreign" \
+            | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$foreign.$num
         echo
     fi
     if [[ ( "$LT_output_lines" > 1 ) \
@@ -283,21 +305,21 @@ do
     fi
     if [ -n "$errs_hunspell$errs_hunspell_foot" ]
     then
-        echo '=================='
-        echo 'fehlerhafte Zeilen'
-        echo '=================='
+        echo '============'
+        echo 'Faulty lines'
+        echo '============'
         grep -n '^' $txtdir/$i.$ext \
             | sed -E $repls_hunspell \
-            | hunspell -L -p $priv_dic_de \
+            | hunspell -L -p $priv_dic_native \
             | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$num
         grep -n '^' $txtdir/$i.$foot.$ext \
             | sed -E $repls_hunspell \
-            | hunspell -L -p $priv_dic_de \
+            | hunspell -L -p $priv_dic_native \
             | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$foot.$num
         echo
-        echo '=================='
-        echo 'unbekannte Woerter'
-        echo '=================='
+        echo '============='
+        echo 'Unknown words'
+        echo '============='
         echo "$errs_hunspell$errs_hunspell_foot"
         echo
     fi
