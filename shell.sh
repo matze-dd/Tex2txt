@@ -32,7 +32,7 @@ python3 tex2txt.py --lang en --nums $file.lin $file > $file.txt
 # call language checker, filter line numbers in output;
 # LT produces: '1.) Line 25, column 13, ...'
 #
-java -jar ../LT/LanguageTool-4.3/languagetool-commandline.jar \
-        --language en-GB $file.txt \
+java -jar ../LT/LanguageTool-4.4/languagetool-commandline.jar \
+        --language en-GB --disable WHITESPACE_RULE $file.txt \
     | python3 -c "$repl_lines" '^\d+\.\) Line (\d+),' $file.lin
 
