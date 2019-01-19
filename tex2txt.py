@@ -70,6 +70,9 @@ parms = Aux()
 #         Python version of at least 3.5 is required (non-matched group
 #         yields empty string); otherwise re module may raise exceptions
 #
+#   REMARK: if a macro does not find its mandatory argument(s) in the text,
+#           it is treated as unknown and can be seen with option --unkn
+#
 parms.project_macros = lambda: (
     Simple('bzw', 'bzw. '),
     Macro('comment', 'A'),
@@ -803,14 +806,17 @@ for (name, args, repl) in (
     if name in cmdline.extr_list:
         continue
     expr = r'\\' + name + end_mac
+    re_args = re_code_args(args, 'Macro', name)
     if not args:
         # consume all space allowed after macro without arguments
         expr += skip_space_macro
+    elif args == 'O' * len(args):
+        # do the same, if actually no optional argument is following
+        expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'\[)'
+                    + skip_space_macro + r')|(?:' + expr + re_args + r'))')
     else:
-        # do the same, if actually no argument is following
-        expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'[[{])'
-                    + skip_space_macro + r')|(?:'
-                    + expr + re_code_args(args, 'Macro', name) + r'))')
+        # at least one mandatory argument expected
+        expr += re_args
     check_repl_string(args, repl, 'Macro', name)
     while mysearch(expr, text):
         # macro might be nested
