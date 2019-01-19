@@ -1,3 +1,9 @@
+
+- fixed bug: expansion of a macro declared with mandatory arguments but
+  actually used without any arguments
+  (could even lead to exceptions for Python < 3.5);<br>
+  now, these macros are treated as unknown and listed by option --unkn
+
 Release 1.3.7
 -------------
 - fixed bug: line number tracking was incorrect when joining lines
