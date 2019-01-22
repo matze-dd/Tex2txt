@@ -62,63 +62,38 @@ parms = Aux()
 #       - P: mandatory [...] argument, see for instance \cite
 #   repl:
 #       - replacement pattern, r'\d' (d: single digit) extracts text
-#         from position d in args (counting from 1);
-#         escape rules: see replacement argument of re.sub()
-#       - repl empty: suppress generation of empty lines
+#         from position d in args (counting from 1)
+#       - escape rules: see replacement argument of re.sub();
+#         include single backslash: repl=r'...\\...'
+#       - inclusion of % only as escaped version r'\\%' accepted, will be
+#         resolved to % at the end by resolve_escapes()
+#       - inclusion of double backslash \\ and replacement ending with \
+#         will be rejected
+#
+#   REMARKS:
+#       - if a macro does not find its mandatory argument(s) in the text,
+#         it is treated as unknown and can be seen with option --unkn
 #       - if refering to an optional argument, e.g.
 #               Macro('xxx', 'OA', r'\1\2'),
 #         Python version of at least 3.5 is required (non-matched group
 #         yields empty string); otherwise re module may raise exceptions
 #
-#   REMARK: if a macro does not find its mandatory argument(s) in the text,
-#           it is treated as unknown and can be seen with option --unkn
 #
 parms.project_macros = lambda: (
-    Simple('bzw', 'bzw. '),
+    # our LaTeX macro: \newcommand{\comment}[1]{}
     Macro('comment', 'A'),
-#   Simple('dphp', 'd.' + utf8_nbsp + 'h. '),
-#   Simple('dphpkomma', 'd.' + utf8_nbsp + 'h., '),
-            # LT only recognizes missing comma in fully written version
-    Simple('dphp', 'das heißt '),
-    Simple('dphpkomma', 'das heißt, '),
-    Simple('fpuep', 'f.' + utf8_nbsp + 'ü. '),
-    Simple('Han', 'XXXHanXXX'),
-    Simple('ipap', 'i.' + utf8_nbsp + 'A. '),
-    Simple('LaTeX', 'Latex'),
-    Simple('monthname', 'Oktober'),
-    Simple('Necas', 'Nečas'),
-    Simple('numbera', 'B1'),
-            # during later checks, we also look for single letters
-    Simple('numberb', 'B2'),
-    Simple('numberc', 'B3'),
-    Simple('numberd', 'B4'),
-    Simple('numbere', 'B5'),
-    Simple('numberf', 'B6'),
-    Simple('numberi', 'N1'),
-    Simple('numberii', 'N2'),
-    Simple('numberiii', 'N3'),
-    Simple('numberiv', 'N4'),
-    Simple('numberv', 'N5'),
-    Simple('numberI', 'N1'),
-    Simple('numberII', 'N2'),
-    Simple('Sp', 'Seite '),
-    Simple('year', '2018'),
-    Simple('TBD', '[Hilfe]: '),
-    Macro('TBDoff', 'A'),
-    Simple('upap', 'u.' + utf8_nbsp + 'a. '),
-    Simple('usw', 'usw. '),
-    Simple('vgl', 'vgl. '),
-    Simple('vgV', 'v.' + utf8_nbsp + 'g.' + utf8_nbsp + 'V.'),
-    Simple('zB', 'z.' + utf8_nbsp + 'B. '),
+    # non-breakable space in acronyms to avoid LT warning
+    # our LaTeX macro: \newcommand{\zB}{z.\,B.\ }
+    Simple('zB', 'z.~B. '),
 
-    # suppress some LT warnings by altering the LaTeX text
+    # macros to suppress rare LT warnings by altering the LaTeX text
     Macro('LTadd', 'A', r'\1'),
                     # for LaTeX, argument is ignored
     Macro('LTalter', 'AA', r'\2'),
                     # for LaTeX, first argument is used
     Macro('LTskip', 'A'),
                     # for LaTeX, first argument is used
-)
+) + defs.project_macros()
 
 #   BUG: quite probably, some macro is missing here ;-)
 #
@@ -172,7 +147,7 @@ parms.system_macros = lambda: (
     Simple('nonumber'),
     Simple('notag'),
     Simple('qedhere'),
-)
+) + defs.system_macros()
 
 #   heading macros with optional argument [...]:
 #   copy content of {...} and add '.' if not ending with interpunction
@@ -186,7 +161,7 @@ parms.heading_macros = lambda: (
     r'section\*?',
     r'subsection\*?',
     r'subsubsection\*?',
-)
+) + defs.heading_macros()
 
 #   equation environments, partly from LaTeX package amsmath;
 #   see comments at LAB:EQUATIONS below
@@ -197,6 +172,7 @@ parms.heading_macros = lambda: (
 #     if the actual content ends with a character from variable
 #     parms.mathpunct (ignoring macros from LAB:EQU:MACROS and variable
 #     parms.mathspace), then this sign is appended
+#   - repl: plain string, no backslashs accepted
 #
 parms.equation_environments = lambda: (
     EquEnv(r'align'),
@@ -211,17 +187,17 @@ parms.equation_environments = lambda: (
     EquEnv(r'eqnarray\*'),
     EquEnv(r'flalign', repl='[Komplex-Formelausdruck]'),
     EquEnv(r'flalign\*', repl='[Komplex-Formelausdruck]'),
-)
+) + defs.equation_environments()
 
 #   these environments are deleted or replaced completely (with body)
 #
 #   EnvRepl(name, repl='')
-#   - repl: if empty, then suppress creation of blank lines
+#   - repl: plain string, no backslashs accepted
 #
 parms.environments = lambda: (
     EnvRepl('table', '[Tabelle].'),
-    EnvRepl('comment'),
-)
+#   EnvRepl('comment'),
+) + defs.environments()
 
 #   at the end, we delete all unknown "standard" environment frames;
 #   here are environments with options / arguments at \begin{...},
@@ -245,7 +221,7 @@ parms.environment_begins = lambda: (
                     for (env, title) in parms.theorem_environments()
     ) + tuple(EnvBegin(env, '', title + ' 1.2.')
                     for (env, title) in parms.theorem_environments()
-)
+) + defs.environment_begins()
 
 #   theorem environments from package amsthm with optional argument [...]:
 #   display a title and text in optional argument as (...) with final dot
@@ -267,7 +243,7 @@ parms.theorem_environments = lambda: (
     ('proposition', 'Proposition'),
     ('remark', 'Remark'),
     ('theorem', 'Theorem'),
-)
+) + defs.theorem_environments()
 
 #   a list of 2-tuples for other things to be replaced
 #       [0]: search pattern as regular expression
@@ -420,6 +396,7 @@ def warning(msg, detail=None):
 #   consumed by a macro in front
 #
 mark_deleted = '%%D%%'
+                    # CROSS-CHECK with re_code_args()
 
 #   after resolution of an environment frame, we leave this mark;
 #   it will avoid that a preceding macro that is treated later will
@@ -493,8 +470,9 @@ def EnvRepl(name, repl=''):
     return (name, repl)
 def EnvBegin(name, args='', repl=''):
     return (name, args, repl)
-def re_code_args(args, who, s):
-    # return regular expression for 'OAA' code
+def re_code_args(args, repl, who, s, no_backslash=False):
+    # return regular expression for 'OAA' code in args,
+    # do some checks for replacment string repl
     ret = ''
     for a in args:
         if a == 'A':
@@ -505,14 +483,22 @@ def re_code_args(args, who, s):
             ret += sp_bracketed
         else:
             fatal(who + "('" + s + "',...): bad argument code '" + args + "'")
-    return ret
-def check_repl_string(args, repl, who, s):
-    # avoid exceptions from re module
+    def err(e):
+        fatal('error in replacement for ' + who + "('" + s + "', ...):\n" + e)
+    if no_backslash and repl.count('\\'):
+        err('no backslashs allowed')
     for m in re.finditer(r'\\(\d)', repl):
+        # avoid exceptions from re module
         n = int(m.group(1))
         if n < 1 or n > len(args):
-            fatal('invalid "\\' + m.group(1) + '" in replacement for '
-                        + who + "('" + s + "', ...)")
+            err('invalid "\\' + m.group(1) + '"')
+    if re.search(r'(?<!\\\\)%', repl):
+        # ensure that repl_linebreak and mark_deleted do work
+        err(r"please use r'\\%' to insert escaped percent sign")
+    if repl.endswith('\\') or repl.count('\\\\\\\\'):
+        # ensure that double backslashs do not appear in text
+        err('backslash at end or insertion of double backslash')
+    return ret
 
 #   this is an eligible name of a "normal" macro
 #
@@ -582,12 +568,10 @@ def mysub(expr, repl, text, flags=0, extract=None):
         res += txt[last:m.start(0)]
         last = m.end(0)
         # lin: first line number of current replacement action
-        lin = len(re.findall(r'\n', res))
+        lin = res.count('\n')
         res += r
-        # number of line breaks in match of original text ...
-        nt = len(re.findall('\n', t))
-        # ... and in replacement text
-        nr = len(re.findall('\n', r))
+        nt = t.count('\n')
+        nr = r.count('\n')
         if extract:
             extract(r, numbers[lin:lin+nr+1])
         if nt != 0 or nr != 0:
@@ -619,6 +603,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('file', nargs='?')
 parser.add_argument('--repl')
 parser.add_argument('--nums')
+parser.add_argument('--defs')
 parser.add_argument('--extr')
 parser.add_argument('--lang')
 parser.add_argument('--unkn', action='store_true')
@@ -642,6 +627,29 @@ if cmdline.extr:
 else:
     cmdline.extr_list = []
 
+defs = Aux()
+if cmdline.defs:
+    exc = None
+    try:
+        exec(open(cmdline.defs).read())
+    except SyntaxError as e:
+        exc = e
+    if exc:
+        fatal('syntax error in file "' + cmdline.defs + '", line '
+                + str(exc.lineno), exc.text)
+for a in (
+    'project_macros',
+    'system_macros',
+    'heading_macros',
+    'environments',
+    'equation_environments',
+    'environments',
+    'environment_begins',
+    'theorem_environments',
+):
+    if not hasattr(defs, a):
+        setattr(defs, a, lambda: ())
+
 if cmdline.file:
     text = open(cmdline.file).read()
 else:
@@ -649,7 +657,7 @@ else:
 
 #   the initial list of line numbers: in fact "only" a tuple
 #
-numbers = tuple(range(1, len(re.findall(r'\n', text)) + 1))
+numbers = tuple(range(1, text.count('\n') + 1))
 
 #   for mysub():
 #   text becomes a 2-tuple of text string and number list
@@ -689,6 +697,7 @@ text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
 #   which is needed for parsing of equation environments below
 #
 repl_linebreak = '%%L%%'
+                    # CROSS-CHECK with re_code_args()
 text = mysub(repl_linebreak_tmp + r'(' + sp_bracketed + r')?',
                         repl_linebreak, text)
 
@@ -736,7 +745,59 @@ if parms.check_equation_replacements:
 
 #######################################################################
 #
-#   replacements: collected in list actions
+#   first resolve macros and special environment starts listed above
+#   ( possible improvement:
+#     - gather macros with same argument pattern and replacement string:
+#       lists of names in a dictionary with tuple (args, repl) as key
+#     - handle macros in a dictionary entry with one replacement run
+#   )
+#
+list_macs_envs = []
+for (name, args, repl) in (
+    parms.system_macros()
+    + parms.project_macros()
+):
+    if name in cmdline.extr_list:
+        continue
+    expr = r'\\' + name + end_mac
+    re_args = re_code_args(args, repl, 'Macro', name)
+    if not args:
+        # consume all space allowed after macro without arguments
+        expr += skip_space_macro
+    elif args == 'O' * len(args):
+        # do the same, if actually no optional argument is following
+        expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'\[)'
+                    + skip_space_macro + r')|(?:' + expr + re_args + r'))')
+    else:
+        # at least one mandatory argument expected
+        expr += re_args
+    list_macs_envs.append((expr, mark_deleted + repl))
+for (name, args, repl) in parms.environment_begins():
+    expr = begin_lbr + name + r'\}' + re_code_args(args, repl,
+                                                    'EnvBegin', name)
+    list_macs_envs.append((expr, mark_begin_env_sub + repl))
+
+flag = True
+cnt = 1
+match = None
+while flag:
+    # loop until no more replacements performed
+    if cnt > 100:
+        fatal('infinite recursion in macro definition?',
+                        match.group(0) if match else '')
+    cnt += 1
+    flag = False
+    for (expr, repl) in list_macs_envs:
+        m = mysearch(expr, text)
+        if m:
+            match = m
+            flag = True
+            text = mysub(expr, repl, text)
+
+
+##################################################################
+#
+#   other replacements: collected in list actions
 #   list of 2-tuples:
 #       [0]: search pattern as regular expression
 #       [1]: replacement text
@@ -745,6 +806,7 @@ actions = parms.misc_replace()
 
 for (name, repl) in parms.environments():
     env = re_nested_env(name, parms.max_depth_env, '')
+    re_code_args('', repl, 'EnvRepl', name, no_backslash=True)
     actions += [(env, mark_begin_env_sub + repl + mark_end_env_sub)]
 
 def f(m):
@@ -757,11 +819,6 @@ for s in parms.heading_macros():
         r'\\' + s + r'(?:' + sp_bracketed + r')?' + sp_braced,
         f
     )]
-
-for (name, args, repl) in parms.environment_begins():
-    expr = begin_lbr + name + r'\}' + re_code_args(args, 'EnvBegin', name)
-    check_repl_string(args, repl, 'EnvBegin', name)
-    actions += [(expr, mark_begin_env_sub + repl)]
 
 #   replace $$...$$ by equation* environment
 #
@@ -789,38 +846,6 @@ actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)+)\$', f)]
 #
 for (expr, repl) in actions:
     text = mysub(expr, repl, text, flags=re.M)
-
-##################################################################
-#
-#   treat macros listed above
-#   ( possible improvement:
-#     - gather macros with same argument pattern and replacement string:
-#       lists of names in a dictionary with tuple (args, repl) as key
-#     - handle macros in a dictionary entry with one replacement run
-#   )
-#
-for (name, args, repl) in (
-    parms.system_macros()
-    + parms.project_macros()
-):
-    if name in cmdline.extr_list:
-        continue
-    expr = r'\\' + name + end_mac
-    re_args = re_code_args(args, 'Macro', name)
-    if not args:
-        # consume all space allowed after macro without arguments
-        expr += skip_space_macro
-    elif args == 'O' * len(args):
-        # do the same, if actually no optional argument is following
-        expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'\[)'
-                    + skip_space_macro + r')|(?:' + expr + re_args + r'))')
-    else:
-        # at least one mandatory argument expected
-        expr += re_args
-    check_repl_string(args, repl, 'Macro', name)
-    while mysearch(expr, text):
-        # macro might be nested
-        text = mysub(expr, mark_deleted + repl, text)
 
 
 ##################################################################
@@ -1043,7 +1068,7 @@ def parse_equ(equ):
 #
 for (name, args, replacement) in parms.equation_environments():
     if not replacement:
-        re_args = re_code_args(args, 'EquEnv', name)
+        re_args = re_code_args(args, replacement, 'EquEnv', name)
         expr = re_nested_env(name, parms.max_depth_env, re_args)
         def f(m):
             return mark_begin_env + parse_equ(m.group('body')) + mark_end_env
@@ -1051,6 +1076,7 @@ for (name, args, replacement) in parms.equation_environments():
         continue
     # environment with fixed replacement and added interpunction
     env = re_nested_env(name, parms.max_depth_env, '')
+    re_code_args('', replacement, 'EquEnv', name, no_backslash=True)
     def f(m):
         txt = parse_equ(m.group('body')).strip()
         s = replacement
@@ -1142,7 +1168,8 @@ text = mysub(r'\\item' + end_mac + r'\s*',
 #   - replace space macros including '~'
 #   - delete \!, \-, "-
 #
-text = mysub(parms.mathspace + r'|(?<!\\)~' , ' ', text)
+text = mysub(parms.mathspace, ' ', text)
+text = mysub(r'(?<!\\)~', utf8_nbsp, text)
 text = mysub(r'\\[!-]|(?<!\\)"-', '', text)
 
 #   - finally remove mark_deleted,
@@ -1233,7 +1260,7 @@ if cmdline.extr:
     for (txt, nums) in extract_list:
         txt = txt.rstrip('\n') + '\n\n'
         sys.stdout.write(resolve_escapes(txt))
-        write_numbers(nums, len(re.findall(r'\n', txt)))
+        write_numbers(nums, txt.count('\n'))
     exit()
 
 #   if braces {...} did remain somewhere: delete
