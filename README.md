@@ -35,7 +35,7 @@ This should ease adaptation to own needs.
 A more complete Bash script for language checking of a whole document tree
 is checks.sh.
 For instance, the command<br>
-<tt>bash checks.sh Banach/\*.tex \> errs</tt><br>
+`bash checks.sh Banach/*.tex > errs`<br>
 will check the main text, extracted footnotes and foreign-language text
 in all these files.
 The result file errs will contain names of files with problems together
@@ -65,26 +65,31 @@ Remark: Before application, variables in this script have to be customized.
   \newcommand{\LTadd}\[1\]{}
 
 ## Usage<a name="usage"></a>
-<tt>python3 tex2txt.py \[--nums file\] \[--repl file\] \[--extr list\] \[--lang xy\] \[--unkn\] \[file\]</tt>
+`python3 tex2txt.py [--nums file] [--repl file] [--defs file] [--extr list] [--lang xy] [--unkn] [file]`
 
 - without argument file: read standard input
-- option <tt>--nums file</tt><br>
+- option `--nums file`<br>
   file for storing original line numbers;
   can be used later to correct line numbers in messages
-- option <tt>--repl file</tt><br>
+- option `--repl file`<br>
   file with phrase replacements performed at the end, namely after
   changing inline maths to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
-- option <tt>--extr ma\[,mb,...\]</tt> (list of macro names)<br>
+- option `--defs file`<br>
+  file with additional declarations, example file content (defs members
+  are appended to parms members):<br>
+  `defs.project_macros = lambda: (Macro('xyz', 'AA', r'\2'),)`
+- option `--extr ma[,mb,...]` (list of macro names)<br>
   extract only first braced argument of these macros;
   useful, e.g., for check of foreign-language text and footnotes
-- option <tt>--lang xy</tt><br>
+- option `--lang xy`<br>
   language de or en, default: de;
   used for adaptation of equation replacements, math operator names,
   proof titles, and replacement of foreign-language text;
   see LAB:LANGUAGE in script
-- option <tt>--unkn</tt><br>
-  print list of "undeclared" macros and environments outside of equations
+- option `--unkn`<br>
+  print list of undeclared macros and environments outside of equations;<br>
+  declared macros do appear here, if a mandatory argument is missing in text
 
 ## Handling of displayed equations<a name="equations"></a>
 ### Rationale
