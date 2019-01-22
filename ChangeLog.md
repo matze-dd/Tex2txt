@@ -1,8 +1,21 @@
-
+Release 1.4.0
+-------------
 - fixed bug: expansion of a macro declared with mandatory arguments but
-  actually used without any arguments
-  (could even lead to exceptions for Python < 3.5);<br>
+  actually used without any arguments enclosed in braces or brackets
+  (could even lead to exceptions for Python < 3.5);
   now, these macros are treated as unknown and listed by option --unkn
+- shifted expansion of declared macros to the beginning, improved handling of
+  recursion
+- added checks for macro and environment replacement strings: they should
+  not insert \\\\ or unescaped % signs
+- remarkable speed-up from using string.count('\\n') instead of
+  len(re.findall(r'\\n', string))
+  <br><br>
+
+- added option --defs for reading additional declarations from file
+- removed some 'private' macro declarations from Python script
+- now replace \~ by UTF8 non-breakable space instead of ASCII ' '
+- updated Bash script checks.sh
 
 Release 1.3.7
 -------------
