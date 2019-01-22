@@ -54,11 +54,11 @@ foreign=en                  # ... for foreign-language text
 foot=foot                   # ... for footnote text
 ori=ori                     # ... for original dictionary files in LT tree
 
-#   Tex2txt script,
-#   file with phrase replacements for option --repls
+#   Tex2txt script
 #
 tex2txt_py=$tooldir/tex2txt.py
-tex2txt_repls=$tooldir/repls.txt
+tex2txt_repl="--repl $tooldir/repls.txt"
+tex2txt_defs="--defs $tooldir/defs.py"
 
 #   sed filter for hunspell (on option --nolt):
 #   '0' --> 'Null'
@@ -100,7 +100,7 @@ priv_dic_foreign=$tooldir/hunspell.en
 
 if [ X$1 == X--del ]
 then
-    read -p "YES: remove directory '$txtdir': " repl
+    read -p "enter YES to remove directory '$txtdir': " repl
     if [ "$repl" == YES ]
     then
         rm -fr $txtdir
@@ -177,11 +177,11 @@ do
     #####################################################
 
     python3 $tex2txt_py \
-        --repl $tex2txt_repls --nums $txtdir/$i.$num $i \
+        $tex2txt_repl $tex2txt_defs --nums $txtdir/$i.$num $i \
         > $txtdir/$i.$ext
     python3 $tex2txt_py \
         --extr footnote,footnotetext \
-        --repl $tex2txt_repls --nums $txtdir/$i.$foot.$num $i \
+        $tex2txt_repl $tex2txt_defs --nums $txtdir/$i.$foot.$num $i \
         > $txtdir/$i.$foot.$ext
     foot_text_size=$(wc -c < $txtdir/$i.$foot.$ext)
 
@@ -257,7 +257,7 @@ do
     #   check foreign-language text with hunspell
     #####################################################
 
-    errs_foreign=$(python3 $tex2txt_py \
+    errs_foreign=$(python3 $tex2txt_py $tex2txt_defs \
         --extr $foreign_macro --nums $txtdir/$i.$foreign.$num $i \
         | grep -n '^' \
         | hunspell -L -d $hunsp_foreign_lang -p $priv_dic_foreign)
