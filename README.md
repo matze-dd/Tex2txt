@@ -11,13 +11,23 @@ Unfortunately, there is a naming conflict with the related Haskell package.
 We ask for apology.
 
 ## General description<a name="description"></a>
-This is a Python script for extracting raw text from LaTeX documents with focus on mathematics.
-The aim is to produce only few "false" warnings when feeding the text into a language checker.
+This is a Python script for extracting raw text from LaTeX documents with
+focus on mathematics.
+The aim is to produce only few "false" warnings when feeding the text into
+a language checker.
 
-In some sense, the script compares to tools like OpenDetex, TeXtidote and the above-mentioned Haskell software.
+In some sense, the script compares to tools like OpenDetex, TeXtidote and
+the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
-Unnecessary creation of empty lines is avoided, paragraphs and sentences remain intact.
-The Bash script shell.sh shows an example for filtering messages from a language checker.
+Unnecessary creation of empty lines is avoided, paragraphs and sentences
+remain intact.
+The Bash script shell.sh shows an example for filtering messages from a
+language checker.
+
+The starting section of the Python script lists macros and environments
+with tailored treatment.
+With option --defs, definitions also can be extended by an additional file.
+This should ease adaptation to project needs.
 
 An optional speciality is some parsing of LaTeX environments for displayed
 equations.
@@ -27,10 +37,6 @@ equations.
 Comments on that can be found [below](#equations).
 An example is shown in file Example.md, operation is summarized in the script
 at label LAB:EQUATIONS.
-
-The starting section of the Python script lists macros and environments
-with tailored treatment.
-This should ease adaptation to own needs.
 
 A more complete Bash script for language checking of a whole document tree
 is checks.sh.
