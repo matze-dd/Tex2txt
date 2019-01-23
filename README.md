@@ -14,15 +14,15 @@ We ask for apology.
 This is a Python script for extracting raw text from LaTeX documents with
 focus on mathematics.
 The aim is to produce only few "false" warnings when feeding the text into
-a language checker.
+a language checker, even if the text flow contains displayed equations.
 
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
 Unnecessary creation of empty lines is avoided, paragraphs and sentences
 remain intact.
-The Bash script shell.sh shows an example for filtering messages from a
-language checker.
+(The Bash script shell.sh shows an example for filtering messages from a
+language checker.)
 
 The starting section of the Python script lists macros and environments
 with tailored treatment.
@@ -42,8 +42,8 @@ A more complete Bash script for language checking of a whole document tree
 is checks.sh.
 For instance, the command<br>
 `bash checks.sh Banach/*.tex > errs`<br>
-will check the main text, extracted footnotes and foreign-language text
-in all these files.
+will check the main text, extracted footnotes (with their own text flow)
+and foreign-language text in all these files.
 The result file errs will contain names of files with problems together
 with filtered messages from the language checker.<br>
 Remark: Before application, variables in this script have to be customized.
@@ -64,7 +64,8 @@ Remark: Before application, variables in this script have to be customized.
   see [below](#equations), file Example.md, and LAB:EQUATIONS in the script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \v are translated to 
-  corresponding UTF8 characters, see LAB:ACCENTS in script
+  corresponding UTF8 characters, see LAB:ACCENTS in script;<br>
+  replacement of \~ by UTF8 non-breaking space
 - rare warnings can be suppressed using \LTadd{}, \LTskip{},
   \LTalter{}{} in the LaTeX text with suitable macro definition there;
   e.g., adding something that only the language checker should see:<br>
@@ -168,9 +169,9 @@ In contrast, the text
 ```
 again will produce an LT warning due to the missing comma after b,
 since the script replaces both b and -c by D2D without intermediate text.
-In rare cases, manipulation with \LTadd{} or \LTskip{} may be necessary
-to avoid false warnings.
 
+In rare cases, manipulation with \LTadd{} or \LTskip{} may be necessary
+to avoid false warnings from the language checker.
 See also file Example.md.
 
 ## Implementation issues<a name="implementation"></a>
