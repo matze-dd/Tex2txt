@@ -22,7 +22,7 @@ As in TeXtidote, we make an effort to track line numbers.
 Unnecessary creation of empty lines is avoided, paragraphs and sentences
 remain intact.
 (The Bash script shell.sh shows an example for filtering messages from a
-language checker.)
+language checker, see also Example.md.)
 
 The starting section of the Python script lists macros and environments
 with tailored treatment.
@@ -65,7 +65,8 @@ Remark: Before application, variables in this script have to be customized.
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script;<br>
-  replacement of \~ by UTF8 non-breaking space
+  replacement of \~ and \\, by UTF8 non-breaking space and
+  narrow non-breaking space
 - rare warnings can be suppressed using \LTadd{}, \LTskip{},
   \LTalter{}{} in the LaTeX text with suitable macro definition there;
   e.g., adding something that only the language checker should see:<br>
@@ -83,9 +84,9 @@ Remark: Before application, variables in this script have to be customized.
   changing inline maths to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
 - option `--defs file`<br>
-  file with additional declarations, example file content (defs members
-  are appended to parms members):<br>
-  `defs.project_macros = lambda: (Macro('xyz', 'AA', r'\2'),)`
+  file with additional declarations, example file content (defs members,
+  given without lambda, are 'appended' to corresponding parms members):<br>
+  `defs.project_macros = (Macro('xyz', 'AA', r'\2'),)`
 - option `--extr ma[,mb,...]` (list of macro names)<br>
   extract only first braced argument of these macros;
   useful, e.g., for check of foreign-language text and footnotes
