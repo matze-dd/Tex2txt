@@ -1,8 +1,18 @@
+Unreleased
+----------
+- replace \\, by UTF8 narrow non-breaking space instead of ASCII ' '
+- removed use of lambda in file of option --defs: allows for better error
+  messages
+- Example.md: removed unneccesary space in \\text in cases environment
+  <br><br>
+- exceptions from file operations now are caught
+- changed function fatal(): simply print message and exit, no exception
+
 Release 1.4.0
 -------------
 - fixed bug: expansion of a macro declared with mandatory arguments but
   actually used without any arguments enclosed in braces or brackets
-  (could even lead to exceptions for Python < 3.5);
+  (could even lead to exceptions for Python \< 3.5);
   now, these macros are treated as unknown and listed by option --unkn
 - shifted expansion of declared macros to the beginning, improved handling of
   recursion
@@ -11,10 +21,9 @@ Release 1.4.0
 - remarkable speed-up from using string.count('\\n') instead of
   len(re.findall(r'\\n', string))
   <br><br>
-
 - added option --defs for reading additional declarations from file
 - removed some 'private' macro declarations from Python script
-- now replace \~ by UTF8 non-breakable space instead of ASCII ' '
+- now replace \~ by UTF8 non-breaking space instead of ASCII ' '
 - updated Bash script checks.sh
 
 Release 1.3.7
@@ -66,7 +75,7 @@ Release 1.3.2
 -------------
 - fixed similar bug as in 1.3.1; avoid for instance that<br>
   'A\notag \color{red} B' produces 'AB',<br>
-  since '\color' is removed first and '\notag consumes the space till 'B'
+  since '\color' is removed first and '\notag' consumes the space till 'B'
 - simplified mechanism for suppression of new empty lines
 
 Release 1.3.1
