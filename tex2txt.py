@@ -82,9 +82,10 @@ parms = Aux()
 parms.project_macros = lambda: (
     # our LaTeX macro: \newcommand{\comment}[1]{}
     Macro('comment', 'A'),
-    # non-breakable space in acronyms to avoid LT warning
+    # non-breaking space in acronyms to avoid LT warning
     # our LaTeX macro: \newcommand{\zB}{z.\,B.\ }
     Simple('zB', 'z.~B. '),
+    # Simple('zB', r'z.\\,B. '),
 
     # macros to suppress rare LT warnings by altering the LaTeX text
     Macro('LTadd', 'A', r'\1'),
@@ -93,7 +94,7 @@ parms.project_macros = lambda: (
                     # for LaTeX, first argument is used
     Macro('LTskip', 'A'),
                     # for LaTeX, first argument is used
-) + defs.project_macros()
+) + defs.project_macros
 
 #   BUG: quite probably, some macro is missing here ;-)
 #
@@ -147,7 +148,7 @@ parms.system_macros = lambda: (
     Simple('nonumber'),
     Simple('notag'),
     Simple('qedhere'),
-) + defs.system_macros()
+) + defs.system_macros
 
 #   heading macros with optional argument [...]:
 #   copy content of {...} and add '.' if not ending with interpunction
@@ -161,7 +162,7 @@ parms.heading_macros = lambda: (
     r'section\*?',
     r'subsection\*?',
     r'subsubsection\*?',
-) + defs.heading_macros()
+) + defs.heading_macros
 
 #   equation environments, partly from LaTeX package amsmath;
 #   see comments at LAB:EQUATIONS below
@@ -187,7 +188,7 @@ parms.equation_environments = lambda: (
     EquEnv(r'eqnarray\*'),
     EquEnv(r'flalign', repl='[Komplex-Formelausdruck]'),
     EquEnv(r'flalign\*', repl='[Komplex-Formelausdruck]'),
-) + defs.equation_environments()
+) + defs.equation_environments
 
 #   these environments are deleted or replaced completely (with body)
 #
@@ -197,7 +198,7 @@ parms.equation_environments = lambda: (
 parms.environments = lambda: (
     EnvRepl('table', '[Tabelle].'),
 #   EnvRepl('comment'),
-) + defs.environments()
+) + defs.environments
 
 #   at the end, we delete all unknown "standard" environment frames;
 #   here are environments with options / arguments at \begin{...},
@@ -221,7 +222,7 @@ parms.environment_begins = lambda: (
                     for (env, title) in parms.theorem_environments()
     ) + tuple(EnvBegin(env, '', title + ' 1.2.')
                     for (env, title) in parms.theorem_environments()
-) + defs.environment_begins()
+) + defs.environment_begins
 
 #   theorem environments from package amsthm with optional argument [...]:
 #   display a title and text in optional argument as (...) with final dot
@@ -243,7 +244,7 @@ parms.theorem_environments = lambda: (
     ('proposition', 'Proposition'),
     ('remark', 'Remark'),
     ('theorem', 'Theorem'),
-) + defs.theorem_environments()
+) + defs.theorem_environments
 
 #   a list of 2-tuples for other things to be replaced
 #       [0]: search pattern as regular expression
@@ -379,7 +380,8 @@ def fatal(msg, detail=None):
     err = '\n*** Internal error:\n' + msg + '\n'
     if detail:
         err += detail + '\n'
-    raise Exception(err)
+    sys.stderr.write(err)
+    exit(1)
 def warning(msg, detail=None):
     sys.stdout.write(parms.warning_error_msg)
     sys.stdout.flush()
@@ -387,6 +389,11 @@ def warning(msg, detail=None):
     if detail:
         err += detail + '\n'
     sys.stderr.write(err)
+def myopen(f, mode='r'):
+    try:
+        return open(f, mode=mode)
+    except:
+        fatal('could not open file "' + f + '"')
 
 #   when deleting macros or environment frames, we do not want to create
 #   new empty lines that break sentences for LT;
@@ -533,6 +540,7 @@ utf8_rqq = '\N{RIGHT DOUBLE QUOTATION MARK}'
 utf8_glqq = '\N{DOUBLE LOW-9 QUOTATION MARK}'
 utf8_grqq = '\N{LEFT DOUBLE QUOTATION MARK}'
 utf8_nbsp = '\N{NO-BREAK SPACE}'
+utf8_nnbsp = '\N{NARROW NO-BREAK SPACE}'
 
 
 #######################################################################
@@ -610,7 +618,7 @@ parser.add_argument('--unkn', action='store_true')
 cmdline = parser.parse_args()
 
 if cmdline.nums:
-    cmdline.nums = open(cmdline.nums, mode='w')
+    cmdline.nums = myopen(cmdline.nums, mode='w')
 
 if not cmdline.lang or cmdline.lang == 'de':
     set_language_de()
@@ -628,30 +636,29 @@ else:
     cmdline.extr_list = []
 
 defs = Aux()
+defs.project_macros = ()
+defs.system_macros = ()
+defs.heading_macros = ()
+defs.environments = ()
+defs.equation_environments = ()
+defs.environments = ()
+defs.environment_begins = ()
+defs.theorem_environments = ()
 if cmdline.defs:
-    exc = None
+    s = myopen(cmdline.defs).read()
     try:
-        exec(open(cmdline.defs).read())
-    except SyntaxError as e:
-        exc = e
-    if exc:
-        fatal('syntax error in file "' + cmdline.defs + '", line '
-                + str(exc.lineno), exc.text)
-for a in (
-    'project_macros',
-    'system_macros',
-    'heading_macros',
-    'environments',
-    'equation_environments',
-    'environments',
-    'environment_begins',
-    'theorem_environments',
-):
-    if not hasattr(defs, a):
-        setattr(defs, a, lambda: ())
+        exec(s)
+    except BaseException as e:
+        import traceback
+        i = 0 if isinstance(e, SyntaxError) else -1
+        s = traceback.format_exc(limit=i)
+        s = re.sub(r'"<string>"', '"' + cmdline.defs + '"', s)
+        s = re.sub(r'in <module>', '', s)
+        s = re.sub(r'Traceback \(most recent call last\):\n', '', s)
+        fatal('problem in file "' + cmdline.defs + '"', s)
 
 if cmdline.file:
-    text = open(cmdline.file).read()
+    text = myopen(cmdline.file).read()
 else:
     text = sys.stdin.read()
 
@@ -1168,6 +1175,7 @@ text = mysub(r'\\item' + end_mac + r'\s*',
 #   - replace space macros including '~'
 #   - delete \!, \-, "-
 #
+text = mysub(r'\\,', utf8_nnbsp, text)
 text = mysub(parms.mathspace, ' ', text)
 text = mysub(r'(?<!\\)~', utf8_nbsp, text)
 text = mysub(r'\\[!-]|(?<!\\)"-', '', text)
@@ -1196,7 +1204,7 @@ text = mysub(repl_linebreak, ' ', text)
 #   - space in phrase to be replaced is arbitrary (expression r'\s+')
 #
 if cmdline.repl:
-    for lin in open(cmdline.repl):
+    for lin in myopen(cmdline.repl):
         i = lin.find('#')
         if i >= 0:
             lin = lin[:i]
