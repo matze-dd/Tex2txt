@@ -116,13 +116,24 @@ Daher ...
 In fact, LT complains about the capital 'Daher' that should start a
 new sentence.
 
+### Trivial version
+With the entry
+```
+    EnvRepl('align')
+```
+in parms.environments of the Python script (but no 'align' entry in
+parms.equation\_environments), one gets the following script ouptut.
+```
+Wir folgern
+Daher ...
+```
+
 ### Simple version
 With the entry
 ```
     EquEnv('align', repl='  Relation')
 ```
-in parms.equation_environments of the Python script, one gets the
-following script ouptut.
+in parms.equation\_environments of the script, one gets:
 ```
 Wir folgern
   Relation
