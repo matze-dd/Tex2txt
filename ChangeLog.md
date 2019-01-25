@@ -1,10 +1,13 @@
-Unreleased
-----------
-- replace \\, by UTF8 narrow non-breaking space instead of ASCII ' '
+Release 1.4.1
+-------------
 - removed use of lambda in file of option --defs: allows for better error
   messages
+- added missing replacements:
+    - escaped hash \\\# substituted by raw \#
+    - escaped ampersand \\\& substituted by raw \& and raw \& by space
+    - narrow space \\, substituted by UTF8 narrow non-breaking space instead
+      of ASCII space
 - Example.md: removed unneccesary space in \\text in cases environment
-  <br><br>
 - exceptions from file operations now are caught
 - changed function fatal(): simply print message and exit, no exception
 
