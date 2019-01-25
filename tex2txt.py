@@ -936,7 +936,7 @@ for (mac, acc) in (
 #   - math space (variable parms.mathspace) like \quad is replaced by ' '
 
 #   Assumptions:
-#   - \\ has been changed to repl_linebreak
+#   - \\ has been changed to repl_linebreak, & is still present
 #   - macros from LAB:EQU:MACROS already have been deleted
 #   - \text{...} has been resolved not yet
 #   - mathematical space as \; and \quad (variable parms.mathspace)
@@ -1172,12 +1172,13 @@ text = mysub(r'\\item' + end_mac + r'\s*',
 
 #   LAB:SMALLMACS
 #   actions only after macro resolution: preceding macro could eat space
-#   - replace space macros including '~'
+#   - replace space macros including ~ and &
 #   - delete \!, \-, "-
 #
 text = mysub(r'\\,', utf8_nnbsp, text)
-text = mysub(parms.mathspace, ' ', text)
 text = mysub(r'(?<!\\)~', utf8_nbsp, text)
+text = mysub(r'(?<!\\)&', ' ', text)
+text = mysub(parms.mathspace, ' ', text)
 text = mysub(r'\\[!-]|(?<!\\)"-', '', text)
 
 #   - finally remove mark_deleted,
@@ -1250,10 +1251,10 @@ def write_numbers(nums, mx):
             s = '?'
         cmdline.nums.write(s + '\n')
 
-#   resolve backslash escapes for {, }, $, %, _
+#   resolve backslash escapes for {, }, $, %, _, &, #
 #
 def resolve_escapes(txt):
-    return re.sub(r'\\([{}$%_])', r'\1', txt)
+    return re.sub(r'\\([{}$%_&#])', r'\1', txt)
 
 #   on option --extr: only print arguments of these macros
 #
