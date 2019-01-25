@@ -32,7 +32,7 @@ This should ease adaptation to project needs.
 An optional speciality is some parsing of LaTeX environments for displayed
 equations.
 Therefore, one can check embedded \text{...} parts (LaTeX package amsmath)
-and interpunction in the text flow including—not too complex—displayed
+and interpunction in the text flow, if it includes—not too complex—displayed
 equations.
 Comments on that can be found [below](#equations).
 An example is shown in file Example.md, operation is summarized in the script
@@ -104,7 +104,7 @@ Remark: Before application, variables in this script have to be customized.
 Displayed equations should be part of the text flow and include the
 necessary interpunction. At least the German version of LanguageTool (LT)
 will detect a missing dot in the following snippet
-(We conclude math Therefore,...).
+(meaning: "We conclude math Therefore,...").
 ```
 Wir folgern
 \begin{align}
@@ -119,7 +119,7 @@ new sentence.
 ### Trivial version
 With the entry
 ```
-    EnvRepl('align')
+    EnvRepl('align'),
 ```
 in parms.environments of the Python script (but no 'align' entry in
 parms.equation\_environments), one gets the following script ouptut.
@@ -131,7 +131,7 @@ Daher ...
 ### Simple version
 With the entry
 ```
-    EquEnv('align', repl='  Relation')
+    EquEnv('align', repl='  Relation'),
 ```
 in parms.equation\_environments of the script, one gets:
 ```
@@ -140,13 +140,15 @@ Wir folgern
 Daher ...
 ```
 Adding a dot '= d.' in the equation will lead to 'Relation.' in the output.
+This will also hold true, if the interpunction sign is followed by math space
+or by macros as \\label and \\nonumber.
 
 ### Full version
 With the entry
 ```
-    EquEnv('align')
+    EquEnv('align'),
 ```
-we obtain (gleich means equal):
+we obtain ("gleich" means equal):
 ```
 Wir folgern
   D1D  gleich D2D
@@ -185,6 +187,14 @@ since the script replaces both b and -c by D2D without intermediate text.
 In rare cases, manipulation with \LTadd{} or \LTskip{} may be necessary
 to avoid false warnings from the language checker.
 See also file Example.md.
+
+### Inclusion of "normal" text
+The argument of \\text\{...\} (variable for macro name in script:
+parms.text\_macro) is directly copied.
+Outside of \\text, only math space like \\; and \\quad is considered as space.
+Therefore, one will get warnings from the language checker, if subsequent
+\\text and math parts are not properly separated.
+See file Example.md.
 
 ## Implementation issues<a name="implementation"></a>
 In order to parse with regular expressions, some of them are constructed by
