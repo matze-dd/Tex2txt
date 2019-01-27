@@ -423,7 +423,7 @@ skip_space = r'(?:[ \t]*\n?[ \t]*)'
 #   BUG (but error message on overrun): the nesting limit is unjustified
 #
 def re_braced(max_depth, inner_beg, inner_end):
-    atom = r'[^\\{}]|\\.'
+    atom = r'[^\\{}]|\\.|\\\n'
     braced = inner_beg + r'\{(?:' + atom + r')*\}' + inner_end
         # (?:...) is (...) without creation of a reference
     for i in range(max_depth - 2):
@@ -439,7 +439,7 @@ sp_braced = skip_space + braced
 #   BUG (without warning): enclosed {} pairs are not recognized
 #
 def re_bracketed(max_depth, inner_beg, inner_end):
-    atom = r'[^]\\[]|\\.'
+    atom = r'[^]\\[]|\\.|\\\n'
     bracketed = inner_beg + r'\[(?:' + atom + r')*\]' + inner_end
     for i in range(max_depth - 2):
         bracketed = r'\[(?:' + atom + r'|' + bracketed + r')*\]'
@@ -847,7 +847,7 @@ def f(m):
                     m.group(0))
     parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
     return parms.inline_math[0]
-actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.)+)\$', f)]
+actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.|\\\n)+)\$', f)]
 
 #   now perform the collected replacement actions
 #
@@ -944,7 +944,7 @@ for (mac, acc) in (
 #   - math macros like \epsilon or \Omega that might constitute a
 #     math part: still present or replaced with non-space
 
-parms.mathspace = r'(?:\\[ ,;:]|\\q?quad' + end_mac + r')'
+parms.mathspace = r'(?:\\[ ,;:\n]|\\q?quad' + end_mac + r')'
 parms.mathop = (
     r'\+|-|\*|/'
     + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
