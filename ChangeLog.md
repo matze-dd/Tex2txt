@@ -1,8 +1,12 @@
-
-- fixed bug: sequence backslash-linebreak ('\\\\\\n') now creates space
+Release 1.4.2
+-------------
+- fixed bug: sequence backslash-linebreak ('\\\\\\n') now creates ' ' space
     - added to parms.mathspace
-    - allowed in regular expressions for nested \[...\], \{...\},
+    - allowed in regular expressions for nested \{...\}, \[...\],
       and for \$...\$
+- fixed bug: tilde ~ inside of equations was not considered as math space
+- fixed bug: do not expand german-language macros like \"\= and \"\'
+  for other language of option --lang
 - Example.md: added script output with filtered LT messages
 
 Release 1.4.1
