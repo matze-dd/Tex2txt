@@ -1,3 +1,10 @@
+
+- fixed bug: sequence backslash-linebreak ('\\\\\\n') now creates space
+    - added to parms.mathspace
+    - allowed in regular expressions for nested \[...\], \{...\},
+      and for \$...\$
+- Example.md: added script output with filtered LT messages
+
 Release 1.4.1
 -------------
 - removed use of lambda in file of option --defs: allows for better error
