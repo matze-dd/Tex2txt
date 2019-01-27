@@ -254,27 +254,35 @@ parms.theorem_environments = lambda: (
 #   ATTENTION:  prepend mark_deleted, if replacement may evaluate to
 #               empty string or white space
 #
-parms.misc_replace = lambda: [
+parms.misc_replace = lambda: (
     # \[    ==> ... 
     (r'\\\[', r'\\begin{equation*}'),
     # \]    ==> ... 
     (r'\\\]', r'\\end{equation*}'),
 
-    # "=    ==> -
-    (r'(?<!\\)"=', '-'),        # (?<!x)y matches y not preceded by x
     # ---    ==> UTF-8 emdash
-    (r'(?<!\\)---', utf8_emdash),
+    (r'(?<!\\)---', utf8_emdash),   # (?<!x)y matches y not preceded by x
     # --    ==> UTF-8 endash
     (r'(?<!\\)--', utf8_endash),
     # ``    ==> UTF-8 double quotation mark (left)
     (r'(?<!\\)``', utf8_lqq),
     # ''    ==> UTF-8 double quotation mark (right)
     (r'(?<!\\)' + "''", utf8_rqq),
+) + parms.misc_replace_lang() + defs.misc_replace
+
+parms.misc_replace_de = lambda: (
+    # "=    ==> -
+    (r'(?<!\\)"=', '-'),
     # "`    ==> UTF-8 german double quotation mark (left)
     (r'(?<!\\)"`', utf8_glqq),
     # "'    ==> UTF-8 german double quotation mark (right)
     (r'(?<!\\)"' + "'", utf8_grqq),
-]
+    # "-    ==> delete
+    (r'(?<!\\)"-', mark_deleted),
+)
+
+parms.misc_replace_en = lambda: (
+)
 
 #   macro for "plain text" in equation environments;
 #   its argument will be copied, see LAB:EQUATIONS below
@@ -335,6 +343,9 @@ def set_language_de():
     # replacement for this macro:
     parms.replace_frgn_lang_mac = '[englisch]'
 
+    # language-dependent part of parms.misc_replace
+    parms.misc_replace_lang = parms.misc_replace_de
+
 def set_language_en():
     # see comments in set_language_de()
     parms.inline_math = ('A', 'B', 'C', 'D', 'E', 'F')
@@ -346,6 +357,7 @@ def set_language_en():
     parms.proof_title = 'Proof'
     parms.foreign_lang_mac = 'foreign'
     parms.replace_frgn_lang_mac = '[foreign]'
+    parms.misc_replace_lang = parms.misc_replace_en
 
 #   further replacements performed below:
 #
@@ -644,6 +656,7 @@ defs.equation_environments = ()
 defs.environments = ()
 defs.environment_begins = ()
 defs.theorem_environments = ()
+defs.misc_replace = ()
 if cmdline.defs:
     s = myopen(cmdline.defs).read()
     try:
@@ -809,7 +822,7 @@ while flag:
 #       [0]: search pattern as regular expression
 #       [1]: replacement text
 #
-actions = parms.misc_replace()
+actions = list(parms.misc_replace())
 
 for (name, repl) in parms.environments():
     env = re_nested_env(name, parms.max_depth_env, '')
@@ -944,7 +957,7 @@ for (mac, acc) in (
 #   - math macros like \epsilon or \Omega that might constitute a
 #     math part: still present or replaced with non-space
 
-parms.mathspace = r'(?:\\[ ,;:\n]|\\q?quad' + end_mac + r')'
+parms.mathspace = r'(?:\\[ ,;:\n]|(?<!\\)~|\\q?quad' + end_mac + r')'
 parms.mathop = (
     r'\+|-|\*|/'
     + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
@@ -1172,14 +1185,14 @@ text = mysub(r'\\item' + end_mac + r'\s*',
 
 #   LAB:SMALLMACS
 #   actions only after macro resolution: preceding macro could eat space
-#   - replace space macros including ~ and &
-#   - delete \!, \-, "-
+#   - replace space macros including ~, \, and &
+#   - delete \!, \-
 #
 text = mysub(r'\\,', utf8_nnbsp, text)
 text = mysub(r'(?<!\\)~', utf8_nbsp, text)
 text = mysub(r'(?<!\\)&', ' ', text)
 text = mysub(parms.mathspace, ' ', text)
-text = mysub(r'\\[!-]|(?<!\\)"-', '', text)
+text = mysub(r'\\[!-]', '', text)
 
 #   - finally remove mark_deleted,
 #     delete a line, if it only contains such marks;
