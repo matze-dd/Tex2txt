@@ -1,5 +1,4 @@
-# Tex2txt, a filter for mathematical texts
-## Table of contents
+# Tex2txt, a flexible filter for complicated texts
 [General description](#description)<br>
 [Selected actions](#actions)<br>
 [Usage](#usage)<br>
@@ -11,29 +10,37 @@ Unfortunately, there is a naming conflict with the related Haskell package.
 We ask for apology.
 
 ## General description<a name="description"></a>
-This is a Python script for extracting raw text from LaTeX documents with
-focus on mathematics.
+This is a Python script for extracting raw text from LaTeX documents,
+especially with focus on mathematics.
 The aim is to produce only few "false" warnings when feeding the text into
 a language checker, even if the text flow contains displayed equations.
 
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
-Unnecessary creation of empty lines is avoided, paragraphs and sentences
-remain intact.
+Unnecessary creation of empty lines therefore can be avoided, paragraphs
+and sentences remain intact.
 (The Bash script shell.sh shows an example for filtering messages from a
 language checker, see also Example.md.)
 
 The starting section of the Python script lists macros and environments
 with tailored treatment.
+Some standard macros and environments are already included, but very probably
+the collection has to be complemented.
 With option --defs, definitions also can be extended by an additional file.
-This should ease adaptation to project needs.
+
+Declared macros can be used recursively.
+Unknown macros and environments are silently ignored while keeping their
+arguments and bodies, respectively.
+As in TeX, macro resolution consumes white space (possibly including a line
+break) between macro name and next non-space character within the current
+paragraph.
 
 An optional speciality is some parsing of LaTeX environments for displayed
 equations.
-Therefore, one can check embedded \text{...} parts (LaTeX package amsmath)
-and interpunction in the text flow, if it includes—not too complex—displayed
-equations.
+Therefore, one can check embedded \text{...} parts (macro from LaTeX package
+amsmath), interpunction and spacing in the text flow, if it includes—not too
+complex—displayed equations.
 Comments on that can be found [below](#equations).
 An example is shown in file Example.md, operation is summarized in the script
 at label LAB:EQUATIONS.
@@ -59,12 +66,14 @@ Remark: Before application, variables in this script have to be customized.
 - inline math $...$ is replaced with text from rotating collection
   in variable parms.inline_math
 - equation environments are resolved in a way suitable for check of
-  interpunction, argument of \text{...} is included into output text;
-  \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
+  interpunction and spacing, argument of \text{...} is included into output
+  text; \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
   see [below](#equations), file Example.md, and LAB:EQUATIONS in the script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \v are translated to 
-  corresponding UTF8 characters, see LAB:ACCENTS in script;<br>
+  corresponding UTF8 characters, see LAB:ACCENTS in script
+- replacement of things like double quotes \'\' and dashs \-\- with UTF8
+  characters;
   replacement of \~ and \\, by UTF8 non-breaking space and
   narrow non-breaking space
 - rare warnings can be suppressed using \LTadd{}, \LTskip{},
@@ -93,7 +102,8 @@ Remark: Before application, variables in this script have to be customized.
 - option `--lang xy`<br>
   language de or en, default: de;
   used for adaptation of equation replacements, math operator names,
-  proof titles, and replacement of foreign-language text;
+  proof titles, for handling of macros like \"\=, and for replacement
+  of foreign-language text;
   see LAB:LANGUAGE in script
 - option `--unkn`<br>
   print list of undeclared macros and environments outside of equations;<br>
