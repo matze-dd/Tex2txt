@@ -39,8 +39,8 @@
 #     of them, warnings are generated)
 #   - severe general problem: resolution of macros not in the order of
 #     TeX (strictly left to right in the text);
-#     work-arounds with hacks \begin{%} and %%D%% are used to avoid
-#     consumption of too much space by macros without argument
+#     work-arounds with hacks mark_begin_env and mark_deleted are used to
+#     avoid consumption of too much space by macros without argument
 #
 #
 #                                   Matthias Baumann, 2018-2019
@@ -80,12 +80,18 @@ parms = Aux()
 #
 #
 parms.project_macros = lambda: (
+
     # our LaTeX macro: \newcommand{\comment}[1]{}
     Macro('comment', 'A'),
     # non-breaking space in acronyms to avoid LT warning
     # our LaTeX macro: \newcommand{\zB}{z.\,B.\ }
     Simple('zB', 'z.~B. '),
     # Simple('zB', r'z.\\,B. '),
+
+    # Macro('verb', 'A', '[verbatim]'),
+    Macro('verb', 'A', r'\1'),
+    # Macro(r'verb\*', 'A', '[verbatim*]'),
+    Macro(r'verb\*', 'A', r'\1'),
 
     # macros to suppress rare LT warnings by altering the LaTeX text
     Macro('LTadd', 'A', r'\1'),
@@ -94,11 +100,14 @@ parms.project_macros = lambda: (
                     # for LaTeX, first argument is used
     Macro('LTskip', 'A'),
                     # for LaTeX, first argument is used
+
 ) + defs.project_macros
+
 
 #   BUG: quite probably, some macro is missing here ;-)
 #
 parms.system_macros = lambda: (
+
     Macro('caption', 'OA', r'\2'),
     Macro('cite', 'A', '[1]'),
     Macro('cite', 'PA', r'[1, \1]'),
@@ -120,6 +129,9 @@ parms.system_macros = lambda: (
     Macro('pageref', 'A', '99'),
     Macro('ref', 'A', '13'),
     Macro('texorpdfstring', 'AA', r'\1'),
+    # \textasciicircum: defined below
+    # \textasciitilde: defined below
+    # \textbackslash: defined below
     Macro('textcolor', 'AA', r'\2'),
     Macro('usepackage', 'OA'),
     Macro(r'vspace\*?', 'A'),
@@ -148,7 +160,9 @@ parms.system_macros = lambda: (
     Simple('nonumber'),
     Simple('notag'),
     Simple('qedhere'),
+
 ) + defs.system_macros
+
 
 #   heading macros with optional argument [...]:
 #   copy content of {...} and add '.' if not ending with interpunction
@@ -157,12 +171,15 @@ parms.heading_macros_punct = '!?'
         # do not add '.' if ending with that;
         # title mistakenly ends with '.' --> '..' will lead to LT warning
 parms.heading_macros = lambda: (
+
     r'chapter\*?',
     r'part\*?',
     r'section\*?',
     r'subsection\*?',
     r'subsubsection\*?',
+
 ) + defs.heading_macros
+
 
 #   equation environments, partly from LaTeX package amsmath;
 #   see comments at LAB:EQUATIONS below
@@ -176,6 +193,7 @@ parms.heading_macros = lambda: (
 #   - repl: plain string, no backslashs accepted
 #
 parms.equation_environments = lambda: (
+
     EquEnv(r'align'),
     EquEnv(r'align\*'),
             # extra pattern with *: safely match begin and end
@@ -188,7 +206,9 @@ parms.equation_environments = lambda: (
     EquEnv(r'eqnarray\*'),
     EquEnv(r'flalign', repl='[Komplex-Formelausdruck]'),
     EquEnv(r'flalign\*', repl='[Komplex-Formelausdruck]'),
+
 ) + defs.equation_environments
+
 
 #   these environments are deleted or replaced completely (with body)
 #
@@ -196,9 +216,14 @@ parms.equation_environments = lambda: (
 #   - repl: plain string, no backslashs accepted
 #
 parms.environments = lambda: (
+
     EnvRepl('table', '[Tabelle].'),
 #   EnvRepl('comment'),
+#   EnvRepl('verbatim', '[verbatim]'),
+#   EnvRepl(r'verbatim\*', '[verbatim*]'),
+
 ) + defs.environments
+
 
 #   at the end, we delete all unknown "standard" environment frames;
 #   here are environments with options / arguments at \begin{...},
@@ -209,9 +234,12 @@ parms.environments = lambda: (
 #   - repl: as for Macro()
 #
 parms.environment_begins = lambda: (
+
     EnvBegin('figure', 'O'),
     EnvBegin('minipage', 'A'),
     EnvBegin('tabular', 'A'),
+    EnvBegin('verbatim'),       # only, if not in parms.environments
+    EnvBegin(r'verbatim\*'),    # only, if not in parms.environments
 
     # proof: try replacement with option, and only after that without
     EnvBegin('proof', 'P', r'\1.'),
@@ -222,12 +250,15 @@ parms.environment_begins = lambda: (
                     for (env, title) in parms.theorem_environments()
     ) + tuple(EnvBegin(env, '', title + ' 1.2.')
                     for (env, title) in parms.theorem_environments()
+
 ) + defs.environment_begins
+
 
 #   theorem environments from package amsthm with optional argument [...]:
 #   display a title and text in optional argument as (...) with final dot
 #
 parms.theorem_environments = lambda: (
+
     # (environment name, text title)
     ('Anmerkung', 'Anmerkung'),
     ('Beispiel', 'Beispiel'),
@@ -244,17 +275,26 @@ parms.theorem_environments = lambda: (
     ('proposition', 'Proposition'),
     ('remark', 'Remark'),
     ('theorem', 'Theorem'),
+
 ) + defs.theorem_environments
+
 
 #   a list of 2-tuples for other things to be replaced
 #       [0]: search pattern as regular expression
 #       [1]: replacement text
 #   see also resolve_escapes() and LAB:SMALLMACS below
 #
-#   ATTENTION:  prepend mark_deleted, if replacement may evaluate to
-#               empty string or white space
+#   ATTENTION:
+#   - prepend mark_deleted, if replacement may evaluate to empty string
+#     or white space
+#   - do not use replacement that
+#       - ends with a backslash
+#       - may insert a double backslash
+#       - may instert an unescaped % sign
+#     (see comments at Macro() above and compare checks in re_code_args())
 #
 parms.misc_replace = lambda: (
+
     # \[    ==> ... 
     (r'\\\[', r'\\begin{equation*}'),
     # \]    ==> ... 
@@ -268,9 +308,12 @@ parms.misc_replace = lambda: (
     (r'(?<!\\)``', utf8_lqq),
     # ''    ==> UTF-8 double quotation mark (right)
     (r'(?<!\\)' + "''", utf8_rqq),
+
 ) + parms.misc_replace_lang() + defs.misc_replace
 
+
 parms.misc_replace_de = lambda: (
+
     # "=    ==> -
     (r'(?<!\\)"=', '-'),
     # "`    ==> UTF-8 german double quotation mark (left)
@@ -279,34 +322,41 @@ parms.misc_replace_de = lambda: (
     (r'(?<!\\)"' + "'", utf8_grqq),
     # "-    ==> delete
     (r'(?<!\\)"-', mark_deleted),
+
 )
 
 parms.misc_replace_en = lambda: (
 )
+
 
 #   macro for "plain text" in equation environments;
 #   its argument will be copied, see LAB:EQUATIONS below
 #
 parms.text_macro = 'text'           # LaTeX package amsmath
 
+
 #   maximum nesting depths
 #
 parms.max_depth_br = 20         # for {} braces and [] brackets
 parms.max_depth_env = 10        # for environments of the same type
+
 
 #   see LAB:ITEMS below
 #
 parms.keep_item_labels = True
 parms.default_item_lab = ''
 
+
 #   message on warnings / errors that should be found by LT;
 #   don't include line breaks: will disrupt line number tracking
 #
 parms.warning_error_msg = ' WARNINGORERROR '
 
+
 #   LAB:LANGUAGE
 #
 def set_language_de():
+
     # properties of these replacements for inline formulas:
     #   - no need to add to LT dictionary
     #   - absent leading / trailing space causes spelling erros
@@ -346,6 +396,7 @@ def set_language_de():
     # language-dependent part of parms.misc_replace
     parms.misc_replace_lang = parms.misc_replace_de
 
+
 def set_language_en():
     # see comments in set_language_de()
     parms.inline_math = ('A', 'B', 'C', 'D', 'E', 'F')
@@ -359,10 +410,12 @@ def set_language_en():
     parms.replace_frgn_lang_mac = '[foreign]'
     parms.misc_replace_lang = parms.misc_replace_en
 
+
 #   further replacements performed below:
 #
 #   - translation of $$...$$ to equation* environment
 #   - replacement of $...$ inline math
+#   - macros \textbackslash, \textasciicircum, \textasciitilde
 #   - treatment of text-mode accents
 #   - handling of displayed equations
 #   - some treatment of \item[...] labels
@@ -407,6 +460,11 @@ def myopen(f, mode='r'):
     except:
         fatal('could not open file "' + f + '"')
 
+#   for internal marks: cannot apear in text after removal of % comments
+#
+mark_internal_pre = '%%%%'      # CROSS-CHECK with re_code_args()
+mark_internal_post = '%%'       # CROSS-CHECK with re_code_args()
+
 #   when deleting macros or environment frames, we do not want to create
 #   new empty lines that break sentences for LT;
 #   thus replace deleted text with tag in mark_deleted which is removed
@@ -414,18 +472,28 @@ def myopen(f, mode='r'):
 #   this also protects space behind a macro already resolved from being
 #   consumed by a macro in front
 #
-mark_deleted = '%%D%%'
-                    # CROSS-CHECK with re_code_args()
+mark_deleted = mark_internal_pre + 'D' + mark_internal_post
 
 #   after resolution of an environment frame, we leave this mark;
 #   it will avoid that a preceding macro that is treated later will
 #   consume too much space;
 #   see also variable skip_space_macro
 #
-mark_begin_env = r'\begin{%}'
-mark_begin_env_sub = r'\\begin{%}'   # if argument of ..sub()
-mark_end_env = r'\end{%}'
-mark_end_env_sub = r'\\end{%}'
+mark_begin_env = r'\begin{' + mark_internal_pre + r'}'
+mark_end_env = r'\end{' + mark_internal_pre + r'}'
+# if replacement argument of ..sub():
+mark_begin_env_sub = r'\\begin{' + mark_internal_pre + r'}'
+mark_end_env_sub = r'\\end{' + mark_internal_pre + r'}'
+
+#   internal representation of double backslash \\
+#
+mark_linebreak = mark_internal_pre + 'L' + mark_internal_post
+
+#   mark for internal representation of a single verbatim character,
+#   will be resolved only at output by resolve_escapes()
+#
+mark_verbatim = (mark_internal_pre + 'V', 'V' + mark_internal_post)
+mark_verbatim_tmp = ('____V', 'V__')    # before removal of % comments
 
 #   space allowed inside of current paragraph, at most one line break
 #
@@ -512,7 +580,7 @@ def re_code_args(args, repl, who, s, no_backslash=False):
         if n < 1 or n > len(args):
             err('invalid "\\' + m.group(1) + '"')
     if re.search(r'(?<!\\\\)%', repl):
-        # ensure that repl_linebreak and mark_deleted do work
+        # ensure that mark_linebreak and mark_deleted do work
         err(r"please use r'\\%' to insert escaped percent sign")
     if repl.endswith('\\') or repl.count('\\\\\\\\'):
         # ensure that double backslashs do not appear in text
@@ -553,6 +621,19 @@ utf8_glqq = '\N{DOUBLE LOW-9 QUOTATION MARK}'
 utf8_grqq = '\N{LEFT DOUBLE QUOTATION MARK}'
 utf8_nbsp = '\N{NO-BREAK SPACE}'
 utf8_nnbsp = '\N{NARROW NO-BREAK SPACE}'
+
+#   create internal verbatim representation of a string
+#
+def verbatim(s, mark, ast):
+    ret = ''
+    for c in s:
+        if ast and c == ' ':
+            c = '⊔'
+        ret += mark[0] + str(ord(c)) + mark[1]
+        if c == '\n':
+            # for line number tracking, compare resolve_escapes()
+            ret += c
+    return ret
 
 
 #######################################################################
@@ -674,6 +755,8 @@ if cmdline.file:
     text = myopen(cmdline.file).read()
 else:
     text = sys.stdin.read()
+if not text or text[-1] != '\n':
+    text += '\n'
 
 #   the initial list of line numbers: in fact "only" a tuple
 #
@@ -684,14 +767,57 @@ numbers = tuple(range(1, text.count('\n') + 1))
 #
 text = (text, numbers)
 
-#   first replace \\ --> afterwards, no double \ anymore
-#   - repl_linebreak_tmp only used during comment removal
-#   - in a valid LaTeX source, this mark only may appear in comments
-#
-repl_linebreak_tmp = r'__L__'
-text = mysub(r'\\\\', repl_linebreak_tmp, text)
 
-#   then remove % comments
+#######################################################################
+#
+#   LAB:VERBATIM
+#   treat verbatim(*) environments and \verb(*) macros
+#   (the given verbatim text is expanded to a coded version that is only
+#    resolved directly at output by resolve_escapes())
+#
+#   - expanded content of verbatim(*) environment is enclosed in
+#     \begin{verbatim(*)}...\end{verbatim(*)}
+#       --> can be removed or replaced by fixed text with 'verbatim'
+#           or r'verbatim\*' entry in parms.environments
+#   - expanded text of \verb(*) macro is enclosed in \verb(*){...}
+#       --> can be removed or replaced with Macro('verb', 'A', ...)
+#           or Macro(r'verb\*', 'A', ...) in parms.*_macros
+#   - BUG: \verb(*) not handled correctly but treated as unknown macro,
+#     if used in replacement for a declared macro of parms.*_macros
+#       --> won't work: Simple('textbackslash', r'\\verb?\\?')
+#
+def f(m):
+    # enclose coded text in \begin{verbatim(*)}...\end{verbatim(*)},
+    # enforce heading and trailing empty lines for environment content
+    return (m.group(1) + '\n\n\\begin{verbatim' + verb_asterisk + '}'
+                + verbatim(m.group(3), mark_verbatim_tmp, verb_asterisk)
+                + '\\end{verbatim' + verb_asterisk + '}\n\n')
+verb_asterisk = '*'
+text = mysub(r'^(([^\n\\%]|\\.)*)' + begin_lbr + r'verbatim\*\}((.|\n)*?)'
+                + end_lbr + r'verbatim\*\}', f, text, flags=re.M)
+                        # important: non-greedy repetition *?
+verb_asterisk = ''
+text = mysub(r'^(([^\n\\%]|\\.)*)' + begin_lbr + r'verbatim\}((.|\n)*?)'
+                + end_lbr + r'verbatim\}', f, text, flags=re.M)
+                        # important: non-greedy repetition *?
+
+def f(m):
+    # enclose coded text in \verb(*){...}
+    return (m.group(1) + '\\verb' + verb_asterisk + '{'
+                + verbatim(m.group(4), mark_verbatim_tmp, verb_asterisk) + '}')
+verb_asterisk = '*'
+text = mysub(r'^(([^\n\\%]|\\.)*)\\verb\*(\S)(.*?)\3',
+                f, text, flags=re.M)
+                        # important: non-greedy repetition *?
+verb_asterisk = ''
+text = mysub(r'^(([^\n\\%]|\\.)*)\\verb' + end_mac + r'(\S)(.*?)\3',
+                f, text, flags=re.M)
+                        # important: non-greedy repetition *?
+
+
+#######################################################################
+#
+#   remove % comments
 #   - line beginning with % is completely removed
 #
 text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
@@ -701,25 +827,33 @@ text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
 #       + not, if \macro call directly before %
 #
 def f(m):
-    if re.search(r'\\' + macro_name + r'\Z', m.group(1)):
+    if re.search(r'(?<!\\)(\\\\)*\\' + macro_name + r'\Z', m.group(1)):
         # \macro call before %: do no remove line break
         return m.group(0)
     return m.group(1)
-text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n\\])%.*\n(?![ \t]*\n)',
+text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n])%.*\n(?![ \t]*\n)',
                         f, text, flags=re.M)
                 # r'(?<!x)y' matches 'y' not preceded by 'x'
 
 #   - "normal case": just remove rest of line, keeping the line break
 #
-text = mysub(r'(?<!\\)%.*$', '', text, flags=re.M)
+text = mysub(r'^(([^\n\\%]|\\.)*)%.*$', r'\1', text, flags=re.M)
 
-#   now we can remove [...] option for \\ and replace with repl_linebreak
+#   now we can replace \\ with mark_linebreak
 #   which is needed for parsing of equation environments below
+#   --> no double backslash \\ from here on
 #
-repl_linebreak = '%%L%%'
-                    # CROSS-CHECK with re_code_args()
-text = mysub(repl_linebreak_tmp + r'(' + sp_bracketed + r')?',
-                        repl_linebreak, text)
+text = mysub(r'\\\\', mark_linebreak, text)
+
+#   only afterwards remove option \\[...]:
+#   in expression bracketed, we do not account for \\
+#
+text = mysub(mark_linebreak + sp_bracketed, mark_linebreak, text)
+
+#   replace temporary marks for verbatim characters
+#
+text = mysub(mark_verbatim_tmp[0] + r'(\d+)' + mark_verbatim_tmp[1],
+                mark_verbatim[0] + r'\1' + mark_verbatim[1], text)
 
 
 #######################################################################
@@ -765,7 +899,7 @@ if parms.check_equation_replacements:
 
 #######################################################################
 #
-#   first resolve macros and special environment starts listed above
+#   resolve macros and special environment starts listed above
 #   ( possible improvement:
 #     - gather macros with same argument pattern and replacement string:
 #       lists of names in a dictionary with tuple (args, repl) as key
@@ -862,6 +996,16 @@ def f(m):
     return parms.inline_math[0]
 actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.|\\\n)+)\$', f)]
 
+#   macros \textxxx
+#
+for (m, c) in (
+    ('textbackslash', '\\'),
+    ('textasciicircum', '^'),
+    ('textasciitilde', '~'),
+):
+    actions += [(r'\\' + m + end_mac + skip_space_macro,
+                        verbatim(c, mark_verbatim, ''))]
+
 #   now perform the collected replacement actions
 #
 for (expr, repl) in actions:
@@ -928,7 +1072,7 @@ for (mac, acc) in (
 #   example: see file Example.md
 #
 #   1. split equation environment into 'lines' delimited by \\
-#      alias repl_linebreak
+#      alias mark_linebreak
 #   2. split each 'line' into 'sections' delimited by &
 #   3. split each 'section' into math and \text parts
 #
@@ -949,7 +1093,7 @@ for (mac, acc) in (
 #   - math space (variable parms.mathspace) like \quad is replaced by ' '
 
 #   Assumptions:
-#   - \\ has been changed to repl_linebreak, & is still present
+#   - \\ has been changed to mark_linebreak, & is still present
 #   - macros from LAB:EQU:MACROS already have been deleted
 #   - \text{...} has been resolved not yet
 #   - mathematical space as \; and \quad (variable parms.mathspace)
@@ -1053,19 +1197,19 @@ def parse_equ(equ):
     # remove mark_deleted
     equ = re.sub(mark_deleted, '', equ)
 
-    # then split into lines delimited by \\ alias repl_linebreak
+    # then split into lines delimited by \\ alias mark_linebreak
     # BUG (with warning for braced macro arguments):
-    # repl_line() and later repl_sec() may fail if \\ alias repl_linebreak
+    # repl_line() and later repl_sec() may fail if \\ alias mark_linebreak
     # or later & are argument of a macro
     #
     for f in re.finditer(braced, equ):
-        if re.search(repl_linebreak + r'|(?<!\\)&', f.group(1)):
+        if re.search(mark_linebreak + r'|(?<!\\)&', f.group(1)):
             warning('"\\\\" or "&" in {} braces (macro argument?):'
                         + ' not properly handled',
-                        re.sub(repl_linebreak, r'\\\\', equ))
+                        re.sub(mark_linebreak, r'\\\\', equ))
             break
     # important: non-greedy *? repetition
-    line = r'((.|\n)*?)(' + repl_linebreak + r'|\Z)'
+    line = r'((.|\n)*?)(' + mark_linebreak + r'|\Z)'
     # return replacement for RE line
     def repl_line(m):
         # finally, split line into sections delimited by '&'
@@ -1135,7 +1279,7 @@ if cmdline.unkn:
             envs += [m.group(1)]
     envs.sort()
     for e in envs:
-        if e != '%':                    # see variable mark_begin_env
+        if e != mark_internal_pre:
             print(r'\begin{' + e + '}')
     exit()
 
@@ -1200,7 +1344,7 @@ text = mysub(r'\\[!-]', '', text)
 #
 text = mysub(r'^([ \t]*' + mark_deleted + r'[ \t]*)+\n', '', text, flags=re.M)
 text = mysub(mark_deleted, '', text)
-text = mysub(repl_linebreak, ' ', text)
+text = mysub(mark_linebreak, ' ', text)
 
 
 ##################################################################
@@ -1264,10 +1408,21 @@ def write_numbers(nums, mx):
             s = '?'
         cmdline.nums.write(s + '\n')
 
-#   resolve backslash escapes for {, }, $, %, _, &, #
+#   - resolve backslash escapes for {, }, $, %, _, &, #
+#   - resolve verbatim characters
 #
 def resolve_escapes(txt):
-    return re.sub(r'\\([{}$%_&#])', r'\1', txt)
+    # subsequent replacement runs would lead to mistakes
+    def f(m):
+        if m.group(1):
+            return m.group(1)
+        c = chr(int(m.group(2)))
+        if c == '\n':
+            # for line number tracking, compare verbatim()
+            return ''
+        return c
+    return re.sub(r'\\([{}$%_&#])|' 
+            + mark_verbatim[0] + r'(\d+)' + mark_verbatim[1], f, txt)
 
 #   on option --extr: only print arguments of these macros
 #
