@@ -1,4 +1,4 @@
-# Tex2txt, a flexible filter for complicated texts
+# Tex2txt: a flexible LaTeX filter with conservation of text flow
 [General description](#description)<br>
 [Selected actions](#actions)<br>
 [Usage](#usage)<br>
@@ -41,7 +41,7 @@ equations.
 Therefore, one can check embedded \text{...} parts (macro from LaTeX package
 amsmath), interpunction and spacing in the text flow, if it includes—not too
 complex—displayed equations.
-Comments on that can be found [below](#equations).
+Comments on that can be found [in the section below](#equations).
 An example is shown in file Example.md, operation is summarized in the script
 at label LAB:EQUATIONS.
 
@@ -56,21 +56,25 @@ with filtered messages from the language checker.<br>
 Remark: Before application, variables in this script have to be customized.
 
 ## Selected actions<a name=actions></a>
-- frames \begin{...} and \end{...} of environments are deleted;
+- frames \\begin\{...\} and \\end\{...\} of environments are deleted;
   tailored behaviour for environment types listed in script
-- flexible treatment of own macros with arbitrary arguments
-- text in heading macros as \section{...} is extracted with
+- flexible treatment of own macros with arbitrary LaTeX-style arguments
+- text in heading macros as \\section\{...\} is extracted with
   added interpunction
-- suitable placeholders for \ref, \eqref, \pageref, and \cite
+- suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
 - "undeclared" macros are silently ignored, keeping their arguments
+  with enclosing \{\} braces removed
+- treatment of \\verb(\*) macros and verbatim(\*) environments,
+  see LAB:VERBATIM in script
 - inline math $...$ is replaced with text from rotating collection
-  in variable parms.inline_math
+  in variable parms.inline\_math in script
 - equation environments are resolved in a way suitable for check of
-  interpunction and spacing, argument of \text{...} is included into output
+  interpunction and spacing, argument of \\text\{...\} is included into output
   text; \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
-  see [below](#equations), file Example.md, and LAB:EQUATIONS in the script
+  see [the section below](#equations), file Example.md,
+  and LAB:EQUATIONS in script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
-- letters with text-mode accents as \\' or \v are translated to 
+- letters with text-mode accents as \\' or \\v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
 - replacement of things like double quotes \'\' and dashs \-\- with UTF8
   characters;
@@ -95,7 +99,7 @@ Remark: Before application, variables in this script have to be customized.
 - option `--defs file`<br>
   file with additional declarations, example file content (defs members,
   given without lambda, are 'appended' to corresponding parms members):<br>
-  `defs.project_macros = (Macro('xyz', 'AA', r'\2'),)`
+  `defs.project_macros = (Macro(name='xyz', args='AA', repl=r'\2'),)`
 - option `--extr ma[,mb,...]` (list of macro names)<br>
   extract only first braced argument of these macros;
   useful, e.g., for check of foreign-language text and footnotes
@@ -220,7 +224,7 @@ A severe general problem is order of macro resolution.
 While TeX strictly evaluates from left to right, the order of treatment by
 regular expressions is completely different.
 This calls for hacks like the regular expression in skip_space_macro together
-with the placeholder \begin{%};
+with the placeholder mark\_begin\_env;
 it aims to avoid that a macro without arguments consumes leading space
 inside of an already resolved following environment.
 
