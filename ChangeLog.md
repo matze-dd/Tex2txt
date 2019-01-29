@@ -1,3 +1,11 @@
+Next version
+------------
+- added macros \\verb(\*) and environments verbatim(\*), see LAB:VERBATIM
+- added macros \\textbackslash, \\textasciicircum and \\textasciitilde:
+  the raw characters \\ and \^ and \~ cannot be obtained via escaping
+- slightly re-organized comment removal and replacement of double
+  backslash \\\\
+
 Release 1.4.2
 -------------
 - fixed bug: sequence backslash-linebreak ('\\\\\\n') now creates ' ' space
