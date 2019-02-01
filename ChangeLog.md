@@ -1,5 +1,7 @@
-Next version
-------------
+Release 1.5.0
+-------------
+- improved line number tracking inside of displayed equations:<br>
+  closed issue \#2, updated Example.md
 - added macros \\verb(\*) and environments verbatim(\*), see LAB:VERBATIM
 - added macros \\textbackslash, \\textasciicircum and \\textasciitilde:
   the raw characters \\ and \^ and \~ cannot be obtained via escaping
