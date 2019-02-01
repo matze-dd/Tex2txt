@@ -88,6 +88,7 @@ parms.project_macros = lambda: (
     Simple('zB', 'z.~B. '),
     # Simple('zB', r'z.\\,B. '),
 
+    # see LAB:VERBATIM below
     # Macro('verb', 'A', '[verbatim]'),
     Macro('verb', 'A', r'\1'),
     # Macro(r'verb\*', 'A', '[verbatim*]'),
@@ -560,6 +561,7 @@ def EnvBegin(name, args='', repl=''):
 def re_code_args(args, repl, who, s, no_backslash=False):
     # return regular expression for 'OAA' code in args,
     # do some checks for replacment string repl
+    # CROSS-CHECK with mark_internal_pre und mark_internal_post
     ret = ''
     for a in args:
         if a == 'A':
@@ -574,11 +576,11 @@ def re_code_args(args, repl, who, s, no_backslash=False):
         fatal('error in replacement for ' + who + "('" + s + "', ...):\n" + e)
     if no_backslash and repl.count('\\'):
         err('no backslashs allowed')
-    for m in re.finditer(r'\\(\d)', repl):
+    for m in re.finditer(r'(?<!\\)(?:\\\\)*\\(\d)', repl):
         # avoid exceptions from re module
         n = int(m.group(1))
         if n < 1 or n > len(args):
-            err('invalid "\\' + m.group(1) + '"')
+            err('invalid reference "\\' + m.group(1) + '"')
     if re.search(r'(?<!\\\\)%', repl):
         # ensure that mark_linebreak and mark_deleted do work
         err(r"please use r'\\%' to insert escaped percent sign")
@@ -605,8 +607,9 @@ skip_space_macro = (r'(?:[ \t]*(?:\n(?=[ \t]*\S)(?![ \t]*\\begin'
 
 #   these RE match beginning and end of arbitrary "standard" environments
 #
-re_begin_env = begin_lbr + r'[^\\{}]+\}'
-re_end_env = end_lbr + r'[^\\{}]+\}'
+environ_name = r'[^\\{}\n]+'
+re_begin_env = begin_lbr + environ_name + r'\}'
+re_end_env = end_lbr + environ_name + r'\}'
 
 #   UTF-8 characters;
 #   name lookup, if char given e.g. from copy-and-paste:
@@ -662,15 +665,22 @@ def mysub(expr, repl, text, flags=0, extract=None):
     last = 0
     for m in re.finditer(expr, txt, flags=flags):
         t = m.group(0)
+        if not t:
+            continue
         if type(repl) is str:
-            r = m.expand(repl)
-        else:   # repl is a callable
+            r = myexpand(m, repl, text)
+        else:
             r = repl(m)
+        if type(r) is tuple:
+            # replacement contains line number information
+            nums2 = r[1]
+            r = r[0]
+        else:
+            nums2 = None
         res += txt[last:m.start(0)]
         last = m.end(0)
         # lin: first line number of current replacement action
         lin = res.count('\n')
-        res += r
         nt = t.count('\n')
         nr = r.count('\n')
         if extract:
@@ -679,17 +689,70 @@ def mysub(expr, repl, text, flags=0, extract=None):
             # ll: original line number of line lin
             ll = abs(numbers[lin])
             if nr > 0 or not r:
-                numbers = numbers[:lin] + (-ll,) * nr + numbers[lin+nt:]
+                if nums2:
+                    # replacement with line number information
+                    numbers = calc_numbers(res, r, numbers, lin, nt, nums2)
+                else:
+                    numbers = numbers[:lin] + (-ll,) * nr + numbers[lin+nt:]
             else:
                 # join to single line: keep correct line number
                 numbers = numbers[:lin] + (-ll,) + numbers[lin+nt+1:]
+        res += r
     return (res + txt[last:], numbers)
+
+#   helper function for mysub()
+#
+def calc_numbers(res, repl, numbers, lin, nt, nums2):
+    t = text_combine((res, numbers[:lin+1]), ('', nums2))
+    t = text_combine((repl, t[1]), ('', numbers[lin+nt:]))
+    return t[1]
+
+#   combine (add) two text elements with line number information
+#
+def text_combine(text1, text2):
+    space = (r'\A(' + mark_deleted + r'|' + re_begin_env
+                + r'|' + re_end_env + r'|\s)*\Z')
+    (t1, n1) = text1
+    (t2, n2) = text2
+    i = t1.rfind('\n') + 1          # i == 0, if not found
+    if re.search(space, t1[i:]):
+        # only "space" after last line break in text1:
+        # use first line number from text2 at junction
+        n = n1[:-1] + n2
+    else:
+        # use last line number from text1 at junction
+        n = n1[:-1] + (-abs(n1[-1]),) + n2[1:]
+    return (t1 + t2, n)
+
+#   prepend and append plain strings to a text with line number information
+#
+def text_add_frame(pre, post, text):
+    return (
+        pre + text[0] + post,
+        (-abs(text[1][0]),) * pre.count('\n')
+                + text[1]
+                + (-abs(text[1][-1]),) * post.count('\n')
+    )
+
+#   extract text with line number information from a group of a match
+#
+def text_from_match(m ,grp, text):
+    if m.string is not text[0]:
+        fatal('text_from_match(): bad match object')
+    beg = m.string[:m.start(grp)].count('\n')
+    end = beg + m.group(grp).count('\n') + 1
+    return (m.group(grp), text[1][beg:end])
+
+#   here, we could re-implement parsing of the repl string and provide
+#   line number information, if a used capturing group spans multiple lines
+#
+def myexpand(m, repl, text):
+    return m.expand(repl)
 
 def mysearch(expr, text, flags=0):
     if type(text) is not tuple:
         fatal('wrong arg for mysearch()')
     return re.search(expr, text[0], flags=flags)
-
 def text_get_txt(text):
     return text[0]
 def text_get_num(text):
@@ -755,12 +818,10 @@ if cmdline.file:
     text = myopen(cmdline.file).read()
 else:
     text = sys.stdin.read()
-if not text or text[-1] != '\n':
-    text += '\n'
 
 #   the initial list of line numbers: in fact "only" a tuple
 #
-numbers = tuple(range(1, text.count('\n') + 1))
+numbers = tuple(range(1, text.count('\n') + 2))
 
 #   for mysub():
 #   text becomes a 2-tuple of text string and number list
@@ -779,6 +840,9 @@ text = (text, numbers)
 #     \begin{verbatim(*)}...\end{verbatim(*)}
 #       --> can be removed or replaced by fixed text with 'verbatim'
 #           or r'verbatim\*' entry in parms.environments
+#       --> complete removal without paragraph break:
+#           \LTskip{\begin{verbatim}...\end{verbatim}}
+#           or \LTalter{...}{replacement}
 #   - expanded text of \verb(*) macro is enclosed in \verb(*){...}
 #       --> can be removed or replaced with Macro('verb', 'A', ...)
 #           or Macro(r'verb\*', 'A', ...) in parms.*_macros
@@ -788,17 +852,22 @@ text = (text, numbers)
 #
 def f(m):
     # enclose coded text in \begin{verbatim(*)}...\end{verbatim(*)},
-    # enforce heading and trailing empty lines for environment content
-    return (m.group(1) + '\n\n\\begin{verbatim' + verb_asterisk + '}'
-                + verbatim(m.group(3), mark_verbatim_tmp, verb_asterisk)
-                + '\\end{verbatim' + verb_asterisk + '}\n\n')
+    # enforce heading and trailing empty lines for environment content,
+    # even in case of single line like `A\begin{verbatim}X\end{verbatim}B'
+    def g(m):
+        return verbatim(m.group(0), mark_verbatim_tmp, verb_asterisk)
+    t = text_from_match(m, 3, text)
+    t = mysub(r'.|\n', g, t)
+    return text_add_frame(
+            m.group(1) + '\n\n\\begin{verbatim' + verb_asterisk + '}',
+            '\\end{verbatim' + verb_asterisk + '}\n\n', t)
 verb_asterisk = '*'
 text = mysub(r'^(([^\n\\%]|\\.)*)' + begin_lbr + r'verbatim\*\}((.|\n)*?)'
-                + end_lbr + r'verbatim\*\}', f, text, flags=re.M)
+                + r'\\end\{verbatim\*\}', f, text, flags=re.M)
                         # important: non-greedy repetition *?
 verb_asterisk = ''
 text = mysub(r'^(([^\n\\%]|\\.)*)' + begin_lbr + r'verbatim\}((.|\n)*?)'
-                + end_lbr + r'verbatim\}', f, text, flags=re.M)
+                + r'\\end\{verbatim\}', f, text, flags=re.M)
                         # important: non-greedy repetition *?
 
 def f(m):
@@ -936,7 +1005,7 @@ cnt = 1
 match = None
 while flag:
     # loop until no more replacements performed
-    if cnt > 100:
+    if cnt > 2 * parms.max_depth_br:
         fatal('infinite recursion in macro definition?',
                         match.group(0) if match else '')
     cnt += 1
@@ -1190,26 +1259,26 @@ def split_sec(txt, first_on_line):
 #   parse the text of an equation environment
 #
 def parse_equ(equ):
-    # first resolve sub-environments (e.g. cases) in order
-    # to see interpunction
-    equ = re.sub(re_begin_env, '', equ)
-    equ = re.sub(re_end_env, '', equ)
-    # remove mark_deleted
-    equ = re.sub(mark_deleted, '', equ)
+    # first resolve sub-environments (e.g. cases) and mark_deleted
+    # in order to see interpunction
+    d = (r'((' + re_begin_env + r')|(' + re_end_env
+                    + r')|(' + mark_deleted + r'))')
+    equ = mysub(d, '', equ)
 
     # then split into lines delimited by \\ alias mark_linebreak
     # BUG (with warning for braced macro arguments):
     # repl_line() and later repl_sec() may fail if \\ alias mark_linebreak
     # or later & are argument of a macro
     #
-    for f in re.finditer(braced, equ):
+    for f in re.finditer(braced, text_get_txt(equ)):
         if re.search(mark_linebreak + r'|(?<!\\)&', f.group(1)):
             warning('"\\\\" or "&" in {} braces (macro argument?):'
                         + ' not properly handled',
-                        re.sub(mark_linebreak, r'\\\\', equ))
+                        re.sub(mark_linebreak, r'\\\\', text_get_txt(equ)))
             break
+
     # important: non-greedy *? repetition
-    line = r'((.|\n)*?)(' + mark_linebreak + r'|\Z)'
+    line = skip_space + r'((.|\n)*?)(' + mark_linebreak + r'|\Z)'
     # return replacement for RE line
     def repl_line(m):
         # finally, split line into sections delimited by '&'
@@ -1224,9 +1293,11 @@ def parse_equ(equ):
             ret = split_sec(m.group(1), flag.first_on_line) + ' '
             flag.first_on_line = False
             return ret
-        return '  ' + re.sub(sec, repl_sec, m.group(1)) + '\n'
+        t = text_from_match(m, 1, equ)
+        t = mysub(sec, repl_sec, t)
+        return text_add_frame('  ', '\n', t)
 
-    return re.sub(line, repl_line, equ)
+    return mysub(line, repl_line, equ)
 
 #   replace equation environments listed above
 #
@@ -1235,14 +1306,17 @@ for (name, args, replacement) in parms.equation_environments():
         re_args = re_code_args(args, replacement, 'EquEnv', name)
         expr = re_nested_env(name, parms.max_depth_env, re_args)
         def f(m):
-            return mark_begin_env + parse_equ(m.group('body')) + mark_end_env
+            t = text_from_match(m, 'body', text)
+            t = parse_equ(t)
+            return text_add_frame(mark_begin_env, mark_end_env, t)
         text = mysub(expr, f, text)
         continue
     # environment with fixed replacement and added interpunction
     env = re_nested_env(name, parms.max_depth_env, '')
     re_code_args('', replacement, 'EquEnv', name, no_backslash=True)
     def f(m):
-        txt = parse_equ(m.group('body')).strip()
+        txt = parse_equ(text_from_match(m, 'body', text))
+        txt = text_get_txt(txt).strip()
         s = replacement
         m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
         if m:
@@ -1274,7 +1348,8 @@ if cmdline.unkn:
         if m not in macsknown:
             print('\\' + m)
     envs = []
-    for m in re.finditer(begin_lbr + r'([^\\{}]+)\}', text_get_txt(text)):
+    for m in re.finditer(begin_lbr + r'(' + environ_name + r')\}',
+                            text_get_txt(text)):
         if m.group(1) not in envs:
             envs += [m.group(1)]
     envs.sort()
