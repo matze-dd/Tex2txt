@@ -19,9 +19,7 @@ In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, paragraphs
-and sentences remain intact.
-(The Bash script shell.sh shows an example for filtering messages from a
-language checker, see also Example.md.)
+and sentences remain intact; see Example.md.
 
 The starting section of the Python script lists macros and environments
 with tailored treatment.
