@@ -32,28 +32,27 @@ With the filter from the Bash script shell.sh, the typo 'andx' will be
 related to line 4.
 The problems in the equation (missing comma leads to word repetition,
 missing space to spelling error) will be related to line 12+ and 14+,
-respectively.
+respectively (line 12 is \\begin\{cases\}).
 
 Here is the output of shell.sh. Line numbers in \[\] brackets have been
 added by the filter in variable \$repl\_lines of the Bash script.
-(Column numbers could be supressed by a changed filter.)
 ```
-1.) Line 2 [4], column 26, Rule ID: MORFOLOGIK_RULE_EN_GB
+1.) Line 2 [4], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: and; Andy; and x
 We see   that all is acceptable andx   that it can be improved.  Thus, with a con...
                                 ^^^^                                             
 
-2.) Line 7 [12+], column 18, Rule ID: ENGLISH_WORD_REPEAT_RULE
+2.) Line 7 [12+], Rule ID: ENGLISH_WORD_REPEAT_RULE
 Message: Possible typo: you repeated a word
 Suggestion: Z
 ...C,   U  equal V for all W,    X  equal Y for Z    Z in caseU.  
                                                 ^^^^^^            
 
-3.) Line 8 [14+], column 8, Rule ID: MORFOLOGIK_RULE_EN_GB
+3.) Line 8 [14+], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: case; cases; Casey; cased; CSEU; case U
 ...ual V for all W,    X  equal Y for Z    Z in caseU.  
                                                 ^^^^^   
-Time: 2052ms for 3 sentences (1.5 sentences/sec)
+Time: 2917ms for 3 sentences (1.0 sentences/sec)
 ```
