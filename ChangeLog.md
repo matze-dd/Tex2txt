@@ -1,6 +1,9 @@
+
+- filter in shell.sh now ignores column numbers; Example.md updated
+
 Release 1.5.0
 -------------
-- improved line number tracking inside of displayed equations:<br>
+- improved line number tracking inside of displayed equations:
   closed issue \#2, updated Example.md
 - added macros \\verb(\*) and environments verbatim(\*), see LAB:VERBATIM
 - added macros \\textbackslash, \\textasciicircum and \\textasciitilde:
