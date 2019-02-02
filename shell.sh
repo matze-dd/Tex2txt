@@ -7,7 +7,9 @@ file=z.tex
 
 #   Python3:
 #   add original line numbers to messages
-#   - argv[1]: RE search pattern; first () group must contain the number
+#   - argv[1]:  RE search pattern;
+#               first () group must contain the number;
+#               text till second () group is removed
 #   - argv[2]: file with original line numbers
 #
 repl_lines='
@@ -19,7 +21,7 @@ def repl(m):
     if lin >= 0 and lin < len(numbers):
         n = numbers[lin].strip()
         return (m.string[m.start(0):m.end(1)] + " [" + n + "]"
-                    + m.string[m.end(1):m.end(0)])
+                    + m.string[m.end(2):m.end(0)])
     return m.group(0)
 for lin in sys.stdin:
     sys.stdout.write(re.sub(expr, repl, lin))
@@ -34,5 +36,5 @@ python3 tex2txt.py --lang en --nums $file.lin $file > $file.txt
 #
 java -jar ../LT/LanguageTool-4.4/languagetool-commandline.jar \
         --language en-GB --disable WHITESPACE_RULE $file.txt \
-    | python3 -c "$repl_lines" '^\d+\.\) Line (\d+),' $file.lin
+    | python3 -c "$repl_lines" '^\d+\.\) Line (\d+), column (\d+)' $file.lin
 
