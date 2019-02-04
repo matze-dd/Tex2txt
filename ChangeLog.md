@@ -1,5 +1,9 @@
-
-- filter in shell.sh now ignores column numbers; Example.md updated
+Release 1.5.1
+-------------
+- issue \#3: now line number tracking in multi-line macro arguments does work
+- fixed bug (issue \#4): now reject insertion of raw % in file from --repl
+- filter in shell.sh now ignores column numbers; Example.md updated;
+  same change in checks.sh
 
 Release 1.5.0
 -------------
