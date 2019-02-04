@@ -23,8 +23,8 @@
 #
 #   Principle of operation:
 #   - read complete input text into a string, then make replacements
-#   - replacements are performed via the wrapper mysub() in order
-#     to observe deletion and inclusion of line breaks
+#   - replacements are performed via the "re-implementation" mysub() of
+#     re.sub() in order to observe deletion and inclusion of line breaks
 #   - in order to treat nested braces / brackets and some nested
 #     environments, we construct regular expressions by iteration;
 #     maximum recognized nesting depth (and thus length of these expressions)
@@ -63,8 +63,8 @@ parms = Aux()
 #   repl:
 #       - replacement pattern, r'\d' (d: single digit) extracts text
 #         from position d in args (counting from 1)
-#       - escape rules: see replacement argument of re.sub();
-#         include single backslash: repl=r'...\\...'
+#       - other escape rules: see escape handling at myexpand() below;
+#         e.g., include a single backslash: repl=r'...\\...'
 #       - inclusion of % only as escaped version r'\\%' accepted, will be
 #         resolved to % at the end by resolve_escapes()
 #       - inclusion of double backslash \\ and replacement ending with \
@@ -641,7 +641,7 @@ def verbatim(s, mark, ast):
 
 #######################################################################
 #
-#   This wrapper for re.sub() operates a small machinery for
+#   This "re-implementation" of re.sub() operates a small machinery for
 #   line number tracking.
 #   Argument text is a 2-tuple.
 #       text[0]: the text as string
@@ -668,14 +668,15 @@ def mysub(expr, repl, text, flags=0, extract=None):
         if not t:
             continue
         if type(repl) is str:
-            r = myexpand(m, repl, text)
+            ex = myexpand(m, repl, text)
         else:
-            r = repl(m)
-        if type(r) is tuple:
+            ex = repl(m)
+        if type(ex) is tuple:
             # replacement contains line number information
-            nums2 = r[1]
-            r = r[0]
+            r = ex[0]
+            nums2 = ex[1]
         else:
+            r = ex
             nums2 = None
         res += txt[last:m.start(0)]
         last = m.end(0)
@@ -714,8 +715,8 @@ def text_combine(text1, text2):
                 + r'|' + re_end_env + r'|\s)*\Z')
     (t1, n1) = text1
     (t2, n2) = text2
-    i = t1.rfind('\n') + 1          # i == 0, if not found
-    if re.search(space, t1[i:]):
+    if n1[-1] == n2[0] or re.search(space, t1[t1.rfind('\n')+1:]):
+        # same line numbers at junction or
         # only "space" after last line break in text1:
         # use first line number from text2 at junction
         n = n1[:-1] + n2
@@ -729,9 +730,8 @@ def text_combine(text1, text2):
 def text_add_frame(pre, post, text):
     return (
         pre + text[0] + post,
-        (-abs(text[1][0]),) * pre.count('\n')
-                + text[1]
-                + (-abs(text[1][-1]),) * post.count('\n')
+        (text[1][0],) * pre.count('\n') + text[1]
+                + (text[1][-1],) * post.count('\n')
     )
 
 #   extract text with line number information from a group of a match
@@ -743,11 +743,69 @@ def text_from_match(m ,grp, text):
     end = beg + m.group(grp).count('\n') + 1
     return (m.group(grp), text[1][beg:end])
 
-#   here, we could re-implement parsing of the repl string and provide
-#   line number information, if a used capturing group spans multiple lines
+#   expansion of a match from replacement template repl:
+#   returned text element provides line number information,
+#   if repl contains a reference to a capturing group
 #
 def myexpand(m, repl, text):
-    return m.expand(repl)
+#   return m.expand(repl)       # fail-save version
+    if not repl:
+        return ''
+
+    # first parse repl: build list 'ops' of
+    # (strings) and (numbers of referenced capturing groups)
+    # - compare parse_template() in /usr/lib/python?.?/sre_parse.py
+    escapes = {
+        'a': '\a', 'b': '\b', 'f': '\f', 'n': '\n',
+        'r': '\r', 't': '\t', 'v': '\v', '\\': '\\'
+    }
+    ops = []
+    first = None
+    cur_str = ''
+    i = 0
+    while i < len(repl):
+        c = repl[i]
+        i += 1
+        if c != '\\':
+            cur_str += c
+            continue
+        if i >= len(repl):
+            cur_str += '\\'
+            break
+        c = repl[i]
+        i += 1
+        if c in escapes:
+            cur_str += escapes[c]
+        elif c in '0g':
+            fatal('myexpand(): escape sequences \\0... and \\g<...>'
+                            + ' not implemented')
+        elif c.isdecimal():
+            if cur_str:
+                ops += [cur_str]
+                cur_str = ''
+            if first is None:
+                first = len(ops)
+            ops += [int(c)]
+        else:
+            cur_str += '\\' + c
+    if cur_str:
+        ops += [cur_str]
+
+    if first is None:
+        # no group reference found, repl == '' was excluded above
+        return ops[0]
+
+    # build replacement text with line number information
+    t = text_from_match(m, ops[first], text)
+    if first > 0:
+        t = text_add_frame(ops[0], '', t)
+    for i in range(first + 1, len(ops)):
+        if type(ops[i]) is int:
+            t2 = text_from_match(m, ops[i], text)
+            t = text_combine(t, t2)
+        else:
+            t = text_add_frame('', ops[i], t)
+    return t
 
 def mysearch(expr, text, flags=0):
     if type(text) is not tuple:
@@ -1451,15 +1509,16 @@ if cmdline.repl:
             s = r'\s+'
         if not t:
             continue
-
         if t[0].isalpha():
             t = r'\b' + t       # require word boundary
         if t[-1].isalpha():
             t = t + r'\b'
-        r = s = ''
-        for i in range(i + 1, len(lin)):
-            r += s + lin[i]
-            s = ' '
+
+        r = ' '.join(lin[i+1:])
+        if re.search(r'(?<!\\)%', r):
+            fatal('please use escaped \\% for replacement in file "'
+                                + cmdline.repl + '"', r)
+        r = re.sub('\\\\', '\\\\\\\\', r)       # \ ==> \\
         text = mysub(t, r, text)
 
 
