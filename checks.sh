@@ -134,7 +134,9 @@ fi
 
 #   Python3:
 #   add original line numbers to messages
-#   - argv[1]: RE search pattern; first () group must contain the number
+#   - argv[1]:  RE search pattern;
+#               first () group must contain the number;
+#               text till second () group is removed
 #   - argv[2]: file with original line numbers
 #
 repl_lines='
@@ -146,11 +148,12 @@ def repl(m):
     if lin >= 0 and lin < len(numbers):
         n = numbers[lin].strip()
         return (m.string[m.start(0):m.end(1)] + " [" + n + "]"
-                    + m.string[m.end(1):m.end(0)])
+                    + m.string[m.end(2):m.end(0)])
     return m.group(0)
 for lin in sys.stdin:
     sys.stdout.write(re.sub(expr, repl, lin))
 '
+
 
 ##########################################################
 ##########################################################
@@ -201,7 +204,7 @@ do
         LT_output=$(java -jar $LTcommand $txtdir/$i.$ext \
             | LTfilter \
             | python3 -c "$repl_lines" \
-                    '^\d+\.\) Line (\d+), column \d+,' $txtdir/$i.$num)
+                    '^\d+\.\) Line (\d+), column (\d+)' $txtdir/$i.$num)
         LT_output_lines=$(echo "$LT_output" | wc -l)
         if (( $LT_output_lines == 1 ))
         then
@@ -212,7 +215,7 @@ do
             LT_foot_output=$(java -jar $LTcommand $txtdir/$i.$foot.$ext \
                 | LTfilter \
                 | python3 -c "$repl_lines" \
-                    '^\d+\.\) Line (\d+), column \d+,' $txtdir/$i.$foot.$num)
+                    '^\d+\.\) Line (\d+), column (\d+)' $txtdir/$i.$foot.$num)
             LT_foot_output_lines=$(echo "$LT_foot_output" | wc -l)
             if (( $LT_foot_output_lines == 1 ))
             then
@@ -283,9 +286,9 @@ do
         echo 'Single letters'
         echo '=============='
         echo "$single_letters" \
-            | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$num
+            | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$num
         echo "$single_letters_foot" \
-            | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$foot.$num
+            | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$foot.$num
         echo
     fi
     if [ -n "$errs_foreign" ]
@@ -294,7 +297,7 @@ do
         echo 'Errors in foreign-language text'
         echo '==============================='
         echo "$errs_foreign" \
-            | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$foreign.$num
+            | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$foreign.$num
         echo
     fi
     if [[ ( "$LT_output_lines" > 1 ) \
@@ -311,11 +314,11 @@ do
         grep -n '^' $txtdir/$i.$ext \
             | sed -E $repls_hunspell \
             | hunspell -L -p $priv_dic_native \
-            | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$num
+            | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$num
         grep -n '^' $txtdir/$i.$foot.$ext \
             | sed -E $repls_hunspell \
             | hunspell -L -p $priv_dic_native \
-            | python3 -c "$repl_lines" '^(\d+):' $txtdir/$i.$foot.$num
+            | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$foot.$num
         echo
         echo '============='
         echo 'Unknown words'
