@@ -1,4 +1,4 @@
-# Tex2txt: flexible LaTeX filter with conservation of text flow
+# Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line numbers
 [General description](#description)<br>
 [Selected actions](#actions)<br>
 [Usage](#usage)<br>
