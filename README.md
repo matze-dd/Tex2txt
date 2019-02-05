@@ -235,3 +235,5 @@ approximation of the "real thing".
 Nevertheless, it seems to work quite well in practice, and it inherits high
 flexibility from Python.
 
+Under Issues, some known shortcomings are listed.
+
