@@ -10,16 +10,20 @@ Unfortunately, there is a naming conflict with the related Haskell package.
 We ask for apology.
 
 ## General description<a name="description"></a>
-This is a Python script for extracting raw text from LaTeX documents,
-especially with focus on mathematics.
-The aim is to produce only few "false" warnings when feeding the text into
-a language checker, even if the text flow contains displayed equations.
+This is a Python script for extracting raw text from LaTeX documents.
+While virtually no text should be dropped by the filter,
+the aim is to produce only few "false" warnings when feeding the result into
+a language checker.
+The goal especially applies to documents containing displayed equations.
+Problems with interpunction and case sensitivity would arise, if
+equation environments were simply removed or replaced by fixed text.
 
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, paragraphs
-and sentences remain intact; see Example.md.
+and sentences remain intact.
+This is demonstrated in Example.md.
 
 The starting section of the Python script lists macros and environments
 with tailored treatment.
@@ -29,7 +33,7 @@ With option --defs, definitions also can be extended by an additional file.
 
 Declared macros can be used recursively.
 Unknown macros and environments are silently ignored while keeping their
-arguments and bodies, respectively.
+arguments and bodies, respectively; they can be listed with option --unkn.
 As in TeX, macro resolution consumes white space (possibly including a line
 break) between macro name and next non-space character within the current
 paragraph.
