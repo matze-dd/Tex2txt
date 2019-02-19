@@ -400,7 +400,7 @@ def set_language_de():
 
 def set_language_en():
     # see comments in set_language_de()
-    parms.inline_math = ('A', 'B', 'C', 'D', 'E', 'F')
+    parms.inline_math = ('B', 'C', 'D', 'E', 'F', 'G')
     parms.display_math = ('U', 'V', 'W', 'X', 'Y', 'Z')
     parms.check_equation_replacements = False
     parms.mathoptext = {'+': ' plus ', '-': ' minus ',
