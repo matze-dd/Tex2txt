@@ -1,6 +1,11 @@
+
+- inline math $...$ should not be replaced with 'A' in English;
+  thanks to symphorien
+
 Release 1.5.1
 -------------
-- issue \#3: now line number tracking in multi-line macro arguments does work
+- closed issue \#3: now line number tracking in multi-line macro arguments
+  does work better
 - fixed bug (issue \#4): now reject insertion of raw % in file from --repl
 - filter in shell.sh now ignores column numbers; Example.md updated;
   same change in checks.sh
