@@ -23,7 +23,7 @@ the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, paragraphs
 and sentences remain intact.
-This is demonstrated in Example.md.
+This is demonstrated in [Example.md](Example.md).
 
 The starting section of the Python script lists macros and environments
 with tailored treatment.
@@ -44,18 +44,18 @@ Therefore, one can check embedded \text{...} parts (macro from LaTeX package
 amsmath), interpunction and spacing in the text flow, if it includes—not too
 complex—displayed equations.
 Comments on that can be found [in the section below](#equations).
-An example is shown in file Example.md, operation is summarized in the script
-at label LAB:EQUATIONS.
+An example is shown in file [Example.md](Example.md), operation is summarized
+in the script at label LAB:EQUATIONS.
 
 A more complete Bash script for language checking of a whole document tree
-is checks.sh.
+is [checks.sh](checks.sh).
 For instance, the command<br>
 `bash checks.sh Banach/*.tex > errs`<br>
 will check the main text, extracted footnotes (with their own text flow)
 and foreign-language text in all these files.
 The result file errs will contain names of files with problems together
-with filtered messages from the language checker.<br>
-Remark: Before application, variables in this script have to be customized.
+with filtered messages from the language checker.
+Before application, variables in this script have to be customized.
 
 ## Selected actions<a name=actions></a>
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
@@ -73,7 +73,7 @@ Remark: Before application, variables in this script have to be customized.
 - equation environments are resolved in a way suitable for check of
   interpunction and spacing, argument of \\text\{...\} is included into output
   text; \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
-  see [the section below](#equations), file Example.md,
+  see [the section below](#equations), file [Example.md](Example.md),
   and LAB:EQUATIONS in script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \\v are translated to 
@@ -164,7 +164,7 @@ With the entry
 ```
     EquEnv('align'),
 ```
-we obtain ("gleich" means equal):
+we obtain ("gleich" means equal, and option --lang en will print "equal"):
 ```
 Wir folgern
   D1D  gleich D2D
@@ -202,7 +202,7 @@ since the script replaces both b and -c by D2D without intermediate text.
 
 In rare cases, manipulation with \LTadd{} or \LTskip{} may be necessary
 to avoid false warnings from the language checker.
-See also file Example.md.
+See also file [Example.md](Example.md).
 
 ### Inclusion of "normal" text
 The argument of \\text\{...\} (variable for macro name in script:
@@ -210,7 +210,7 @@ parms.text\_macro) is directly copied.
 Outside of \\text, only math space like \\; and \\quad is considered as space.
 Therefore, one will get warnings from the language checker, if subsequent
 \\text and math parts are not properly separated.
-See file Example.md.
+See file [Example.md](Example.md).
 
 ## Implementation issues<a name="implementation"></a>
 In order to parse with regular expressions, some of them are constructed by
@@ -235,5 +235,5 @@ approximation of the "real thing".
 Nevertheless, it seems to work quite well in practice, and it inherits high
 flexibility from Python.
 
-Under Issues, some known shortcomings are listed.
+Under category Issues, some known shortcomings are listed.
 
