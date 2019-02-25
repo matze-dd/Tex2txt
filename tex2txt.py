@@ -49,6 +49,7 @@
 class Aux: pass
 parms = Aux()
 
+#   LAB:MACROS
 #   these are macros with tailored treatment;
 #   replacement only if not given in option --extr
 #
@@ -56,17 +57,22 @@ parms = Aux()
 #   abbreviation for Macro(name, '', repl)
 #
 #   Macro(name, args, repl=''):
+#   name:
+#       - macro name without leading backslash
+#       - characters with special meaning in regular expressions, e.g. '*',
+#         may need to be escaped; see for example declaration of \hspace
 #   args:
-#       - A: mandatory {...} argument
-#       - O: optional [...] argument
-#       - P: mandatory [...] argument, see for instance \cite
+#       - string that codes argument sequence
+#       - A: a mandatory {...} argument
+#       - O: an optional [...] argument
+#       - P: a mandatory [...] argument, see for instance \cite
 #   repl:
 #       - replacement pattern, r'\d' (d: single digit) extracts text
 #         from position d in args (counting from 1)
 #       - other escape rules: see escape handling at myexpand() below;
 #         e.g., include a single backslash: repl=r'...\\...'
-#       - inclusion of % only as escaped version r'\\%' accepted, will be
-#         resolved to % at the end by resolve_escapes()
+#       - inclusion of % only accepted as escaped version r'...\\%...',
+#         will be resolved to % at the end by resolve_escapes()
 #       - inclusion of double backslash \\ and replacement ending with \
 #         will be rejected
 #
@@ -153,7 +159,7 @@ parms.system_macros = lambda: (
     # macro for foreign-language text
     Macro(parms.foreign_lang_mac, 'A', parms.replace_frgn_lang_mac),
 
-    # LAB:EQU:MACROS
+    # LAB:EQU_MACROS
     # necessary for correct parsing of equation environments
     # (might hide interpunction, see LAB:EQUATIONS)
     Macro('label', 'A'),
@@ -189,7 +195,7 @@ parms.heading_macros = lambda: (
 #   - args: arguments at \begin, as for Macro()
 #   - repl not empty: replace whole environment with this fix text;
 #     if the actual content ends with a character from variable
-#     parms.mathpunct (ignoring macros from LAB:EQU:MACROS and variable
+#     parms.mathpunct (ignoring macros from LAB:EQU_MACROS and variable
 #     parms.mathspace), then this sign is appended
 #   - repl: plain string, no backslashs accepted
 #
@@ -291,7 +297,7 @@ parms.theorem_environments = lambda: (
 #   - do not use replacement that
 #       - ends with a backslash
 #       - may insert a double backslash
-#       - may instert an unescaped % sign
+#       - may insert an unescaped % sign
 #     (see comments at Macro() above and compare checks in re_code_args())
 #
 parms.misc_replace = lambda: (
@@ -443,7 +449,7 @@ import unicodedata
 def fatal(msg, detail=None):
     sys.stdout.write(parms.warning_error_msg)
     sys.stdout.flush()
-    err = '\n*** Internal error:\n' + msg + '\n'
+    err = '\n*** ' + sys.argv[0] + ': internal error:\n' + msg + '\n'
     if detail:
         err += detail + '\n'
     sys.stderr.write(err)
@@ -462,6 +468,7 @@ def myopen(f, mode='r'):
         fatal('could not open file "' + f + '"')
 
 #   for internal marks: cannot apear in text after removal of % comments
+#   (has to be nonsymmetrical)
 #
 mark_internal_pre = '%%%%'      # CROSS-CHECK with re_code_args()
 mark_internal_post = '%%'       # CROSS-CHECK with re_code_args()
@@ -649,6 +656,7 @@ def verbatim(s, mark, ast):
 #   Return value: tuple (string, number list)
 #   As for re.sub(), argument repl may be a callable.
 #   Argument extract: function for extracting replacements
+#   Argument track_braces: function for detection of inserted braces
 #
 #   For each line in the current text string, the number list
 #   contains the original line number (before any changes took place).
@@ -656,7 +664,7 @@ def verbatim(s, mark, ast):
 #   list are removed. On creation of an additional line, a negative
 #   placeholder is inserted in the number list.
 #
-def mysub(expr, repl, text, flags=0, extract=None):
+def mysub(expr, repl, text, flags=0, extract=None, track_braces=None):
     if type(text) is not tuple:
         fatal('wrong arg for mysub()')
     txt = text[0]
@@ -686,6 +694,8 @@ def mysub(expr, repl, text, flags=0, extract=None):
         nr = r.count('\n')
         if extract:
             extract(r, numbers[lin:lin+nr+1])
+        if track_braces:
+            track_braces(t, r)
         if nt != 0 or nr != 0:
             # ll: original line number of line lin
             ll = abs(numbers[lin])
@@ -867,9 +877,9 @@ if cmdline.defs:
         import traceback
         i = 0 if isinstance(e, SyntaxError) else -1
         s = traceback.format_exc(limit=i)
-        s = re.sub(r'"<string>"', '"' + cmdline.defs + '"', s)
-        s = re.sub(r'in <module>', '', s)
-        s = re.sub(r'Traceback \(most recent call last\):\n', '', s)
+        s = re.sub(r'\ATraceback \(most recent call last\):\n'
+                        + r'  File "<string>"(, line \d+).*\n',
+                        r'File "' + cmdline.defs + r'"\1\n', s)
         fatal('problem in file "' + cmdline.defs + '"', s)
 
 if cmdline.file:
@@ -989,28 +999,36 @@ text = mysub(mark_verbatim_tmp[0] + r'(\d+)' + mark_verbatim_tmp[1],
 #   we construct regular expressions for a larger nesting depth and
 #   test, whether the innermost group matches
 #
-for m in re.finditer(re_braced(parms.max_depth_br + 1, '(?P<inner>', ')'),
-                            text_get_txt(text)):
-    if m.group('inner'):
-        # innermost {} braces did match
-        fatal('maximum nesting depth for {} braces exceeded,'
-            + ' parms.max_depth_br=' + str(parms.max_depth_br), m.group(0))
-for m in re.finditer(re_bracketed(parms.max_depth_br + 1, '(?P<inner>', ')'),
-                            text_get_txt(text)):
-    if m.group('inner'):
-        fatal('maximum nesting depth for [] brackets exceeded,'
-            + ' parms.max_depth_br=' + str(parms.max_depth_br), m.group(0))
-
-for env in (
-    parms.equation_environments()
-    + parms.environments()
-):
-    expr = re_nested_env(env[0], parms.max_depth_env + 1, '')
-    for m in re.finditer(expr, text_get_txt(text)):
+def check_nesting_limits(text):
+    def strip_internals(s):
+        return re.sub(mark_deleted + r'|' + mark_linebreak, '', s)
+    for m in re.finditer(re_braced(parms.max_depth_br + 1, '(?P<inner>', ')'),
+                                text_get_txt(text)):
         if m.group('inner'):
-            fatal('maximum nesting depth for environments exceeded,'
-                    + ' parms.max_depth_env=' + str(parms.max_depth_env),
-                        m.group(0))
+            # innermost {} braces did match
+            fatal('maximum nesting depth for {} braces exceeded,'
+                    + ' parms.max_depth_br=' + str(parms.max_depth_br),
+                        strip_internals(m.group(0)))
+    for m in re.finditer(re_bracketed(parms.max_depth_br + 1,
+                                '(?P<inner>', ')'), text_get_txt(text)):
+        if m.group('inner'):
+            fatal('maximum nesting depth for [] brackets exceeded,'
+                    + ' parms.max_depth_br=' + str(parms.max_depth_br),
+                        strip_internals(m.group(0)))
+    for env in (
+        parms.equation_environments()
+        + parms.environments()
+    ):
+        expr = re_nested_env(env[0], parms.max_depth_env + 1, '')
+        for m in re.finditer(expr, text_get_txt(text)):
+            if m.group('inner'):
+                fatal('maximum nesting depth for environments exceeded,'
+                        + ' parms.max_depth_env=' + str(parms.max_depth_env),
+                            strip_internals(m.group(0)))
+
+#   check will be repeated during macro expansion, if braces are included
+#
+check_nesting_limits(text)
 
 #   check whether equation replacements appear in original text
 #
@@ -1058,6 +1076,13 @@ for (name, args, repl) in parms.environment_begins():
                                                     'EnvBegin', name)
     list_macs_envs.append((expr, mark_begin_env_sub + repl))
 
+#   detect insertion of braces during macro expansion
+#
+def detect_added_braces(t, r):
+    if r.count('{') > t.count('{') or r.count('}') > t.count('}'):
+        global added_braces
+        added_braces = True
+
 flag = True
 cnt = 1
 match = None
@@ -1073,7 +1098,10 @@ while flag:
         if m:
             match = m
             flag = True
-            text = mysub(expr, repl, text)
+            added_braces = False
+            text = mysub(expr, repl, text, track_braces=detect_added_braces)
+            if added_braces:
+                check_nesting_limits(text)
 
 
 ##################################################################
@@ -1212,16 +1240,16 @@ for (mac, acc) in (
 #     as ' gleich ...', if math part is not first on line ('&' is a part)
 #   - other operators like +, -, *, / are prepended e.g. as ' minus ...'
 #   - see variables parms.mathop and parms.mathoptext for text replacements
-#   - basic replacement steps to next value from parms.display_math,
-#       if part includes a leading operator,
-#       after intermediate \text{...},
-#       and if last math part ended with interpunction
-#           (the latter for parms.change_repl_after_punct == True)
+#   - the basic replacement steps to next value from parms.display_math,
+#       - if the part includes a leading operator,
+#       - after intermediate \text{...},
+#       - and if last math part ended with interpunction
+#         (this only for parms.change_repl_after_punct == True)
 #   - math space (variable parms.mathspace) like \quad is replaced by ' '
 
 #   Assumptions:
 #   - \\ has been changed to mark_linebreak, & is still present
-#   - macros from LAB:EQU:MACROS already have been deleted
+#   - macros from LAB:EQU_MACROS already have been deleted
 #   - \text{...} has been resolved not yet
 #   - mathematical space as \; and \quad (variable parms.mathspace)
 #     is still present
