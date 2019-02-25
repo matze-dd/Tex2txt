@@ -2,8 +2,9 @@
 [General description](#description)<br>
 [Selected actions](#actions)<br>
 [Usage](#usage)<br>
+[Tool integration](#integration)<br>
 [Handling of displayed equations](#equations)<br>
-[Implementation issues](#implementation)
+[Remarks on implementation](#implementation)
 
 ## Problem
 Unfortunately, there is a naming conflict with the related Haskell package.
@@ -25,7 +26,7 @@ Unnecessary creation of empty lines therefore can be avoided, paragraphs
 and sentences remain intact.
 This is demonstrated in [Example.md](Example.md).
 
-The starting section of the Python script lists macros and environments
+The starting section of the Python script gathers macros and environments
 with tailored treatment.
 Some standard macros and environments are already included, but very probably
 the collection has to be complemented.
@@ -46,16 +47,6 @@ complex—displayed equations.
 Comments on that can be found [in the section below](#equations).
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
-
-A more complete Bash script for language checking of a whole document tree
-is [checks.sh](checks.sh).
-For instance, the command<br>
-`bash checks.sh Banach/*.tex > errs`<br>
-will check the main text, extracted footnotes (with their own text flow)
-and foreign-language text in all these files.
-The result file errs will contain names of files with problems together
-with filtered messages from the language checker.
-Before application, variables in this script have to be customized.
 
 ## Selected actions<a name=actions></a>
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
@@ -78,14 +69,14 @@ Before application, variables in this script have to be customized.
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \\v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
-- replacement of things like double quotes \'\' and dashs \-\- with UTF8
+- replacement of things like double quotes '\`\`' and dashs '\-\-' with UTF8
   characters;
   replacement of \~ and \\, by UTF8 non-breaking space and
   narrow non-breaking space
-- rare warnings can be suppressed using \LTadd{}, \LTskip{},
-  \LTalter{}{} in the LaTeX text with suitable macro definition there;
+- rare warnings can be suppressed using \\LTadd{}, \\LTskip{},
+  \\LTalter{}{} in the LaTeX text with suitable macro definition there;
   e.g., adding something that only the language checker should see:<br>
-  \newcommand{\LTadd}\[1\]{}
+  \newcommand{\\LTadd}\[1\]{}
 
 ## Usage<a name="usage"></a>
 `python3 tex2txt.py [--nums file] [--repl file] [--defs file] [--extr list] [--lang xy] [--unkn] [file]`
@@ -115,12 +106,28 @@ Before application, variables in this script have to be customized.
   print list of undeclared macros and environments outside of equations;<br>
   declared macros do appear here, if a mandatory argument is missing in text
 
+## Tool integration<a name="integration"></a>
+The Python script is meant as small utility that performs a limited task
+with good quality.
+Integration with a language checker and features like tracking of
+\\input{...} directives have to be implemented "on top".
+
+A Bash script for language checking of a whole document tree is
+[checks.sh](checks.sh).
+For instance, the command<br>
+`bash checks.sh Banach/*.tex > errs`<br>
+will check the main text, extracted footnotes (with their own text flow)
+and foreign-language text in all these files.
+The result file errs will contain names of files with problems together
+with filtered messages from the language checker.
+Before application, variables in this script have to be customized.
+
 ## Handling of displayed equations<a name="equations"></a>
 ### Rationale
 Displayed equations should be part of the text flow and include the
-necessary interpunction. At least the German version of LanguageTool (LT)
-will detect a missing dot in the following snippet
-(meaning: "We conclude math Therefore,...").
+necessary interpunction.
+At least the German version of LanguageTool (LT) will detect a missing dot
+in the following snippet (meaning: "We conclude math Therefore,...").
 ```
 Wir folgern
 \begin{align}
@@ -200,7 +207,7 @@ In contrast, the text
 again will produce an LT warning due to the missing comma after b,
 since the script replaces both b and -c by D2D without intermediate text.
 
-In rare cases, manipulation with \LTadd{} or \LTskip{} may be necessary
+In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
 to avoid false warnings from the language checker.
 See also file [Example.md](Example.md).
 
@@ -212,9 +219,14 @@ Therefore, one will get warnings from the language checker, if subsequent
 \\text and math parts are not properly separated.
 See file [Example.md](Example.md).
 
-## Implementation issues<a name="implementation"></a>
-In order to parse with regular expressions, some of them are constructed by
-iteration.
+## Remarks on implementation<a name="implementation"></a>
+Parsing with regular expressions is fun, but it remains a rather coarse
+approximation of the "real thing".
+Nevertheless, it seems to work quite well in practice, and it inherits high
+flexibility from Python.
+
+In order to parse nested structures, some regular expressions are constructed
+by iteration.
 At the beginning, we hence check for instance, whether nested {} braces of
 the actual input text do overrun the corresponding regular expression.
 In that case, an error message is generated, and the variable
@@ -225,15 +237,10 @@ resource usage.
 A severe general problem is order of macro resolution.
 While TeX strictly evaluates from left to right, the order of treatment by
 regular expressions is completely different.
-This calls for hacks like the regular expression in skip_space_macro together
-with the placeholder mark\_begin\_env;
-it aims to avoid that a macro without arguments consumes leading space
+This calls for hacks like the regular expression in skip\_space\_macro
+together with the placeholder mark\_begin\_env.
+It aims to avoid that a macro without arguments consumes leading space
 inside of an already resolved following environment.
-
-Overall, parsing with regular expressions is fun, but remains a rather coarse
-approximation of the "real thing".
-Nevertheless, it seems to work quite well in practice, and it inherits high
-flexibility from Python.
 
 Under category Issues, some known shortcomings are listed.
 
