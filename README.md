@@ -51,7 +51,8 @@ in the script at label LAB:EQUATIONS.
 ## Selected actions<a name=actions></a>
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
   tailored behaviour for environment types listed in script
-- flexible treatment of own macros with arbitrary LaTeX-style arguments
+- flexible treatment of own macros with arbitrary LaTeX-style arguments;
+  see LAB:MACROS in script
 - text in heading macros as \\section\{...\} is extracted with
   added interpunction
 - suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
@@ -71,7 +72,7 @@ in the script at label LAB:EQUATIONS.
   corresponding UTF8 characters, see LAB:ACCENTS in script
 - replacement of things like double quotes '\`\`' and dashs '\-\-' with UTF8
   characters;
-  replacement of \~ and \\, by UTF8 non-breaking space and
+  replacement of '\~' and '\\,' by UTF8 non-breaking space and
   narrow non-breaking space
 - rare warnings can be suppressed using \\LTadd{}, \\LTskip{},
   \\LTalter{}{} in the LaTeX text with suitable macro definition there;
