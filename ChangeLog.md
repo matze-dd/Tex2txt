@@ -1,19 +1,22 @@
-
-- inline math $...$ should not be replaced with 'A' in English;
-  thanks to symphorien
+Release 1.5.2
+-------------
+- merged commit from pull request #11, **thanks to** symphorien:
+  inline math $...$ should not be replaced with 'A' in English
+- closed issue #5: nesting depths now are checked, if a macro substitution
+  inserts additional {} braces
 
 Release 1.5.1
 -------------
-- closed issue \#3: now line number tracking in multi-line macro arguments
+- closed issue #3: now line number tracking in multi-line macro arguments
   does work better
-- fixed bug (issue \#4): now reject insertion of raw % in file from --repl
+- fixed bug (issue #4): now reject insertion of raw % in file from --repl
 - filter in shell.sh now ignores column numbers; Example.md updated;
   same change in checks.sh
 
 Release 1.5.0
 -------------
 - improved line number tracking inside of displayed equations:
-  closed issue \#2, updated Example.md
+  closed issue #2, updated Example.md
 - added macros \\verb(\*) and environments verbatim(\*), see LAB:VERBATIM
 - added macros \\textbackslash, \\textasciicircum and \\textasciitilde:
   the raw characters \\ and \^ and \~ cannot be obtained via escaping
