@@ -26,7 +26,7 @@ Unnecessary creation of empty lines therefore can be avoided, paragraphs
 and sentences remain intact.
 This is demonstrated in [Example.md](Example.md).
 
-The starting section of the Python script gathers macros and environments
+The first section of the Python script gathers macros and environments
 with tailored treatment.
 Some standard macros and environments are already included, but very probably
 the collection has to be complemented.
