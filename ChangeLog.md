@@ -1,3 +1,8 @@
+
+- closed issue #5 (once again :-(): now {} braces and \[\] brackets as well
+  as \\begin and \\end of environments are checked during macro expansion and
+  fix-text replacement of environments
+
 Release 1.5.2
 -------------
 - merged commit from pull request #11, **thanks to** symphorien:
