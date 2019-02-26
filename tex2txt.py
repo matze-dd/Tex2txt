@@ -446,12 +446,15 @@ import unicodedata
 
 #   first of all ...
 #
+def strip_internal_marks(s):
+    # will be re-defined below
+    return s
 def fatal(msg, detail=None):
     sys.stdout.write(parms.warning_error_msg)
     sys.stdout.flush()
     err = '\n*** ' + sys.argv[0] + ': internal error:\n' + msg + '\n'
     if detail:
-        err += detail + '\n'
+        err += strip_internal_marks(detail) + '\n'
     sys.stderr.write(err)
     exit(1)
 def warning(msg, detail=None):
@@ -459,7 +462,7 @@ def warning(msg, detail=None):
     sys.stdout.flush()
     err = '\n*** ' + sys.argv[0] + ': warning:\n' + msg + '\n'
     if detail:
-        err += detail + '\n'
+        err += strip_internal_marks(detail) + '\n'
     sys.stderr.write(err)
 def myopen(f, mode='r'):
     try:
@@ -502,6 +505,17 @@ mark_linebreak = mark_internal_pre + 'L' + mark_internal_post
 #
 mark_verbatim = (mark_internal_pre + 'V', 'V' + mark_internal_post)
 mark_verbatim_tmp = ('____V', 'V__')    # before removal of % comments
+
+#   only for error messages: remove internal marks
+#
+def strip_internal_marks(s):
+    s = re.sub(mark_deleted, '', s)
+    s = re.sub(mark_linebreak, r'\\\\', s)
+    s = re.sub(mark_verbatim[0], r'\\verb.', s)
+    s = re.sub(mark_verbatim[1], r'.', s)
+    s = re.sub(re.escape(mark_begin_env), r'\\begin{.}', s)
+    s = re.sub(re.escape(mark_end_env), r'\\end{.}', s)
+    return s
 
 #   space allowed inside of current paragraph, at most one line break
 #
@@ -656,7 +670,7 @@ def verbatim(s, mark, ast):
 #   Return value: tuple (string, number list)
 #   As for re.sub(), argument repl may be a callable.
 #   Argument extract: function for extracting replacements
-#   Argument track_braces: function for detection of inserted braces
+#   Argument track_repl: function for detection of inserted braces etc.
 #
 #   For each line in the current text string, the number list
 #   contains the original line number (before any changes took place).
@@ -664,7 +678,7 @@ def verbatim(s, mark, ast):
 #   list are removed. On creation of an additional line, a negative
 #   placeholder is inserted in the number list.
 #
-def mysub(expr, repl, text, flags=0, extract=None, track_braces=None):
+def mysub(expr, repl, text, flags=0, extract=None, track_repl=None):
     if type(text) is not tuple:
         fatal('wrong arg for mysub()')
     txt = text[0]
@@ -694,8 +708,8 @@ def mysub(expr, repl, text, flags=0, extract=None, track_braces=None):
         nr = r.count('\n')
         if extract:
             extract(r, numbers[lin:lin+nr+1])
-        if track_braces:
-            track_braces(t, r)
+        if track_repl:
+            track_repl(t, r)
         if nt != 0 or nr != 0:
             # ll: original line number of line lin
             ll = abs(numbers[lin])
@@ -1000,21 +1014,19 @@ text = mysub(mark_verbatim_tmp[0] + r'(\d+)' + mark_verbatim_tmp[1],
 #   test, whether the innermost group matches
 #
 def check_nesting_limits(text):
-    def strip_internals(s):
-        return re.sub(mark_deleted + r'|' + mark_linebreak, '', s)
     for m in re.finditer(re_braced(parms.max_depth_br + 1, '(?P<inner>', ')'),
                                 text_get_txt(text)):
         if m.group('inner'):
             # innermost {} braces did match
             fatal('maximum nesting depth for {} braces exceeded,'
                     + ' parms.max_depth_br=' + str(parms.max_depth_br),
-                        strip_internals(m.group(0)))
+                        m.group(0))
     for m in re.finditer(re_bracketed(parms.max_depth_br + 1,
                                 '(?P<inner>', ')'), text_get_txt(text)):
         if m.group('inner'):
             fatal('maximum nesting depth for [] brackets exceeded,'
                     + ' parms.max_depth_br=' + str(parms.max_depth_br),
-                        strip_internals(m.group(0)))
+                        m.group(0))
     for env in (
         parms.equation_environments()
         + parms.environments()
@@ -1024,11 +1036,27 @@ def check_nesting_limits(text):
             if m.group('inner'):
                 fatal('maximum nesting depth for environments exceeded,'
                         + ' parms.max_depth_env=' + str(parms.max_depth_env),
-                            strip_internals(m.group(0)))
+                            m.group(0))
 
-#   check will be repeated during macro expansion, if braces are included
-#
 check_nesting_limits(text)
+
+#   check will be repeated during macro expansion and environment handling:
+#   - detect insertion of braces, brackets, \begin, or \end
+#   - re-check nesting depths
+#
+def mysub_check_nested(expr, repl, text):
+    flag = Aux()
+    def f(t, r):
+        for c in '{}[]':
+            if r.count(c) > t.count(c):
+                flag.flag = True
+        if r.count('\\begin') or r.count('\\end'):
+            flag.flag = True
+    flag.flag = False
+    text = mysub(expr, repl, text, track_repl=f)
+    if flag.flag:
+        check_nesting_limits(text)
+    return text
 
 #   check whether equation replacements appear in original text
 #
@@ -1076,13 +1104,6 @@ for (name, args, repl) in parms.environment_begins():
                                                     'EnvBegin', name)
     list_macs_envs.append((expr, mark_begin_env_sub + repl))
 
-#   detect insertion of braces during macro expansion
-#
-def detect_added_braces(t, r):
-    if r.count('{') > t.count('{') or r.count('}') > t.count('}'):
-        global added_braces
-        added_braces = True
-
 flag = True
 cnt = 1
 match = None
@@ -1098,10 +1119,7 @@ while flag:
         if m:
             match = m
             flag = True
-            added_braces = False
-            text = mysub(expr, repl, text, track_braces=detect_added_braces)
-            if added_braces:
-                check_nesting_limits(text)
+            text = mysub_check_nested(expr, repl, text)
 
 
 ##################################################################
@@ -1112,11 +1130,6 @@ while flag:
 #       [1]: replacement text
 #
 actions = list(parms.misc_replace())
-
-for (name, repl) in parms.environments():
-    env = re_nested_env(name, parms.max_depth_env, '')
-    re_code_args('', repl, 'EnvRepl', name, no_backslash=True)
-    actions += [(env, mark_begin_env_sub + repl + mark_end_env_sub)]
 
 def f(m):
     txt = m.group(2)
@@ -1165,6 +1178,15 @@ for (m, c) in (
 #
 for (expr, repl) in actions:
     text = mysub(expr, repl, text, flags=re.M)
+
+#   fix-text replacements for environments:
+#   check for inclusion of {} etc.
+#
+for (name, repl) in parms.environments():
+    env = re_nested_env(name, parms.max_depth_env, '')
+    re_code_args('', repl, 'EnvRepl', name, no_backslash=True)
+    text = mysub_check_nested(env,
+                    mark_begin_env_sub + repl + mark_end_env_sub, text)
 
 
 ##################################################################
@@ -1408,7 +1430,7 @@ for (name, args, replacement) in parms.equation_environments():
         if m:
             s += m.group(1)
         return mark_begin_env + s + mark_end_env
-    text = mysub(env, f, text)
+    text = mysub_check_nested(env, f, text)
 
 
 #######################################################################
