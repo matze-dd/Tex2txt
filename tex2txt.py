@@ -621,9 +621,9 @@ end_mac = r'(?![a-zA-Z])'
 
 #   space that can be consumed after a macro without argument:
 #   only consume line break, if non-space on next line found,
-#   and if line break not in front of a \begin for environment
+#   and if line break not in front of a \begin or \end for environment
 #
-skip_space_macro = (r'(?:[ \t]*(?:\n(?=[ \t]*\S)(?![ \t]*\\begin'
+skip_space_macro = (r'(?:[ \t]*(?:\n(?=[ \t]*\S)(?![ \t]*\\(?:begin|end)'
                             + end_mac + r'))?[ \t]*)')
 
 #   these RE match beginning and end of arbitrary "standard" environments
