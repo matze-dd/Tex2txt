@@ -1,7 +1,10 @@
-
+Release 1.5.3
+-------------
 - closed issue #5 (once again :-(): now {} braces and \[\] brackets as well
   as \\begin and \\end of environments are checked during macro expansion and
   fix-text replacement of environments
+- fixed bug: macro now also won't consume line break in front of \\end{...}
+  (variable skip\_space\_macro)
 
 Release 1.5.2
 -------------
