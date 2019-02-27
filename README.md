@@ -70,7 +70,7 @@ in the script at label LAB:EQUATIONS.
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \\v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
-- replacement of things like double quotes '\`\`' and dashs '\-\-' with UTF8
+- replacement of things like double quotes '\`\`' and dashes '\-\-' with UTF8
   characters;
   replacement of '\~' and '\\,' by UTF8 non-breaking space and
   narrow non-breaking space
@@ -88,7 +88,7 @@ in the script at label LAB:EQUATIONS.
   can be used later to correct line numbers in messages
 - option `--repl file`<br>
   file with phrase replacements performed at the end, namely after
-  changing inline maths to text, and German hyphen "= to - ;
+  changing inline math to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
 - option `--defs file`<br>
   file with additional declarations, example file content (defs members,
@@ -128,7 +128,7 @@ Before application, variables in this script have to be customized.
 Displayed equations should be part of the text flow and include the
 necessary interpunction.
 At least the German version of LanguageTool (LT) will detect a missing dot
-in the following snippet (meaning: "We conclude math Therefore,...").
+in the following snippet (meaning: "We conclude math Therefore, ...").
 ```
 Wir folgern
 \begin{align}
@@ -146,7 +146,7 @@ With the entry
     EnvRepl('align'),
 ```
 in parms.environments of the Python script (but no 'align' entry in
-parms.equation\_environments), one gets the following script ouptut.
+parms.equation\_environments), one gets the following script output.
 ```
 Wir folgern
 Daher ...
