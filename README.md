@@ -123,6 +123,10 @@ The result file errs will contain names of files with problems together
 with filtered messages from the language checker.
 Before application, variables in this script have to be customized.
 
+With option --rec, file inclusions as \\input{...} will be tracked recursively;
+exceptions are listed at LAB:RECURSE in the Bash script
+(see, however, the limitation named in issue #12).
+
 ## Handling of displayed equations<a name="equations"></a>
 ### Rationale
 Displayed equations should be part of the text flow and include the
