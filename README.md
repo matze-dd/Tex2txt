@@ -44,9 +44,12 @@ equations.
 Therefore, one can check embedded \text{...} parts (macro from LaTeX package
 amsmath), interpunction and spacing in the text flow, if it includes—not too
 complex—displayed equations.
-Comments on that can be found [in the section below](#equations).
+Comments on that can be found [in this section below](#equations).
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
+
+Further functionality added by a Bash script is described
+[in this section below](#integration).
 
 ## Selected actions<a name=actions></a>
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
