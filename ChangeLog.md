@@ -1,3 +1,7 @@
+
+- added option --rec to Bash script checks.sh: will track recursively
+  \\input{...} macros
+
 Release 1.5.3
 -------------
 - closed issue #5 (once again :-(): now {} braces and \[\] brackets as well
