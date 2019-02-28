@@ -130,11 +130,14 @@ Exceptions are listed at LAB:RECURSE in the Bash script.
 Note, however, the limitation sketched in [issue #12](../../issues/12).
 
 Before application, variables in this script have to be customized.
-For placement of intermediate files, the script uses an auxiliary directory
-designated by variable txtdir.
+The script will back up and extend spelling.txt and prohibit.txt in
+LanguageTool's directory tree.
+For placement of intermediate text and line number files, the script uses an
+auxiliary directory designated by variable txtdir.
 This directory and possibly necessary sub-directories will be created
 without request.
 They can be deleted with option --del.
+
 
 ## Handling of displayed equations<a name="equations"></a>
 ### Rationale
