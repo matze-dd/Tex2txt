@@ -124,11 +124,17 @@ will check the main text, extracted footnotes (with their own text flow)
 and foreign-language text in all these files.
 The result file errs will contain names of files with problems together
 with filtered messages from the language checker.
-Before application, variables in this script have to be customized.
 
-With option --rec, file inclusions as \\input{...} will be tracked recursively;
-exceptions are listed at LAB:RECURSE in the Bash script
-(see, however, the limitation named in issue #12).
+With option --rec, file inclusions as \\input{...} will be tracked recursively.
+Exceptions are listed at LAB:RECURSE in the Bash script.
+Note, however, the limitation sketched in [issue #12](../../issues/12).
+
+Before application, variables in this script have to be customized.
+For placement of intermediate files, the script uses an auxiliary directory
+designated by variable txtdir.
+This directory and possibly necessary sub-directories will be created
+without request.
+They can be deleted with option --del.
 
 ## Handling of displayed equations<a name="equations"></a>
 ### Rationale
@@ -250,5 +256,5 @@ together with the placeholder mark\_begin\_env.
 It aims to avoid that a macro without arguments consumes leading space
 inside of an already resolved following environment.
 
-Under category Issues, some known shortcomings are listed.
+Under [category Issues](../../issues), some known shortcomings are listed.
 
