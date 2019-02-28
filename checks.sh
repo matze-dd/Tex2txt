@@ -12,29 +12,22 @@
 #   . at beginning: append private dictionary to LT's spelling.txt,
 #     and create entries in LT's prohibit.txt
 #
+#   - without arguments: check files in variable all_tex_files
 #   - option --nolt:
 #     do not call LT, instead only use hunspell
 #     (replace before: variable repls_hunspell below)
+#   - option --rec:
+#     track file inclusion macros as \input, see LAB:RECURSE
 #   - option --del:
 #     remove auxiliary directory $txtdir, and exit
-#   - without arguments: check "all" files
 #
 #
 #                                   Matthias Baumann, 2018-2019
 #
 
-if [ X$1 == X--nolt ]
-then
-    option_nolt=1
-    shift
-fi
-
-if (( $# == 0 ))
-then
-    args="vorwort.tex */*.tex"
-else
-    args=$*
-fi
+#   if no argument files given
+#
+all_tex_files="vorwort.tex */*.tex"
 
 #   LanguageTool for check of native-language text
 #
@@ -94,11 +87,49 @@ hunsp_foreign_lang=en_GB    # foreign-language code for hunspell -d ...
 priv_dic_foreign=$tooldir/hunspell.en
                             # private hunspell dictionary
 
+#   LAB:RECURSE scan file inclusions
+#
+#   recognized file inclusion macros
+input_macros=input      # =input,include
+#   do not read these files at all (regular expression)
+input_do_not_read='(.*/)?figure\.tex'
+                # our files from fig2dev, in different sub-directories
+#   scan files for inclusions, but don't perform language checks on them
+input_do_not_check='(defs|main)\.tex'
+
 
 ##########################################################
 ##########################################################
 
-if [ X$1 == X--del ]
+trap exit SIGINT
+
+#   parse command-line options
+#
+declare -A options
+while [ "${1:0:1}" == "-" ]
+do
+    case $1 in
+    --nolt|--rec|--del)
+        options[$1]=1
+        ;;
+    --)
+        shift
+        break
+        ;;
+    *)
+        echo $0: unknown option $1 >&2
+        exit 1
+    esac
+    shift
+done
+if (( $# == 0 ))
+then
+    args=$all_tex_files
+else
+    args=$*
+fi
+
+if [ -n "${options[--del]}" ]
 then
     read -p "enter YES to remove directory '$txtdir': " repl
     if [ "$repl" == YES ]
@@ -108,11 +139,9 @@ then
     exit
 fi
 
-trap exit SIGINT
-
 #   adjust LT's spelling files
 #
-if [ -z "$option_nolt" ]
+if [ -z "${options[--nolt]}" ]
 then
     if [ -f $lt_dic_native.$ori ]
     then
@@ -154,6 +183,39 @@ for lin in sys.stdin:
     sys.stdout.write(re.sub(expr, repl, lin))
 '
 
+#   Python3:
+#   - scan given files for inclusion macros
+#   - search recursively
+#   - print list of files
+#
+track_input_macro='
+import re, os, sys
+todo = sys.argv[1:]
+done = []
+while todo:
+    f = todo.pop(0)
+    if re.fullmatch(r"'$input_do_not_read'", f):
+        continue
+    if f not in done:
+        done.append(f)
+    p = os.popen("python3 '$tex2txt_py' --extr '$input_macros' " + f)
+    fs = p.read()
+    if p.close():
+        sys.stderr.write("\nerror while checking file " + f + "\n")
+        exit(1)
+    for f in fs.split():
+        if f not in done and f not in todo:
+            todo.append(f)
+iter = (f for f in done if not re.fullmatch(r"'$input_do_not_check'", f))
+print(" ".join(iter))
+'
+
+if [ -n "${options[--rec]}" ]
+then
+    echo Scanning file inclusions starting with $args ... >&2
+    args=$(python3 -c "$track_input_macro" $args)
+fi
+
 
 ##########################################################
 ##########################################################
@@ -162,7 +224,7 @@ for i in $args
 do
     if [ ! -r $i ]
     then
-        echo "$0: cannot read file '$i'"
+        echo "$0: cannot read file '$i'" >&2
         exit 1
     fi
     dir=$(dirname $txtdir/$i)
@@ -170,7 +232,7 @@ do
     then
         if ! mkdir -p $dir
         then
-            echo "$0: cannot create directory '$dir'"
+            echo "$0: cannot create directory '$dir'" >&2
             exit 1
         fi
     fi
@@ -192,7 +254,7 @@ do
     # call LT or hunspell
     #####################################################
 
-    if [ -z "$option_nolt" ]
+    if [ -z "${options[--nolt]}" ]
     then
         if [[ "$OS" =~ Windows ]]
         then
@@ -208,7 +270,7 @@ do
         LT_output_lines=$(echo "$LT_output" | wc -l)
         if (( $LT_output_lines == 1 ))
         then
-            echo $LT_output > /dev/tty
+            echo $LT_output >&2
         fi
         if (( $foot_text_size > 0 ))
         then        # save energy: only if file not empty
@@ -219,7 +281,7 @@ do
             LT_foot_output_lines=$(echo "$LT_foot_output" | wc -l)
             if (( $LT_foot_output_lines == 1 ))
             then
-                echo $LT_foot_output > /dev/tty
+                echo $LT_foot_output >&2
             fi
         else
             LT_foot_output=
