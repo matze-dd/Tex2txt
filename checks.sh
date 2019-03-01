@@ -122,7 +122,7 @@ do
         ;;
     *)
         echo unknown option "'$1'" >&2
-        echo usage: bash $0 [--recurse] [--adapt-lt] [--no-lt] [--delete] [files] >&2
+        echo usage: bash $0 '[--recurse] [--adapt-lt] [--no-lt] [--delete] [files]' >&2
         exit 1
     esac
     shift
