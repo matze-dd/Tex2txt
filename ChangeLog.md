@@ -1,6 +1,9 @@
 
-- added option --rec to Bash script checks.sh: will track recursively
-  \\input{...} macros
+- checks.sh: added option --recurse, will recursively track \\input{...} macros
+- checks.sh: only adapt LT's files spelling.txt and prohibit.txt on
+  option --adapt-lt
+- checks.sh: renamed other command-line options
+- checks.sh: added license header, shifted documentation to README.md
 
 Release 1.5.3
 -------------
