@@ -1,31 +1,31 @@
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 
+#######################################################################
 #
 #   Bash:
-#   Do for the given LaTeX files:
+#   perform language checks for LaTeX files
 #
-#   . convert to raw text (Python script tex2txt.py)
-#   . call LanguageTool (LT) for native-language main text and
-#     separately for footnotes
-#   . look for single letters (exclude: variable acronyms below)
-#     (if check_for_single_letters set to yes)
-#   . check foreign-language text using hunspell
-#   . at beginning: append private dictionary to LT's spelling.txt,
-#     and create entries in LT's prohibit.txt
-#
-#   - without arguments: check files in variable all_tex_files
-#   - option --nolt:
-#     do not call LT, instead only use hunspell
-#     (replace before: variable repls_hunspell below)
-#   - option --rec:
-#     track file inclusion macros as \input, see LAB:RECURSE
-#   - option --del:
-#     remove auxiliary directory $txtdir, and exit
+#   Actions and usage:
+#   - see README.md
 #
 #
 #                                   Matthias Baumann, 2018-2019
 #
 
-#   if no argument files given
+#   check these, if no argument files given
 #
 all_tex_files="vorwort.tex */*.tex"
 
@@ -53,7 +53,7 @@ tex2txt_py=$tooldir/tex2txt.py
 tex2txt_repl="--repl $tooldir/repls.txt"
 tex2txt_defs="--defs $tooldir/defs.py"
 
-#   sed filter for hunspell (on option --nolt):
+#   sed filter for hunspell (on option --no-lt):
 #   '0' --> 'Null'
 #
 repls_hunspell=' -e s/\<0\>/Null/g'
@@ -68,6 +68,7 @@ acronyms='d\. h\.|f\. ü\.|i\. A\.|u\. a\.|v\. g\. V\.|z\. B\.'
 utf8_nbsp=$(python3 -c 'print("\N{NO-BREAK SPACE}", end="")')
 acronyms=$(echo -n $acronyms | sed -E "s/ /$utf8_nbsp/g")
 
+#   LAB:ADAPT-LT
 #   append private hunspell dictionary to LT's spelling.txt
 #   ATTENTION: LT does not like empty lines
 #
@@ -91,10 +92,13 @@ priv_dic_foreign=$tooldir/hunspell.en
 #
 #   recognized file inclusion macros
 input_macros=input      # =input,include
+
 #   do not read these files at all (regular expression)
+#   - our files from fig2dev, placed in different sub-directories
 input_do_not_read='(.*/)?figure\.tex'
-                # our files from fig2dev, in different sub-directories
-#   scan files for inclusions, but don't perform language checks on them
+
+#   scan these files for inclusions, but don't perform language checks on them
+#   - our root files containing mainly fancy things, but no "real text"
 input_do_not_check='(defs|main)\.tex'
 
 
@@ -103,13 +107,13 @@ input_do_not_check='(defs|main)\.tex'
 
 trap exit SIGINT
 
-#   parse command-line options
+#   parse command-line
 #
 declare -A options
 while [ "${1:0:1}" == "-" ]
 do
     case $1 in
-    --nolt|--rec|--del)
+    --recurse|--adapt-lt|--no-lt|--delete)
         options[$1]=1
         ;;
     --)
@@ -117,7 +121,8 @@ do
         break
         ;;
     *)
-        echo $0: unknown option $1 >&2
+        echo unknown option "'$1'" >&2
+        echo usage: bash $0 [--recurse] [--adapt-lt] [--no-lt] [--delete] [files] >&2
         exit 1
     esac
     shift
@@ -129,7 +134,9 @@ else
     args=$*
 fi
 
-if [ -n "${options[--del]}" ]
+#   only delete auxiliary directory $txtdir?
+#
+if [ -n "${options[--delete]}" ]
 then
     read -p "enter YES to remove directory '$txtdir': " repl
     if [ "$repl" == YES ]
@@ -139,10 +146,11 @@ then
     exit
 fi
 
-#   adjust LT's spelling files
+#   only adjust LT's spelling files?
 #
-if [ -z "${options[--nolt]}" ]
+if [ -n "${options[--adapt-lt]}" ]
 then
+    echo Updating $lt_dic_native ... >&2
     if [ -f $lt_dic_native.$ori ]
     then
         cp $lt_dic_native.$ori $lt_dic_native
@@ -151,6 +159,8 @@ then
         cp $lt_dic_native $lt_dic_native.$ori
     fi
     cat $priv_dic_native >> $lt_dic_native
+
+    echo Updating $lt_prohib_native ... >&2
     if [ -f $lt_prohib_native.$ori ]
     then
         cp $lt_prohib_native.$ori $lt_prohib_native
@@ -159,6 +169,7 @@ then
         cp $lt_prohib_native $lt_prohib_native.$ori
     fi
     cat $priv_prohib_native >> $lt_prohib_native
+    exit
 fi
 
 #   Python3:
@@ -204,13 +215,15 @@ while todo:
         sys.stderr.write("\nerror while checking file " + f + "\n")
         exit(1)
     for f in fs.split():
-        if f not in done and f not in todo:
+        if f not in done + todo:
             todo.append(f)
 iter = (f for f in done if not re.fullmatch(r"'$input_do_not_check'", f))
 print(" ".join(iter))
 '
 
-if [ -n "${options[--rec]}" ]
+#   track file inclusions?
+#
+if [ -n "${options[--recurse]}" ]
 then
     echo Scanning file inclusions starting with $args ... >&2
     args=$(python3 -c "$track_input_macro" $args)
@@ -254,7 +267,7 @@ do
     # call LT or hunspell
     #####################################################
 
-    if [ -z "${options[--nolt]}" ]
+    if [ -z "${options[--no-lt]}" ]
     then
         if [[ "$OS" =~ Windows ]]
         then
@@ -365,7 +378,8 @@ do
     if [[ ( "$LT_output_lines" > 1 ) \
             || ( "$LT_foot_output_lines" > 1 ) ]]
     then
-        echo "$LT_output$LT_foot_output"
+        echo "$LT_output"
+        echo "$LT_foot_output"
         echo
     fi
     if [ -n "$errs_hunspell$errs_hunspell_foot" ]
