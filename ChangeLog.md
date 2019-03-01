@@ -1,9 +1,12 @@
-
-- checks.sh: added option --recurse, will recursively track \\input{...} macros
-- checks.sh: only adapt LT's files spelling.txt and prohibit.txt on
-  option --adapt-lt
-- checks.sh: renamed other command-line options
-- checks.sh: added license header, shifted documentation to README.md
+"Unreleased"
+------------
+- inline math \\(...\\) treated like $...$
+- Bash script checks.sh:
+    - added option --recurse, will recursively track \\input{...} macros
+    - only adapt LT's files spelling.txt and prohibit.txt on
+      option --adapt-lt
+    - renamed other command-line options
+    - added license header, shifted documentation to README.md
 
 Release 1.5.3
 -------------
@@ -221,4 +224,3 @@ Release 0.1.0
 Initial Version
 ---------------
 - first upload
-
