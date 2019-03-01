@@ -421,7 +421,7 @@ def set_language_en():
 #   further replacements performed below:
 #
 #   - translation of $$...$$ to equation* environment
-#   - replacement of $...$ inline math
+#   - replacement of $...$ and \(...\) inline math
 #   - macros \textbackslash, \textasciicircum, \textasciitilde
 #   - treatment of text-mode accents
 #   - handling of displayed equations
@@ -1153,16 +1153,19 @@ def f(m):
     return r'\end{equation*}'
 actions += [(r'(?<!\\)\$\$', f)]
 
-# replace $...$ by text from variable parms.inline_math
+# replace $...$ and \(...\) by text from variable parms.inline_math
 # BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
 #
 def f(m):
-    if re.search(r'(?<!\\)\$', m.group(1)):
-        warning('"$" in {} braces (macro argument?): not properly handled',
-                    m.group(0))
+    m2 = re.search(r'(?<!\\)\$|\\\(|\\\)', m.group(1))
+    if m2:
+        warning('"' + m2.group(0)
+                + '" in {} braces (macro argument?): not properly handled',
+                m.group(0))
     parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
     return parms.inline_math[0]
-actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\.|\\\n)+)\$', f)]
+actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\[^()])+)\$', f)]
+actions += [(r'\\\(((?:' + braced + r'|[^\\$]|\\[^()])*)\\\)', f)]
 
 #   macros \textxxx
 #
