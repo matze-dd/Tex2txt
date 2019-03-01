@@ -63,8 +63,8 @@ Further functionality added by a Bash script is described
   with enclosing \{\} braces removed
 - treatment of \\verb(\*) macros and verbatim(\*) environments,
   see LAB:VERBATIM in script
-- inline math $...$ is replaced with text from rotating collection
-  in variable parms.inline\_math in script
+- inline math $...$ and \\(...\\) is replaced with text from rotating
+  collection in variable parms.inline\_math in script
 - equation environments are resolved in a way suitable for check of
   interpunction and spacing, argument of \\text\{...\} is included into output
   text; \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
