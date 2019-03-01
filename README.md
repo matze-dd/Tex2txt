@@ -125,19 +125,40 @@ and foreign-language text in all these files.
 The result file errs will contain names of files with problems together
 with filtered messages from the language checker.
 
-With option --rec, file inclusions as \\input{...} will be tracked recursively.
+With option --recurse, file inclusions as \\input{...} will be tracked
+recursively.
 Exceptions are listed at LAB:RECURSE in the Bash script.
 Note, however, the limitation sketched in [issue #12](../../issues/12).
 
 Before application, variables in this script have to be customized.
-The script will back up and extend spelling.txt and prohibit.txt in
-LanguageTool's directory tree.
 For placement of intermediate text and line number files, the script uses an
 auxiliary directory designated by variable txtdir.
 This directory and possibly necessary sub-directories will be created
 without request.
-They can be deleted with option --del.
+They can be deleted with option --delete.
 
+### Actions
+- convert content of given LaTeX files to plain text
+- call LanguageTool for native-language main text and separately for footnotes
+- check foreign-language text using Hunspell
+- only if variable check\_for\_single\_letters set to yes:
+  look for single letters, excluding abbreviations in script variable acronyms
+
+### Usage
+`bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]`
+
+- no argument files: use files from script variable all\_tex\_files
+- option `--recurse`<br>
+  track file inclusions; see LAB:RECURSE in script for exceptions
+- option `--adapt-lt`<br>
+  only back up LanguageTool's files spelling.txt (additional accepted words)
+  and prohibit.txt (words raising an error), append corresponding private
+  files, and exit; see LAB:ADAPT-LT in script
+- option `--no-lt`<br>
+  do not use LanguageTool but instead Hunspell for native-language checks;
+  perform replacements from script variable repls\_hunspell beforehand
+- option `--delete`<br>
+  only remove auxiliary directory in script variable txtdir, and exit
 
 ## Handling of displayed equations<a name="equations"></a>
 ### Rationale
