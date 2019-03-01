@@ -1,6 +1,6 @@
 # Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line numbers
 [General description](#description)<br>
-[Selected actions](#actions)<br>
+[Selected actions](#actions_python)<br>
 [Usage](#usage)<br>
 [Tool integration](#integration)<br>
 [Handling of displayed equations](#equations)<br>
@@ -51,7 +51,7 @@ in the script at label LAB:EQUATIONS.
 Further functionality added by a Bash script is described
 [in this section below](#integration).
 
-## Selected actions<a name=actions></a>
+## Selected actions<a name=actions_python></a>
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
   tailored behaviour for environment types listed in script
 - flexible treatment of own macros with arbitrary LaTeX-style arguments;
