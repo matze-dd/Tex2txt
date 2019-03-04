@@ -123,12 +123,13 @@ parms.system_macros = lambda: (
     Macro('documentclass', 'OA'),
     Macro('eqref', 'A', '(7)'),
     Macro('fcolorbox', 'AAA', r'\3'),
-    Macro('footnote', 'OA', '5'),
-    Macro('footnotemark', 'O', '5'),
-    Macro('footnotetext', 'OA'),
+    Macro('footnote', 'OA'),        # own text flow, use option --extr
+    Macro('footnotemark', 'O'),
+    Macro('footnotetext', 'OA'),    # own text flow, use option --extr
     Macro('framebox', 'OOA', r'\3'),
     Simple('hfill', ' '),
     Macro(r'hspace\*?', 'A'),
+    Macro('include', 'A'),
     Macro('includegraphics', 'OA'),
     Macro('input', 'A'),
     Macro('newcommand', 'AOA'),
