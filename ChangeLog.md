@@ -1,10 +1,11 @@
 "Unreleased"
 ------------
+- fixed bug: \\footnote and \\footnotemark should not leave a number,
+  this may hide mistakes or cause false positives
 - inline math \\(...\\) treated like $...$
 - Bash script checks.sh:
     - added option --recurse, will recursively track \\input{...} macros
-    - only adapt LT's files spelling.txt and prohibit.txt on
-      option --adapt-lt
+    - only adapt LT's files spelling.txt and prohibit.txt on option --adapt-lt
     - renamed other command-line options
     - added license header, shifted documentation to README.md
 
