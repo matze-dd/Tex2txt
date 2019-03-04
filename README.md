@@ -1,19 +1,19 @@
 # Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line numbers
-[General description](#description)<br>
-[Selected actions](#actions_python)<br>
+[General description](#general-description)<br>
+[Selected actions](#selected-actions)<br>
 [Usage](#usage)<br>
-[Tool integration](#integration)<br>
-[Handling of displayed equations](#equations)<br>
-[Remarks on implementation](#implementation)
+[Tool integration](#tool-integration)<br>
+[Handling of displayed equations](#handling-of-displayed-equations)<br>
+[Remarks on implementation](#remarks-on-implementation)
 
 ## Problem
 Unfortunately, there is a naming conflict with the related Haskell package.
 We ask for apology.
 
-## General description<a name="description"></a>
+## General description
 This is a Python script for extracting raw text from LaTeX documents.
 While virtually no text should be dropped by the filter,
-the aim is to produce only few "false" warnings when feeding the result into
+the aim is to produce only few “false” warnings when feeding the result into
 a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
@@ -22,8 +22,8 @@ equation environments were simply removed or replaced by fixed text.
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
-Unnecessary creation of empty lines therefore can be avoided, paragraphs
-and sentences remain intact.
+Unnecessary creation of empty lines therefore can be avoided, sentences
+and paragraphs remain intact.
 This is demonstrated in [Example.md](Example.md).
 
 The first section of the Python script gathers macros and environments
@@ -32,6 +32,16 @@ Some standard macros and environments are already included, but very probably
 the collection has to be complemented.
 With option --defs, definitions also can be extended by an additional file.
 
+An optional speciality is some parsing of LaTeX environments for displayed
+equations.
+Therefore, one can check embedded \text{...} parts (macro from LaTeX package
+amsmath), interpunction and spacing in the text flow, even if it includes
+displayed equations.
+Comments on that can be found
+[in this section below](#handling-of-displayed-equations).
+An example is shown in file [Example.md](Example.md), operation is summarized
+in the script at label LAB:EQUATIONS.
+
 Declared macros can be used recursively.
 Unknown macros and environments are silently ignored while keeping their
 arguments and bodies, respectively; they can be listed with option --unkn.
@@ -39,19 +49,10 @@ As in TeX, macro resolution consumes white space (possibly including a line
 break) between macro name and next non-space character within the current
 paragraph.
 
-An optional speciality is some parsing of LaTeX environments for displayed
-equations.
-Therefore, one can check embedded \text{...} parts (macro from LaTeX package
-amsmath), interpunction and spacing in the text flow, if it includes—not too
-complex—displayed equations.
-Comments on that can be found [in this section below](#equations).
-An example is shown in file [Example.md](Example.md), operation is summarized
-in the script at label LAB:EQUATIONS.
+Functionality added by a Bash script is described
+[in this section below](#tool-integration).
 
-Further functionality added by a Bash script is described
-[in this section below](#integration).
-
-## Selected actions<a name=actions_python></a>
+## Selected actions
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
   tailored behaviour for environment types listed in script
 - flexible treatment of own macros with arbitrary LaTeX-style arguments;
@@ -59,7 +60,7 @@ Further functionality added by a Bash script is described
 - text in heading macros as \\section\{...\} is extracted with
   added interpunction
 - suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
-- "undeclared" macros are silently ignored, keeping their arguments
+- “undeclared” macros are silently ignored, keeping their arguments
   with enclosing \{\} braces removed
 - treatment of \\verb(\*) macros and verbatim(\*) environments,
   see LAB:VERBATIM in script
@@ -68,8 +69,8 @@ Further functionality added by a Bash script is described
 - equation environments are resolved in a way suitable for check of
   interpunction and spacing, argument of \\text\{...\} is included into output
   text; \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
-  see [the section below](#equations), file [Example.md](Example.md),
-  and LAB:EQUATIONS in script
+  see [the section below](#handling-of-displayed-equations),
+  file [Example.md](Example.md), and LAB:EQUATIONS in script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \\v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
@@ -82,7 +83,7 @@ Further functionality added by a Bash script is described
   e.g., adding something that only the language checker should see:<br>
   \newcommand{\\LTadd}\[1\]{}
 
-## Usage<a name="usage"></a>
+## Usage
 `python3 tex2txt.py [--nums file] [--repl file] [--defs file] [--extr list] [--lang xy] [--unkn] [file]`
 
 - without argument file: read standard input
@@ -110,11 +111,11 @@ Further functionality added by a Bash script is described
   print list of undeclared macros and environments outside of equations;<br>
   declared macros do appear here, if a mandatory argument is missing in text
 
-## Tool integration<a name="integration"></a>
+## Tool integration
 The Python script is meant as small utility that performs a limited task
 with good quality.
 Integration with a language checker and features like tracking of
-\\input{...} directives have to be implemented "on top".
+\\input{...} directives have to be implemented “on top”.
 
 A Bash script for language checking of a whole document tree is
 [checks.sh](checks.sh).
@@ -137,35 +138,34 @@ This directory and possibly necessary sub-directories will be created
 without request.
 They can be deleted with option --delete.
 
-### Actions
+### Actions of the Bash script
 - convert content of given LaTeX files to plain text
 - call LanguageTool for native-language main text and separately for footnotes
 - check foreign-language text using Hunspell
 - only if variable check\_for\_single\_letters set to yes:
   look for single letters, excluding abbreviations in script variable acronyms
 
-### Usage
+### Usage of the Bash script
 `bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]`
 
 - no argument files: use files from script variable all\_tex\_files
 - option `--recurse`<br>
   track file inclusions; see LAB:RECURSE in script for exceptions
 - option `--adapt-lt`<br>
-  only back up LanguageTool's files spelling.txt (additional accepted words)
-  and prohibit.txt (words raising an error), append corresponding private
-  files, and exit; see LAB:ADAPT-LT in script
+  prior to checks, back up LanguageTool's files spelling.txt (additional
+  accepted words) and prohibit.txt (words raising an error), and append
+  corresponding private files; see LAB:ADAPT-LT in script
 - option `--no-lt`<br>
   do not use LanguageTool but instead Hunspell for native-language checks;
   perform replacements from script variable repls\_hunspell beforehand
 - option `--delete`<br>
   only remove auxiliary directory in script variable txtdir, and exit
 
-## Handling of displayed equations<a name="equations"></a>
-### Rationale
+## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
 necessary interpunction.
 At least the German version of LanguageTool (LT) will detect a missing dot
-in the following snippet (meaning: "We conclude math Therefore, ...").
+in the following snippet (meaning: “We conclude math Therefore, ...”).
 ```
 Wir folgern
 \begin{align}
@@ -174,7 +174,7 @@ Wir folgern
 \end{align}
 Daher ...
 ```
-In fact, LT complains about the capital 'Daher' that should start a
+In fact, LT complains about the capital “Daher” that should start a
 new sentence.
 
 ### Trivial version
@@ -200,7 +200,7 @@ Wir folgern
   Relation
 Daher ...
 ```
-Adding a dot '= d.' in the equation will lead to 'Relation.' in the output.
+Adding a dot “= d.” in the equation will lead to “Relation.” in the output.
 This will also hold true, if the interpunction sign is followed by math space
 or by macros as \\label and \\nonumber.
 
@@ -209,14 +209,14 @@ With the entry
 ```
     EquEnv('align'),
 ```
-we obtain ("gleich" means equal, and option --lang en will print "equal"):
+we obtain (“gleich” means equal, and option --lang en will print “equal”):
 ```
 Wir folgern
   D1D  gleich D2D
   D2D  gleich D3D.
 Daher ...
 ```
-Now, LT will complain about repetition of D2D. Writing '= b,' in the equation
+Now, LT will complain about repetition of D2D. Writing “= b,” in the equation
 leads to:
 ```
 Wir folgern
@@ -249,7 +249,7 @@ In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
 to avoid false warnings from the language checker.
 See also file [Example.md](Example.md).
 
-### Inclusion of "normal" text
+### Inclusion of “normal” text
 The argument of \\text\{...\} (variable for macro name in script:
 parms.text\_macro) is directly copied.
 Outside of \\text, only math space like \\; and \\quad is considered as space.
@@ -257,9 +257,9 @@ Therefore, one will get warnings from the language checker, if subsequent
 \\text and math parts are not properly separated.
 See file [Example.md](Example.md).
 
-## Remarks on implementation<a name="implementation"></a>
+## Remarks on implementation
 Parsing with regular expressions is fun, but it remains a rather coarse
-approximation of the "real thing".
+approximation of the “real thing”.
 Nevertheless, it seems to work quite well in practice, and it inherits high
 flexibility from Python.
 
@@ -281,4 +281,3 @@ It aims to avoid that a macro without arguments consumes leading space
 inside of an already resolved following environment.
 
 Under [category Issues](../../issues), some known shortcomings are listed.
-
