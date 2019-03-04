@@ -91,7 +91,7 @@ priv_dic_foreign=$tooldir/hunspell.en
 #   LAB:RECURSE scan file inclusions
 #
 #   recognized file inclusion macros
-input_macros=input      # =input,include
+input_macros=input,include
 
 #   do not read these files at all (regular expression)
 #   - our files from fig2dev, placed in different sub-directories
@@ -146,7 +146,7 @@ then
     exit
 fi
 
-#   only adjust LT's spelling files?
+#   adjust LT's spelling files?
 #
 if [ -n "${options[--adapt-lt]}" ]
 then
@@ -169,7 +169,6 @@ then
         cp $lt_prohib_native $lt_prohib_native.$ori
     fi
     cat $priv_prohib_native >> $lt_prohib_native
-    exit
 fi
 
 #   Python3:
@@ -212,9 +211,11 @@ while todo:
     p = os.popen("python3 '$tex2txt_py' --extr '$input_macros' " + f)
     fs = p.read()
     if p.close():
-        sys.stderr.write("\nerror while checking file " + f + "\n")
+        sys.stderr.write("\n'$0': error while checking file \"" + f + "\"\n")
         exit(1)
     for f in fs.split():
+        if not f.endswith(".tex"):
+            f += ".tex"
         if f not in done + todo:
             todo.append(f)
 iter = (f for f in done if not re.fullmatch(r"'$input_do_not_check'", f))
@@ -301,10 +302,12 @@ do
             LT_foot_output_lines=
         fi
     else
+        echo Hunspell $txtdir/$i.$ext ... >&2
         errs_hunspell=$(sed -E $repls_hunspell $txtdir/$i.$ext \
                 | hunspell -l -p $priv_dic_native)
         if (( $foot_text_size > 0 ))
         then
+            echo Hunspell $txtdir/$i.$foot.$ext ... >&2
             errs_hunspell_foot=$(sed -E $repls_hunspell $txtdir/$i.$foot.$ext \
                     | hunspell -l -p $priv_dic_native)
         else
