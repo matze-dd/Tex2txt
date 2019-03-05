@@ -234,8 +234,23 @@ fi
 ##########################################################
 ##########################################################
 
+txtdir_path=$(readlink -m $txtdir)/
+
 for i in $args
 do
+    #   avoid creation of aux files outside of txtdir
+    #
+    i_path=$(readlink -m $txtdir/$i.$ext)
+    if [ "${i_path:0:${#txtdir_path}}" != "$txtdir_path" ]
+    then
+        echo "$0: ERROR:" >&2
+        echo "for input file '$i'," >&2
+        echo "auxiliary text file '$txtdir/$i.$ext'" >&2
+        echo "would be created otside of directory '$txtdir'" >&2
+        echo "--> exit" >&2
+        exit 1
+    fi   
+
     if [ ! -r $i ]
     then
         echo "$0: cannot read file '$i'" >&2
