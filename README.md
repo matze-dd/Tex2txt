@@ -34,10 +34,10 @@ With option --defs, definitions also can be extended by an additional file.
 
 An optional speciality is some parsing of LaTeX environments for displayed
 equations.
-Therefore, one can check embedded \text{...} parts (macro from LaTeX package
-amsmath), interpunction and spacing in the text flow, even if it includes
-displayed equations.
-Comments on that can be found
+Therefore, one can check embedded \\text{...} parts (macro from LaTeX package
+amsmath), and trailing interpunction of these equations
+can be taken into account during language check of the main text flow.
+Further details on that are described
 [in this section below](#handling-of-displayed-equations).
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
