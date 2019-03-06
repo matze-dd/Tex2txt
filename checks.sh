@@ -246,7 +246,7 @@ do
         echo "$0: ERROR:" >&2
         echo "for input file '$i'," >&2
         echo "auxiliary text file '$txtdir/$i.$ext'" >&2
-        echo "would be created otside of directory '$txtdir'" >&2
+        echo "would be created outside of directory '$txtdir'" >&2
         echo "--> exit" >&2
         exit 1
     fi   
