@@ -1,5 +1,5 @@
-"Unreleased"
-------------
+Release 1.5.4
+-------------
 - fixed bug: \\footnote and \\footnotemark should not leave a number,
   this may hide mistakes or cause false positives
 - inline math \\(...\\) treated like $...$
