@@ -1,3 +1,8 @@
+"Unreleased"
+------------
+- improved protection against inclusion of unescaped % signs during
+  macro expansion (function re\_code\_args())
+
 Release 1.5.4
 -------------
 - fixed bug: \\footnote and \\footnotemark should not leave a number,
