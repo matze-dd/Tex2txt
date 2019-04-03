@@ -28,14 +28,15 @@ Thus, with a constant B and a domain C,
   X  equal Y for Z 
   Z in caseU. 
 ```
-With the filter from the Bash script shell.sh, the typo 'andx' will be
-related to line 4.
+With the filter from the Bash script [shell.sh](shell.sh),
+the typo 'andx' will be related to line 4.
 The problems in the equation (missing comma leads to word repetition,
 missing space to spelling error) will be related to line 12+ and 14+,
 respectively (line 12 is \\begin\{cases\}).
 
-Here is the output of shell.sh. Line numbers in \[\] brackets have been
-added by the filter in variable \$repl\_lines of the Bash script.
+Here is the output of [shell.sh](shell.sh).
+Line numbers in \[\] brackets have been added by the filter in variable
+\$repl\_lines of the Bash script.
 ```
 1.) Line 2 [4], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
