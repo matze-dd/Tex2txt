@@ -24,7 +24,9 @@ the above-mentioned Haskell software.
 As in TeXtidote, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
-This is demonstrated in [Example.md](Example.md).
+This is demonstrated in [Example.md](Example.md),
+and a more complete application of the script is described
+[in this section below](#tool-integration).
 
 The first section of the Python script gathers macros and environments
 with tailored treatment.
@@ -48,9 +50,6 @@ arguments and bodies, respectively; they can be listed with option --unkn.
 As in TeX, macro resolution consumes white space (possibly including a line
 break) between macro name and next non-space character within the current
 paragraph.
-
-Functionality added by a Bash script is described
-[in this section below](#tool-integration).
 
 ## Selected actions
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
