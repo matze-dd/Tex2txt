@@ -603,7 +603,7 @@ def re_code_args(args, repl, who, s, no_backslash=False):
         n = int(m.group(1))
         if n < 1 or n > len(args):
             err('invalid reference "\\' + m.group(1) + '"')
-    if re.search(r'(?<!\\\\)%', repl):
+    if re.search(r'(?<!\\)\\(?:\\\\)*%', repl):
         # ensure that mark_linebreak and mark_deleted do work
         err(r"please use r'\\%' to insert escaped percent sign")
     if repl.endswith('\\') or repl.count('\\\\\\\\'):
