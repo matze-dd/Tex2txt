@@ -6,7 +6,7 @@
 [Handling of displayed equations](#handling-of-displayed-equations)<br>
 [Remarks on implementation](#remarks-on-implementation)
 
-## Problem
+## Naming conflict
 Unfortunately, there is a naming conflict with the related Haskell package.
 We ask for apology.
 
@@ -34,22 +34,22 @@ Some standard macros and environments are already included, but very probably
 the collection has to be complemented.
 With option --defs, definitions also can be extended by an additional file.
 
+Unknown macros and environments are silently ignored while keeping their
+arguments and bodies, respectively; they can be listed with option --unkn.
+Declared macros can be used recursively.
+As in TeX, macro resolution consumes white space (possibly including a line
+break) between macro name and next non-space character within the current
+paragraph.
+
 An optional speciality is some parsing of LaTeX environments for displayed
 equations.
-Therefore, one can check embedded \\text{...} parts (macro from LaTeX package
+Therefore, one may check embedded \\text{...} parts (macro from LaTeX package
 amsmath), and trailing interpunction of these equations
 can be taken into account during language check of the main text flow.
 Further details on that are described
 [in this section below](#handling-of-displayed-equations).
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
-
-Declared macros can be used recursively.
-Unknown macros and environments are silently ignored while keeping their
-arguments and bodies, respectively; they can be listed with option --unkn.
-As in TeX, macro resolution consumes white space (possibly including a line
-break) between macro name and next non-space character within the current
-paragraph.
 
 ## Selected actions
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
@@ -62,7 +62,7 @@ paragraph.
 - “undeclared” macros are silently ignored, keeping their arguments
   with enclosing \{\} braces removed
 - treatment of \\verb(\*) macros and verbatim(\*) environments,
-  see LAB:VERBATIM in script
+  see LAB:VERBATIM in script; note, however, [issue #6](../../issues/6)
 - inline math $...$ and \\(...\\) is replaced with text from rotating
   collection in variable parms.inline\_math in script
 - equation environments are resolved in a way suitable for check of
@@ -73,8 +73,8 @@ paragraph.
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as \\' or \\v are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
-- replacement of things like double quotes '\`\`' and dashes '\-\-' with UTF8
-  characters;
+- replacement of things like double quotes '\`\`' and dashes '\-\-' with
+  corresponding UTF8 characters;
   replacement of '\~' and '\\,' by UTF8 non-breaking space and
   narrow non-breaking space
 - rare warnings can be suppressed using \\LTadd{}, \\LTskip{},
@@ -99,7 +99,8 @@ paragraph.
   `defs.project_macros = (Macro(name='xyz', args='AA', repl=r'\2'),)`
 - option `--extr ma[,mb,...]` (list of macro names)<br>
   extract only first braced argument of these macros;
-  useful, e.g., for check of foreign-language text and footnotes
+  useful, e.g., for check of foreign-language text and footnotes,
+  or for tracking of file inclusions
 - option `--lang xy`<br>
   language de or en, default: de;
   used for adaptation of equation replacements, math operator names,
@@ -132,22 +133,25 @@ Note, however, the limitation sketched in [issue #12](../../issues/12).
 
 Before application, variables in this script have to be customized.
 For placement of intermediate text and line number files, the script uses an
-auxiliary directory designated by variable txtdir.
+auxiliary directory designated by variable $txtdir.
 This directory and possibly necessary sub-directories will be created
 without request.
 They can be deleted with option --delete.
+The script will refuse to create auxiliary files outside of the directory
+$txtdir; something like \\input{../../generics.tex} probably won't work
+with option --recurse.
 
 ### Actions of the Bash script
 - convert content of given LaTeX files to plain text
 - call LanguageTool for native-language main text and separately for footnotes
 - check foreign-language text using Hunspell
-- only if variable check\_for\_single\_letters set to yes:
+- only if variable $check\_for\_single\_letters set to 'yes':
   look for single letters, excluding abbreviations in script variable acronyms
 
 ### Usage of the Bash script
 `bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]`
 
-- no argument files: use files from script variable all\_tex\_files
+- no argument files: use files from script variable $all\_tex\_files
 - option `--recurse`<br>
   track file inclusions; see LAB:RECURSE in script for exceptions
 - option `--adapt-lt`<br>
@@ -156,9 +160,9 @@ They can be deleted with option --delete.
   corresponding private files; see LAB:ADAPT-LT in script
 - option `--no-lt`<br>
   do not use LanguageTool but instead Hunspell for native-language checks;
-  perform replacements from script variable repls\_hunspell beforehand
+  perform replacements from script variable $repls\_hunspell beforehand
 - option `--delete`<br>
-  only remove auxiliary directory in script variable txtdir, and exit
+  only remove auxiliary directory in script variable $txtdir, and exit
 
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
