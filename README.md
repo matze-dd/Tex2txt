@@ -146,7 +146,7 @@ with option --recurse.
 - call LanguageTool for native-language main text and separately for footnotes
 - check foreign-language text using Hunspell
 - only if variable $check\_for\_single\_letters set to 'yes':
-  look for single letters, excluding abbreviations in script variable acronyms
+  look for single letters, excluding abbreviations in script variable $acronyms
 
 ### Usage of the Bash script
 `bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]`
