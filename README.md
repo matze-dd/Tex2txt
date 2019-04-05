@@ -37,7 +37,7 @@ With option --defs, definitions also can be extended by an additional file.
 Unknown macros and environments are silently ignored while keeping their
 arguments and bodies, respectively; they can be listed with option --unkn.
 Declared macros can be used recursively.
-As in TeX, macro resolution consumes white space (possibly including a line
+As in TeX, macro expansion consumes white space (possibly including a line
 break) between macro name and next non-space character within the current
 paragraph.
 
@@ -52,34 +52,36 @@ An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
 
 ## Selected actions
-- frames \\begin\{...\} and \\end\{...\} of environments are deleted;
-  tailored behaviour for environment types listed in script
 - flexible treatment of own macros with arbitrary LaTeX-style arguments;
   see LAB:MACROS in script
+- “undeclared” macros are silently ignored, keeping their arguments
+  with enclosing \{\} braces removed
+- frames \\begin\{...\} and \\end\{...\} of environments are deleted;
+  tailored behaviour for environment types listed in script
 - text in heading macros as \\section\{...\} is extracted with
   added interpunction
 - suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
-- “undeclared” macros are silently ignored, keeping their arguments
-  with enclosing \{\} braces removed
-- treatment of \\verb(\*) macros and verbatim(\*) environments,
-  see LAB:VERBATIM in script; note, however, [issue #6](../../issues/6)
 - inline math $...$ and \\(...\\) is replaced with text from rotating
   collection in variable parms.inline\_math in script
 - equation environments are resolved in a way suitable for check of
   interpunction and spacing, argument of \\text\{...\} is included into output
-  text; \\\[...\\\] and $$...$$ are same as environment equation\*;<br>
+  text; \\\[...\\\] and $$...$$ are same as environment equation\*;
   see [the section below](#handling-of-displayed-equations),
   file [Example.md](Example.md), and LAB:EQUATIONS in script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
-- letters with text-mode accents as \\' or \\v are translated to 
+- letters with text-mode accents as '\\`' or '\\v' are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
 - replacement of things like double quotes '\`\`' and dashes '\-\-' with
   corresponding UTF8 characters;
   replacement of '\~' and '\\,' by UTF8 non-breaking space and
   narrow non-breaking space
-- rare warnings can be suppressed using \\LTadd{}, \\LTskip{},
-  \\LTalter{}{} in the LaTeX text with suitable macro definition there;
-  e.g., adding something that only the language checker should see:<br>
+- treatment of \\verb(\*) macros and verbatim(\*) environments,
+  see LAB:VERBATIM in script; note, however, [issue #6](../../issues/6)
+- handling of % comments near to TeX: skipping of line break under certain
+  circumstances
+- rare warnings from language checker can be suppressed using \\LTadd{},
+  \\LTskip{}, \\LTalter{}{} in the LaTeX text with suitable macro definition
+  there; e.g., adding something that only the language checker should see:
   \newcommand{\\LTadd}\[1\]{}
 
 ## Usage
@@ -275,7 +277,7 @@ parms.max\_depth\_br for maximum brace nesting depth has to be changed.
 Setting control variables for instance to 100 does work, but also increases
 resource usage.
 
-A severe general problem is order of macro resolution.
+A severe general problem is order of macro expansion.
 While TeX strictly evaluates from left to right, the order of treatment by
 regular expressions is completely different.
 This calls for hacks like the regular expression in skip\_space\_macro
