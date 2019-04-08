@@ -123,8 +123,8 @@ A Bash script for language checking of a whole document tree is
 [checks.sh](checks.sh).
 For instance, the command<br>
 `bash checks.sh Banach/*.tex > errs`<br>
-will check the main text, extracted footnotes (with their own text flow)
-and foreign-language text in all these files.
+will check the main text, extracted footnotes and captions (with their own
+text flows) and foreign-language text in all these files.
 The result file errs will contain names of files with problems together
 with filtered messages from the language checker.
 
@@ -146,6 +146,7 @@ with option --recurse.
 ### Actions of the Bash script
 - convert content of given LaTeX files to plain text
 - call LanguageTool for native-language main text and separately for footnotes
+  and captions
 - check foreign-language text using Hunspell
 - only if variable $check\_for\_single\_letters set to 'yes':
   look for single letters, excluding abbreviations in script variable $acronyms
