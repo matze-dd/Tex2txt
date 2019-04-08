@@ -2,6 +2,9 @@
 ------------
 - improved protection against inclusion of unescaped % signs during
   macro expansion (function re\_code\_args())
+- handling of \\caption{...} in own textflow (like footnotes)
+    - tex2txt.py: do not copy argument of macro caption
+    - checks.sh: extract caption argument to file with footnote texts
 
 Release 1.5.4
 -------------
