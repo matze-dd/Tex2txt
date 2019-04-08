@@ -31,7 +31,7 @@ all_tex_files="vorwort.tex */*.tex"
 
 #   LanguageTool for check of native-language text
 #
-LTprefix=../LT/LanguageTool-4.4
+LTprefix=../LT/LanguageTool-4.5
 LTcommand="$LTprefix/languagetool-commandline.jar \
     --language de-DE --encoding utf-8 \
     --disable \
@@ -44,7 +44,7 @@ txtdir=$tooldir/Tex2txt     # directory for extraction of raw text
 ext=txt                     # file name extension for raw text
 num=lin                     # ... for line number information
 foreign=en                  # ... for foreign-language text
-foot=foot                   # ... for footnote text
+foot=foot                   # ... for footnote texts and captions
 ori=ori                     # ... for original dictionary files in LT tree
 
 #   Tex2txt script
@@ -52,6 +52,7 @@ ori=ori                     # ... for original dictionary files in LT tree
 tex2txt_py=$tooldir/tex2txt.py
 tex2txt_repl="--repl $tooldir/repls.txt"
 tex2txt_defs="--defs $tooldir/defs.py"
+tex2txt_extr="--extr footnote,footnotetext,caption"
 
 #   sed filter for hunspell (on option --no-lt):
 #   '0' --> 'Null'
@@ -274,8 +275,8 @@ do
         $tex2txt_repl $tex2txt_defs --nums $txtdir/$i.$num $i \
         > $txtdir/$i.$ext
     python3 $tex2txt_py \
-        --extr footnote,footnotetext \
-        $tex2txt_repl $tex2txt_defs --nums $txtdir/$i.$foot.$num $i \
+        $tex2txt_extr $tex2txt_repl $tex2txt_defs \
+        --nums $txtdir/$i.$foot.$num $i \
         > $txtdir/$i.$foot.$ext
     foot_text_size=$(wc -c < $txtdir/$i.$foot.$ext)
 
