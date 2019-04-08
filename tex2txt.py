@@ -115,7 +115,7 @@ parms.project_macros = lambda: (
 #
 parms.system_macros = lambda: (
 
-    Macro('caption', 'OA', r'\2'),
+    Macro('caption', 'OA'),         # own text flow, use option --extr
     Macro('cite', 'A', '[1]'),
     Macro('cite', 'PA', r'[1, \1]'),
     Macro('color', 'A'),
