@@ -1,8 +1,11 @@
 "Unreleased"
 ------------
+- better % comment handling on line join: leading space on next line will
+  be skipped (like TeX, one could skip leading space in general, but this
+  would unnecessarily reduce similarity of input and output text)
 - improved protection against inclusion of unescaped % signs during
   macro expansion (function re\_code\_args())
-- handling of \\caption{...} in own textflow (like footnotes)
+- handling of \\caption{...} in own text flow (like footnotes)
     - tex2txt.py: do not copy argument of macro caption
     - checks.sh: extract caption argument to file with footnote texts
 
