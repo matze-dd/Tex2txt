@@ -983,7 +983,7 @@ def f(m):
         # \macro call before %: do no remove line break
         return m.group(0)
     return m.group(1)
-text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n])%.*\n(?![ \t]*\n)',
+text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n])%.*\n[ \t]*(?!\n)',
                         f, text, flags=re.M)
                 # r'(?<!x)y' matches 'y' not preceded by 'x'
 
