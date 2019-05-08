@@ -18,6 +18,8 @@ a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
+Used in batch mode, the script can help to create a single compact report
+from language examination of a complete document tree.
 
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
@@ -136,7 +138,7 @@ Note, however, the limitation sketched in [issue #12](../../issues/12).
 Before application, variables in this script have to be customized.
 For placement of intermediate text and line number files, the script uses an
 auxiliary directory designated by variable $txtdir.
-This directory and possibly necessary sub-directories will be created
+This directory and possibly necessary subdirectories will be created
 without request.
 They can be deleted with option --delete.
 The script will refuse to create auxiliary files outside of the directory
