@@ -12,14 +12,14 @@ We ask for apology.
 
 ## General description
 This is a Python script for extracting raw text from LaTeX documents.
+Used in batch mode, it can help to create a single compact report
+from language examination of a complete document tree.
 While virtually no text should be dropped by the filter,
 the aim is to produce only few “false” warnings when feeding the result into
 a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
-Used in batch mode, the script can help to create a single compact report
-from language examination of a complete document tree.
 
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
@@ -91,10 +91,12 @@ in the script at label LAB:EQUATIONS.
 
 - without argument file: read standard input
 - option `--nums file`<br>
-  file for storing original line numbers;
+  file for storing original line numbers:
+  for each line of output text, the file contains a line with the estimated
+  original line number;
   can be used later to correct line numbers in messages
 - option `--repl file`<br>
-  file with phrase replacements performed at the end, namely after
+  file with phrase replacements performed at the end, for instance after
   changing inline math to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
 - option `--defs file`<br>
@@ -135,7 +137,9 @@ recursively.
 Exceptions are listed at LAB:RECURSE in the Bash script.
 Note, however, the limitation sketched in [issue #12](../../issues/12).
 
-Before application, variables in this script have to be customized.
+Apart from Python, the Bash script uses Java together with LanguageTool's
+desktop version for offline use, Hunspell and some standard Unix tools.
+Before application, variables in the script have to be customized.
 For placement of intermediate text and line number files, the script uses an
 auxiliary directory designated by variable $txtdir.
 This directory and possibly necessary subdirectories will be created
