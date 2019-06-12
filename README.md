@@ -12,14 +12,14 @@ We ask for apology.
 
 ## General description
 This is a Python script for the extraction of plain text from LaTeX documents.
-Used in batch mode, it can help to create a single compact report
-from language examination of a complete document tree.
 While virtually no text should be dropped by the filter,
 the aim is to produce only few “false” warnings when feeding the result into
 a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
+In summary, the program can help to create a single compact report
+from language examination of a complete document tree.
 
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
@@ -37,7 +37,7 @@ the collection has to be complemented.
 With option --defs, definitions also can be extended by an additional file.
 
 Unknown LaTeX macros and environments are silently ignored while keeping their
-arguments and bodies, respectively; they can be listed with option --unkn.
+arguments and bodies, respectively; script option --unkn will list them.
 Declared macros can be used recursively.
 As in TeX, macro expansion consumes white space (possibly including a line
 break) between macro name and next non-space character within the current
