@@ -11,7 +11,7 @@ Unfortunately, there is a naming conflict with the related Haskell package.
 We ask for apology.
 
 ## General description
-This is a Python script for extracting raw text from LaTeX documents.
+This is a Python script for the extraction of plain text from LaTeX documents.
 Used in batch mode, it can help to create a single compact report
 from language examination of a complete document tree.
 While virtually no text should be dropped by the filter,
@@ -23,20 +23,20 @@ equation environments were simply removed or replaced by fixed text.
 
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
 the above-mentioned Haskell software.
-As in TeXtidote, we make an effort to track line numbers.
+For ease of problem localisation, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
 This is demonstrated in [Example.md](Example.md),
 and a more complete application of the script is described
 [in this section below](#tool-integration).
 
-The first section of the Python script gathers macros and environments
+The first section of the Python script gathers LaTeX macros and environments
 with tailored treatment.
 Some standard macros and environments are already included, but very probably
 the collection has to be complemented.
 With option --defs, definitions also can be extended by an additional file.
 
-Unknown macros and environments are silently ignored while keeping their
+Unknown LaTeX macros and environments are silently ignored while keeping their
 arguments and bodies, respectively; they can be listed with option --unkn.
 Declared macros can be used recursively.
 As in TeX, macro expansion consumes white space (possibly including a line
@@ -114,8 +114,9 @@ in the script at label LAB:EQUATIONS.
   of foreign-language text;
   see LAB:LANGUAGE in script
 - option `--unkn`<br>
-  print list of undeclared macros and environments outside of equations;<br>
-  declared macros do appear here, if a mandatory argument is missing in text
+  print list of undeclared macros and environments outside of equations;
+  declared macros do appear here, if a mandatory argument is missing
+  in input text
 
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
@@ -145,9 +146,10 @@ auxiliary directory designated by variable $txtdir.
 This directory and possibly necessary subdirectories will be created
 without request.
 They can be deleted with option --delete.
-The script will refuse to create auxiliary files outside of the directory
-$txtdir; something like \\input{../../generics.tex} probably won't work
-with option --recurse.
+For safety, the script will refuse to create auxiliary files outside of
+the directory specified by $txtdir;
+an inclusion like \\input{../../generics.tex}
+probably won't work with option --recurse.
 
 ### Actions of the Bash script
 - convert content of given LaTeX files to plain text
