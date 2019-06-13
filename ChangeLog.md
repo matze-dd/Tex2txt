@@ -1,5 +1,5 @@
-"Unreleased"
-------------
+Release 1.5.5
+-------------
 - better % comment handling on line join: leading space on next line will
   be skipped (like TeX, one could skip leading space in general, but this
   would unnecessarily reduce similarity of input and output text)
