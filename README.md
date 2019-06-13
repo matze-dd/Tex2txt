@@ -142,8 +142,8 @@ It is assumed that the Bash script is invoked at the “root directory”
 of the LaTeX project, and that all LaTeX documents are placed directly there
 or in subdirectories.
 For safety, the script will refuse to create auxiliary files outside of
-the directory specified by $txtdir.
-Thus, an inclusion statement like \\input{../../generics.tex}
+the directory specified by $txtdir (see below).
+Thus, an inclusion like \\input{../../generics.tex}
 probably won't work with option --recurse.
 
 Apart from Python, the Bash script uses Java together with LanguageTool's
