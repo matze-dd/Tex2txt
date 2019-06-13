@@ -101,7 +101,7 @@ in the script at label LAB:EQUATIONS.
   see LAB:SPELLING in script for line syntax
 - option `--defs file`<br>
   file with additional declarations, example file content (defs members,
-  given without lambda, are 'appended' to corresponding parms members):<br>
+  given without lambda, are “appended” to corresponding parms members):<br>
   `defs.project_macros = (Macro(name='xyz', args='AA', repl=r'\2'),)`
 - option `--extr ma[,mb,...]` (list of macro names)<br>
   extract only first braced argument of these macros;
@@ -138,6 +138,14 @@ recursively.
 Exceptions are listed at LAB:RECURSE in the Bash script.
 Note, however, the limitation sketched in [issue #12](../../issues/12).
 
+It is assumed that the Bash script is invoked at the “root directory”
+of the LaTeX project, and that all LaTeX documents are placed directly there
+or in subdirectories.
+For safety, the script will refuse to create auxiliary files outside of
+the directory specified by $txtdir.
+Thus, an inclusion statement like \\input{../../generics.tex}
+probably won't work with option --recurse.
+
 Apart from Python, the Bash script uses Java together with LanguageTool's
 desktop version for offline use, Hunspell and some standard Unix tools.
 Before application, variables in the script have to be customized.
@@ -146,10 +154,6 @@ auxiliary directory designated by variable $txtdir.
 This directory and possibly necessary subdirectories will be created
 without request.
 They can be deleted with option --delete.
-For safety, the script will refuse to create auxiliary files outside of
-the directory specified by $txtdir;
-an inclusion like \\input{../../generics.tex}
-probably won't work with option --recurse.
 
 ### Actions of the Bash script
 - convert content of given LaTeX files to plain text
