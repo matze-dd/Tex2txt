@@ -1,7 +1,7 @@
 # Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line numbers
 [General description](#general-description)<br>
 [Selected actions](#selected-actions)<br>
-[Usage](#usage)<br>
+[Command line](#command-line)<br>
 [Tool integration](#tool-integration)<br>
 [Handling of displayed equations](#handling-of-displayed-equations)<br>
 [Remarks on implementation](#remarks-on-implementation)
@@ -18,7 +18,7 @@ a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
-In summary, the program can help to create a single compact report
+Altogether, the program can help to create a single compact report
 from language examination of a complete document tree.
 
 In some sense, the script compares to tools like OpenDetex, TeXtidote and
@@ -86,7 +86,7 @@ in the script at label LAB:EQUATIONS.
   there; e.g., adding something that only the language checker should see:
   \newcommand{\\LTadd}\[1\]{}
 
-## Usage
+## Command line
 `python3 tex2txt.py [--nums file] [--repl file] [--defs file] [--extr list] [--lang xy] [--unkn] [file]`
 
 - without argument file: read standard input
