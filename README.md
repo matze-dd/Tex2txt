@@ -3,6 +3,7 @@
 [Selected actions](#selected-actions)<br>
 [Command line](#command-line)<br>
 [Tool integration](#tool-integration)<br>
+[Declaration of LaTeX macros](#declaration-of-latex-macros)<br>
 [Handling of displayed equations](#handling-of-displayed-equations)<br>
 [Remarks on implementation](#remarks-on-implementation)
 
@@ -31,7 +32,8 @@ and a more complete application of the script is described
 [in this section below](#tool-integration).
 
 The first section of the Python script gathers LaTeX macros and environments
-with tailored treatment.
+with tailored treatment,
+see [this section below](#declaration-of-latex-macros).
 Some standard macros and environments are already included, but very probably
 the collection has to be complemented.
 With option --defs, definitions also can be extended by an additional file.
@@ -101,8 +103,9 @@ in the script at label LAB:EQUATIONS.
   see LAB:SPELLING in script for line syntax
 - option `--defs file`<br>
   file with additional declarations, example file content (defs members,
-  given without lambda, are “appended” to corresponding parms members):<br>
-  `defs.project_macros = (Macro(name='xyz', args='AA', repl=r'\2'),)`
+  given without lambda, are “appended” to corresponding parms members;
+  see [this section below](#declaration-of-latex-macros)):<br>
+  `defs.project_macros = (Macro(name='swap', args='AA', repl=r'\2\1'),)`
 - option `--extr ma[,mb,...]` (list of macro names)<br>
   extract only first braced argument of these macros;
   useful, e.g., for check of foreign-language text and footnotes,
@@ -178,6 +181,9 @@ They can be deleted with option --delete.
   perform replacements from script variable $repls\_hunspell beforehand
 - option `--delete`<br>
   only remove auxiliary directory in script variable $txtdir, and exit
+
+## Declaration of LaTeX macros
+TBD: shift documentation from Python script to this place
 
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
