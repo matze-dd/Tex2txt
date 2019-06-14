@@ -28,7 +28,7 @@ For ease of problem localisation, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
 This is demonstrated in [Example.md](Example.md),
-and a more complete application of the script is described
+and a more complete application of the script is documented
 [in this section below](#tool-integration).
 
 The first section of the Python script gathers LaTeX macros and environments
@@ -190,8 +190,8 @@ and is applied in the collections
 parms.project\_macros and parms.system\_macros.
 Here is a short extract from the definition of standard LaTeX macros already
 included.
-(The lambda construct allows to use variables and functions only defined
-later.)
+(The lambda construct allows us to use variables and functions introduced
+only later.)
 
 ```
 parms.system_macros = lambda: (
@@ -201,16 +201,14 @@ parms.system_macros = lambda: (
     Macro('color', 'A'),
     Macro('colorbox', 'AA', r'\2'),
     Macro('documentclass', 'OA'),
-    Macro('eqref', 'A', '(7)'),
-    Macro('fcolorbox', 'AAA', r'\3'),
     ...
 ```
 
-Other collections, e.g. for LaTeX environments, use similar “helper functions” 
-documented in the Python script.
+Other collections, e.g. for LaTeX environments, use similar
+“helper functions”.
 Project specific extension of all these collections is possible with
 option --defs and an additional Python file.
-There, the corresponding collections, for instance defs.project\_macros,
+The corresponding collections there, for instance defs.project\_macros,
 have to be defined using simple tuples (x,y,z,) without lambda construct.
 
 Synopsis of `Macro(name, args, repl='')`
