@@ -32,10 +32,10 @@ and a more complete application of the script is described
 [in this section below](#tool-integration).
 
 The first section of the Python script gathers LaTeX macros and environments
-with tailored treatment,
-see [this section below](#declaration-of-latex-macros).
+with tailored treatment, which is shortly described
+[in this section below](#declaration-of-latex-macros).
 Some standard macros and environments are already included, but very probably
-the collection has to be complemented.
+the collections have to be complemented.
 With option --defs, definitions also can be extended by an additional file.
 
 Unknown LaTeX macros and environments are silently ignored while keeping their
@@ -183,7 +183,55 @@ They can be deleted with option --delete.
   only remove auxiliary directory in script variable $txtdir, and exit
 
 ## Declaration of LaTeX macros
-TBD: shift documentation from Python script to this place
+The first section of the Python script consists of collections for
+LaTeX macros and environments.
+The central “helper function” Macro(...) declares a LaTeX macro
+and is applied in the collections
+parms.project\_macros and parms.system\_macros.
+Here is a short extract from the definition of standard LaTeX macros already
+included.
+(The lambda construct allows to use variables and functions only defined
+later.)
+
+```
+parms.system_macros = lambda: (
+    Macro('caption', 'OA'),         # own text flow, use option --extr
+    Macro('cite', 'A', '[1]'),
+    Macro('cite', 'PA', r'[1, \1]'),
+    Macro('color', 'A'),
+    Macro('colorbox', 'AA', r'\2'),
+    Macro('documentclass', 'OA'),
+    Macro('eqref', 'A', '(7)'),
+    Macro('fcolorbox', 'AAA', r'\3'),
+    ...
+```
+
+Other collections, e.g. for LaTeX environments, use similar “helper functions” 
+documented in the Python script.
+Project specific extension of all these collections is possible with
+option --defs and an additional Python file.
+There, the corresponding collections, for instance defs.project\_macros,
+have to be defined using simple tuples (x,y,z,) without lambda construct.
+
+Synopsis of `Macro(name, args, repl='')`
+- argument `name`:
+    - macro name without leading backslash
+    - characters with special meaning in regular expressions, e.g. '\*',
+      may need to be escaped; see for example declaration of macro \\hspace
+- argument `args`:
+    - string that codes argument sequence
+    - A: a mandatory \{...\} argument
+    - O: an optional \[...\] argument
+    - P: a mandatory \[...\] argument, see for instance macro \\cite
+- optional argument `repl`:
+    - replacement pattern, r'\\d' (d: single digit) extracts text
+      from position d in args (counting from 1)
+    - other escape rules: see escape handling at myexpand();
+      e.g., include a single backslash: repl=r'...\\\\...'
+    - inclusion of % only accepted as escaped version r'...\\\\%...',
+      will be resolved to % at the end by resolve_escapes()
+    - inclusion of double backslash \\\\ and replacement ending with \\
+      will be rejected
 
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
