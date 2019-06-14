@@ -1,3 +1,7 @@
+"Unreleased"
+------------
+- README.md: added section on declaration of LaTeX macros
+
 Release 1.5.5
 -------------
 - better % comment handling on line join: leading space on next line will
