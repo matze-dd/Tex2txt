@@ -13,17 +13,18 @@ We ask for apology.
 
 ## General description
 This is a Python script for the extraction of plain text from LaTeX documents.
+In some sense, it compares to tools like OpenDetex, TeXtidote and
+the above-mentioned Haskell software.
+
 While virtually no text should be dropped by the filter,
 the aim is to produce only few “false” warnings when feeding the result into
 a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
-Altogether, the program can help to create a single compact report
+Altogether, the script can help to create a single compact report
 from language examination of a complete document tree.
 
-In some sense, the script compares to tools like OpenDetex, TeXtidote and
-the above-mentioned Haskell software.
 For ease of problem localisation, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
@@ -185,8 +186,8 @@ They can be deleted with option --delete.
 ## Declaration of LaTeX macros
 The first section of the Python script consists of collections for
 LaTeX macros and environments.
-The central “helper function” Macro(...) declares a LaTeX macro
-and is applied in the collections
+The central “helper function” Macro(...) declares a LaTeX macro, see the
+synopsis below, and is applied in the collections
 parms.project\_macros and parms.system\_macros.
 Here is a short extract from the definition of standard LaTeX macros already
 included.
