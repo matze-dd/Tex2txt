@@ -7,14 +7,11 @@
 [Handling of displayed equations](#handling-of-displayed-equations)<br>
 [Remarks on implementation](#remarks-on-implementation)
 
-## Naming conflict
-Unfortunately, there is a naming conflict with the related Haskell package.
-We ask for apology.
-
-## General description
+<a name="general-description"></a>
 This is a Python script for the extraction of plain text from LaTeX documents.
-In some sense, it compares to tools like OpenDetex, TeXtidote and
-the above-mentioned Haskell software.
+In some sense, it compares to tools like OpenDetex, TeXtidote, and
+the Haskell software Tex2txt.
+For the naming conflict, we ask for apology.
 
 While virtually no text should be dropped by the filter,
 the aim is to produce only few “false” warnings when feeding the result into
