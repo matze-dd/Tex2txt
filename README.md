@@ -55,7 +55,8 @@ in the script at label LAB:EQUATIONS.
 
 ## Selected actions
 - flexible treatment of own macros with arbitrary LaTeX-style arguments;
-  see LAB:MACROS in script
+  see section [Declaration of LaTeX macros](#declaration-of-latex-macros),
+  and label LAB:MACROS in script
 - “undeclared” macros are silently ignored, keeping their arguments
   with enclosing \{\} braces removed
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
