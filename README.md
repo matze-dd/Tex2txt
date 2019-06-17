@@ -54,8 +54,8 @@ An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
 
 The Python script mainly relies on parsing with regular expressions.
-Its internal design is less orderly, but structuring usage, e.g., of classes
-would probably increase the program size
+Its internal design is less orderly, but structuring with usage, e.g.,
+of classes would probably increase the program size
 (currently, less than 900 effective lines of code).
 In section [Remarks on implementation](#remarks-on-implementation),
 some general issues are mentioned.
