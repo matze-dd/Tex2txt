@@ -26,7 +26,7 @@ For ease of problem localisation, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
 This is demonstrated in file [Example.md](Example.md),
-and a more complete application of the script is documented
+and a more complete application of the script is addressed
 in section [Tool integration](#tool-integration) below.
 
 The first part of the Python script gathers LaTeX macros and environments
@@ -52,6 +52,13 @@ Further details on that are described in section
 [Handling of displayed equations](#handling-of-displayed-equations).
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
+
+The Python script mainly relies on parsing with regular expressions.
+Its internal design is less orderly, but structuring usage, e.g., of classes
+would probably increase the program size
+(currently, less than 900 effective lines of code).
+In section [Remarks on implementation](#remarks-on-implementation),
+some general issues are mentioned.
 
 ## Selected actions
 - flexible treatment of own macros with arbitrary LaTeX-style arguments;
@@ -104,7 +111,8 @@ in the script at label LAB:EQUATIONS.
 - option `--defs file`<br>
   file with additional declarations, example file content (defs members,
   given without lambda, are “appended” to corresponding parms members;
-  compare [this section](#declaration-of-latex-macros) below):<br>
+  compare section
+  [Declaration of LaTeX macros](#declaration-of-latex-macros)):<br>
   `defs.project_macros = (Macro(name='swap', args='AA', repl=r'\2\1'),)`
 - option `--extr ma[,mb,...]` (list of macro names)<br>
   extract only first braced argument of these macros;
