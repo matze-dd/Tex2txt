@@ -25,13 +25,13 @@ from language examination of a complete document tree.
 For ease of problem localisation, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
-This is demonstrated in [Example.md](Example.md),
+This is demonstrated in file [Example.md](Example.md),
 and a more complete application of the script is documented
-[in this section below](#tool-integration).
+in section [Tool integration](#tool-integration) below.
 
-The first section of the Python script gathers LaTeX macros and environments
+The first part of the Python script gathers LaTeX macros and environments
 with tailored treatment, which is shortly described
-[in this section below](#declaration-of-latex-macros).
+in section [Declaration of LaTeX macros](#declaration-of-latex-macros).
 Some standard macros and environments are already included, but very probably
 the collections have to be complemented.
 With option --defs, definitions also can be extended by an additional file.
@@ -48,8 +48,8 @@ equations.
 Therefore, one may check embedded \\text{...} parts (macro from LaTeX package
 amsmath), and trailing interpunction of these equations
 can be taken into account during language check of the main text flow.
-Further details on that are described
-[in this section below](#handling-of-displayed-equations).
+Further details on that are described in section
+[Handling of displayed equations](#handling-of-displayed-equations).
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
 
@@ -68,7 +68,8 @@ in the script at label LAB:EQUATIONS.
 - equation environments are resolved in a way suitable for check of
   interpunction and spacing, argument of \\text\{...\} is included into output
   text; \\\[...\\\] and $$...$$ are same as environment equation\*;
-  see [the section below](#handling-of-displayed-equations),
+  see the section
+  [Handling of displayed equations](#handling-of-displayed-equations),
   file [Example.md](Example.md), and LAB:EQUATIONS in script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
 - letters with text-mode accents as '\\`' or '\\v' are translated to 
@@ -102,7 +103,7 @@ in the script at label LAB:EQUATIONS.
 - option `--defs file`<br>
   file with additional declarations, example file content (defs members,
   given without lambda, are “appended” to corresponding parms members;
-  see [this section below](#declaration-of-latex-macros)):<br>
+  compare [this section](#declaration-of-latex-macros) below):<br>
   `defs.project_macros = (Macro(name='swap', args='AA', repl=r'\2\1'),)`
 - option `--extr ma[,mb,...]` (list of macro names)<br>
   extract only first braced argument of these macros;
