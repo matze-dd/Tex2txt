@@ -14,7 +14,7 @@ the Haskell software Tex2txt.
 For the naming conflict with the latter project, we want to apologize.
 
 While virtually no text should be dropped by the filter,
-the aim is to produce only few “false” warnings when feeding the result into
+the aim is to provoke only few “false” warnings when feeding the result into
 a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
@@ -48,7 +48,7 @@ equations.
 Therefore, one may check embedded \\text{...} parts (macro from LaTeX package
 amsmath), and trailing interpunction of these equations
 can be taken into account during language check of the main text flow.
-Further details on that are described in section
+Further details on that are given in section
 [Handling of displayed equations](#handling-of-displayed-equations).
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
@@ -143,7 +143,7 @@ For instance, the command<br>
 `bash checks.sh Banach/*.tex > errs`<br>
 will check the main text, extracted footnotes and captions (with their own
 text flows) and foreign-language text in all these files.
-The result file errs will contain names of files with problems together
+The result file 'errs' will contain names of files with problems together
 with filtered messages from the language checker.
 
 With option --recurse, file inclusions as \\input{...} will be tracked
@@ -263,7 +263,8 @@ With the entry
     EnvRepl('align'),
 ```
 in parms.environments of the Python script (but no 'align' entry in
-parms.equation\_environments), one gets the following script output.
+parms.equation\_environments), the equation environment is simply removed.
+We get the following script output.
 ```
 Wir folgern
 Daher ...
