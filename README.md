@@ -11,7 +11,7 @@
 This is a Python script for the extraction of plain text from LaTeX documents.
 In some sense, it compares to tools like OpenDetex, TeXtidote, and
 the Haskell software Tex2txt.
-For the naming conflict, we ask for apology.
+For the naming conflict with the latter project, we want to apologize.
 
 While virtually no text should be dropped by the filter,
 the aim is to produce only few “false” warnings when feeding the result into
@@ -61,6 +61,8 @@ In section [Remarks on implementation](#remarks-on-implementation),
 some general issues are mentioned.
 
 ## Selected actions
+Here is a list of the most important script operations.
+
 - flexible treatment of own macros with arbitrary LaTeX-style arguments;
   see section [Declaration of LaTeX macros](#declaration-of-latex-macros),
   and label LAB:MACROS in script
@@ -219,7 +221,7 @@ option --defs and an additional Python file.
 The corresponding collections there, for instance defs.project\_macros,
 have to be defined using simple tuples (x,y,z,) without lambda construct.
 
-Synopsis of `Macro(name, args, repl='')`
+Synopsis of `Macro(name, args, repl='')`:
 - argument `name`:
     - macro name without leading backslash
     - characters with special meaning in regular expressions, e.g. '\*',
