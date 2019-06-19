@@ -21,8 +21,8 @@ the result into a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
-Altogether, the script can help to create a single compact report
-from language examination of a complete document tree.
+Altogether, the script can help to create a compact report from language
+examination of a single file or a complete document tree.
 
 For ease of problem localisation, we make an effort to track line numbers.
 Unnecessary creation of empty lines therefore can be avoided, sentences
@@ -67,7 +67,7 @@ for improvement, please leave a note under category [Issues](../../issues).
 
 Happy TeXing!
 
-&emsp;&emsp;&ndash; Matthias
+&emsp;&emsp;&ndash; M.&thinsp;B.
 
 ## Selected actions
 Here is a list of the most important script operations.
