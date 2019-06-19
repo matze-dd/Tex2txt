@@ -9,8 +9,10 @@
 
 <a name="general-description"></a>
 This is a Python script for the extraction of plain text from LaTeX documents.
-In some sense, it compares to tools like OpenDetex, TeXtidote, and
-the Haskell software Tex2txt.
+In some sense, it compares to tools like
+[OpenDetex](https://github.com/pkubowicz/opendetex),
+[TeXtidote](https://github.com/sylvainhalle/textidote), and
+[tex2txt](http://hackage.haskell.org/package/tex2txt).
 For the naming conflict with the latter project, we want to apologize.
 
 While virtually no text should be dropped by the filter,
