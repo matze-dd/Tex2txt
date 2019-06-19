@@ -48,14 +48,14 @@ equations.
 Therefore, one may check embedded \\text{...} parts (macro from LaTeX package
 amsmath), and trailing interpunction of these equations
 can be taken into account during language check of the main text flow.
-Further details on that are given in section
+Further details are given in section
 [Handling of displayed equations](#handling-of-displayed-equations).
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
 
-The Python script mainly relies on parsing with regular expressions.
-Its internal design is less orderly, but structuring with usage, e.g.,
-of classes would probably increase the program size
+The Python script may be seen as an exercise in usage of regular expressions.
+Its internal design could be more orderly, but formal structuring with usage,
+e.g., of classes would probably increase the program size
 (currently, less than 900 effective lines of code).
 In section [Remarks on implementation](#remarks-on-implementation),
 some general issues are mentioned.
@@ -116,7 +116,7 @@ Here is a list of the most important script operations.
   compare section
   [Declaration of LaTeX macros](#declaration-of-latex-macros)):<br>
   `defs.project_macros = (Macro(name='swap', args='AA', repl=r'\2\1'),)`
-- option `--extr ma[,mb,...]` (list of macro names)<br>
+- option `--extr ma[,mb,...]` (comma-separated list of macro names)<br>
   extract only first braced argument of these macros;
   useful, e.g., for check of foreign-language text and footnotes,
   or for tracking of file inclusions
@@ -137,12 +137,12 @@ with good quality.
 Integration with a language checker and features like tracking of
 \\input{...} directives have to be implemented “on top”.
 
-A Bash script for language checking of a whole document tree is
-[checks.sh](checks.sh).
+A Bash script for language checking of a whole document tree is proposed
+in file [checks.sh](checks.sh).
 For instance, the command<br>
 `bash checks.sh Banach/*.tex > errs`<br>
 will check the main text, extracted footnotes and captions (with their own
-text flows) and foreign-language text in all these files.
+text flows), as well as foreign-language text in all these files.
 The result file 'errs' will contain names of files with problems together
 with filtered messages from the language checker.
 
@@ -159,8 +159,13 @@ the directory specified by $txtdir (see below).
 Thus, an inclusion like \\input{../../generics.tex}
 probably won't work with option --recurse.
 
-Apart from Python, the Bash script uses Java together with LanguageTool's
-desktop version for offline use, Hunspell and some standard Unix tools.
+Apart from [Python](https://www.python.org),
+the [Bash](https://www.gnu.org/software/bash) script
+uses [Java](https://java.com) together with
+[LanguageTool's](https://www.languagetool.org)
+desktop version for offline use,
+[Hunspell](https://github.com/hunspell/hunspell),
+and some standard [Linux](https://www.linux.org) tools.
 Before application, variables in the script have to be customized.
 For placement of intermediate text and line number files, the script uses an
 auxiliary directory designated by variable $txtdir.
@@ -232,7 +237,7 @@ Synopsis of `Macro(name, args, repl='')`:
     - O: an optional \[...\] argument
     - P: a mandatory \[...\] argument, see for instance macro \\cite
 - optional argument `repl`:
-    - replacement pattern, r'\\d' (d: single digit) extracts text
+    - replacement pattern, r'...\\d...' (d: single digit) extracts text
       from position d in args (counting from 1)
     - other escape rules: see escape handling at myexpand();
       e.g., include a single backslash: repl=r'...\\\\...'
@@ -245,7 +250,8 @@ Synopsis of `Macro(name, args, repl='')`:
 Displayed equations should be part of the text flow and include the
 necessary interpunction.
 At least the German version of LanguageTool (LT) will detect a missing dot
-in the following snippet (meaning: “We conclude math Therefore, ...”).
+in the following snippet, where 'a' to 'd' stand for arbitrary mathematical
+terms (meaning: “We conclude math Therefore, ...”).
 ```
 Wir folgern
 \begin{align}
@@ -260,11 +266,12 @@ new sentence.
 ### Trivial version
 With the entry
 ```
-    EnvRepl('align'),
+    EnvRepl('align', repl=''),
 ```
 in parms.environments of the Python script (but no 'align' entry in
 parms.equation\_environments), the equation environment is simply removed.
-We get the following script output.
+We get the following script output which will probably cause a problem,
+even if the equation ends with a correct interpunction sign.
 ```
 Wir folgern
 Daher ...
@@ -297,8 +304,10 @@ Wir folgern
   D2D  gleich D3D.
 Daher ...
 ```
-Now, LT will complain about repetition of D2D. Writing “= b,” in the equation
-leads to:
+The replacements 'D1D' to 'D3D' are taken from the collection in script
+variable parms.display\_math that depends on option --lang, too.
+Now, LT will complain about repetition of D2D.
+Finally, writing “= b,” in the equation leads to the output:
 ```
 Wir folgern
   D1D  gleich D2D,
