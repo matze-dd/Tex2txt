@@ -14,8 +14,8 @@ the Haskell software Tex2txt.
 For the naming conflict with the latter project, we want to apologize.
 
 While virtually no text should be dropped by the filter,
-the aim is to provoke only few “false” warnings when feeding the result into
-a language checker.
+the aim is to provoke as few as possible “false” warnings when feeding
+the result into a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
@@ -55,10 +55,17 @@ in the script at label LAB:EQUATIONS.
 
 The Python script may be seen as an exercise in usage of regular expressions.
 Its internal design could be more orderly, but formal structuring with usage,
-e.g., of classes would probably increase the program size
+for instance, of classes would probably increase the program size
 (currently, less than 900 effective lines of code).
 In section [Remarks on implementation](#remarks-on-implementation),
 some general issues are mentioned.
+
+If you use this tool and encounter a bug or have other suggestions
+for improvement, please leave a note under category [Issues](../../issues).
+
+Happy TeXing!
+
+&emsp;&emsp;&ndash; Matthias
 
 ## Selected actions
 Here is a list of the most important script operations.
@@ -100,7 +107,7 @@ Here is a list of the most important script operations.
 ## Command line
 `python3 tex2txt.py [--nums file] [--repl file] [--defs file] [--extr list] [--lang xy] [--unkn] [file]`
 
-- without argument file: read standard input
+- without positional argument `file`: read standard input
 - option `--nums file`<br>
   file for storing original line numbers:
   for each line of output text, the file contains a line with the estimated
@@ -155,7 +162,7 @@ It is assumed that the Bash script is invoked at the “root directory”
 of the LaTeX project, and that all LaTeX documents are placed directly there
 or in subdirectories.
 For safety, the script will refuse to create auxiliary files outside of
-the directory specified by $txtdir (see below).
+the directory specified by variable $txtdir (see below).
 Thus, an inclusion like \\input{../../generics.tex}
 probably won't work with option --recurse.
 
@@ -180,11 +187,13 @@ They can be deleted with option --delete.
 - check foreign-language text using Hunspell
 - only if variable $check\_for\_single\_letters set to 'yes':
   look for single letters, excluding abbreviations in script variable $acronyms
+  (useful, for instance, in German)
 
 ### Usage of the Bash script
 `bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]`
 
-- no argument files: use files from script variable $all\_tex\_files
+- no positional arguments `files`:
+  use files from script variable $all\_tex\_files
 - option `--recurse`<br>
   track file inclusions; see LAB:RECURSE in script for exceptions
 - option `--adapt-lt`<br>
@@ -224,7 +233,8 @@ Other collections, e.g. for LaTeX environments, use similar
 Project specific extension of all these collections is possible with
 option --defs and an additional Python file.
 The corresponding collections there, for instance defs.project\_macros,
-have to be defined using simple tuples (x,y,z,) without lambda construct.
+have to be defined using simple tuples (x,y,z,) without lambda construct;
+compare section [Command line](#command-line).
 
 Synopsis of `Macro(name, args, repl='')`:
 - argument `name`:
@@ -232,7 +242,7 @@ Synopsis of `Macro(name, args, repl='')`:
     - characters with special meaning in regular expressions, e.g. '\*',
       may need to be escaped; see for example declaration of macro \\hspace
 - argument `args`:
-    - string that codes argument sequence
+    - string that encodes argument sequence
     - A: a mandatory \{...\} argument
     - O: an optional \[...\] argument
     - P: a mandatory \[...\] argument, see for instance macro \\cite
@@ -332,7 +342,7 @@ In contrast, the text
     a   &= b \\
     -c  &= d.
 ```
-again will produce an LT warning due to the missing comma after b,
+will again produce an LT warning due to the missing comma after b,
 since the script replaces both b and -c by D2D without intermediate text.
 
 In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
@@ -340,8 +350,8 @@ to avoid false warnings from the language checker.
 See also file [Example.md](Example.md).
 
 ### Inclusion of “normal” text
-The argument of \\text\{...\} (variable for macro name in script:
-parms.text\_macro) is directly copied.
+In variant “Full version”, the argument of \\text\{...\}
+(variable for macro name in script: parms.text\_macro) is directly copied.
 Outside of \\text, only math space like \\; and \\quad is considered as space.
 Therefore, one will get warnings from the language checker, if subsequent
 \\text and math parts are not properly separated.
@@ -351,7 +361,7 @@ See file [Example.md](Example.md).
 Parsing with regular expressions is fun, but it remains a rather coarse
 approximation of the “real thing”.
 Nevertheless, it seems to work quite well in practice, and it inherits high
-flexibility from Python.
+flexibility from the Python environment.
 
 In order to parse nested structures, some regular expressions are constructed
 by iteration.
@@ -370,4 +380,4 @@ together with the placeholder mark\_begin\_env.
 It aims to avoid that a macro without arguments consumes leading space
 inside of an already resolved following environment.
 
-Under [category Issues](../../issues), some known shortcomings are listed.
+Under category [Issues](../../issues), some known shortcomings are listed.
