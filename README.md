@@ -16,7 +16,7 @@ In some sense, it compares to tools like
 For the naming conflict with the latter project, we want to apologize.
 
 While virtually no text should be dropped by the filter,
-the aim is to provoke as few as possible “false” warnings when feeding
+our aim is to provoke as few as possible “false” warnings when feeding
 the result into a language checker.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
@@ -55,7 +55,8 @@ Further details are given in section
 An example is shown in file [Example.md](Example.md), operation is summarized
 in the script at label LAB:EQUATIONS.
 
-The Python script may be seen as an exercise in usage of regular expressions.
+The Python script may be seen as an exercise in application of regular
+expressions.
 Its internal design could be more orderly, but formal structuring with usage,
 for instance, of classes would probably increase the program size
 (currently, less than 900 effective lines of code).
@@ -91,7 +92,7 @@ Here is a list of the most important script operations.
   [Handling of displayed equations](#handling-of-displayed-equations),
   file [Example.md](Example.md), and LAB:EQUATIONS in script
 - some treatment for \item\[...\] labels, see LAB:ITEMS in script
-- letters with text-mode accents as '\\`' or '\\v' are translated to 
+- letters with text-mode accents as '\\\`' or '\\v' are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
 - replacement of things like double quotes '\`\`' and dashes '\-\-' with
   corresponding UTF8 characters;
@@ -107,9 +108,13 @@ Here is a list of the most important script operations.
   \newcommand{\\LTadd}\[1\]{}
 
 ## Command line
-`python3 tex2txt.py [--nums file] [--repl file] [--defs file] [--extr list] [--lang xy] [--unkn] [file]`
-
-- without positional argument `file`: read standard input
+The script expects the following parameters.
+```
+python3 tex2txt.py [--nums file] [--repl file] [--defs file] \
+                   [--extr list] [--lang xy] [--unkn] \
+                   [texfile]
+```
+- without positional argument `texfile`: read standard input
 - option `--nums file`<br>
   file for storing original line numbers:
   for each line of output text, the file contains a line with the estimated
@@ -148,8 +153,10 @@ Integration with a language checker and features like tracking of
 
 A Bash script for language checking of a whole document tree is proposed
 in file [checks.sh](checks.sh).
-For instance, the command<br>
-`bash checks.sh Banach/*.tex > errs`<br>
+For instance, the command
+```
+bash checks.sh Banach/*.tex > errs
+```
 will check the main text, extracted footnotes and captions (with their own
 text flows), as well as foreign-language text in all these files.
 The result file 'errs' will contain names of files with problems together
@@ -218,7 +225,6 @@ Here is a short extract from the definition of standard LaTeX macros already
 included.
 (The lambda construct allows us to use variables and functions introduced
 only later.)
-
 ```
 parms.system_macros = lambda: (
     Macro('caption', 'OA'),         # own text flow, use option --extr
@@ -229,7 +235,6 @@ parms.system_macros = lambda: (
     Macro('documentclass', 'OA'),
     ...
 ```
-
 Other collections, e.g. for LaTeX environments, use similar
 “helper functions”.
 Project specific extension of all these collections is possible with
