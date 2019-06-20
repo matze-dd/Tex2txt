@@ -199,8 +199,9 @@ They can be deleted with option --delete.
   (useful, for instance, in German)
 
 ### Usage of the Bash script
-`bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]`
-
+```
+bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]
+```
 - no positional arguments `files`:
   use files from script variable $all\_tex\_files
 - option `--recurse`<br>
