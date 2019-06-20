@@ -61,7 +61,7 @@ Its internal design could be more orderly, but formal structuring with usage,
 for instance, of classes would probably increase the program size
 (currently, less than 900 effective lines of code).
 In section [Remarks on implementation](#remarks-on-implementation),
-some general issues are mentioned.
+some general topics are considered.
 
 If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues).
@@ -219,7 +219,7 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]
 ## Declaration of LaTeX macros
 The first section of the Python script consists of collections for
 LaTeX macros and environments.
-The central “helper function” Macro(...) declares a LaTeX macro, see the
+The central “helper function” Macro() declares a LaTeX macro, see the
 synopsis below, and is applied in the collections
 parms.project\_macros and parms.system\_macros.
 Here is a short extract from the definition of standard LaTeX macros already
@@ -236,8 +236,8 @@ parms.system_macros = lambda: (
     Macro('documentclass', 'OA'),
     ...
 ```
-Other collections, e.g. for LaTeX environments, use similar
-“helper functions”.
+Other collections, e.g. for LaTeX environments, use functions similar
+to Macro().
 Project specific extension of all these collections is possible with
 option --defs and an additional Python file.
 The corresponding collections there, for instance defs.project\_macros,
