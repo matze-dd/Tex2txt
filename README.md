@@ -400,4 +400,13 @@ current text string part.
 During substitutions, the line numbers are adjusted with deletion or
 inclusion of line breaks.
 
+In order to avoid the creation of new empty lines that might break
+the text flow, we use a simple scheme.
+Whenever a LaTeX macro is expanded or an environment frame is deleted,
+a special mark is left in the text string.
+At the very end, these marks are deleted, and lines only consisting
+of space and such marks are removed completely.
+This also means that initially blank lines remain in the text (except
+those only containing a % comment).
+
 Under category [Issues](../../issues), some known shortcomings are listed.
