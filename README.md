@@ -1,14 +1,16 @@
 # Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line numbers
-[General description](#general-description)<br>
-[Selected actions](#selected-actions)<br>
-[Command line](#command-line)<br>
-[Tool integration](#tool-integration)<br>
-[Declaration of LaTeX macros](#declaration-of-latex-macros)<br>
-[Handling of displayed equations](#handling-of-displayed-equations)<br>
+[General description](#general-description)&nbsp;/
+[Selected actions](#selected-actions)&nbsp;/
+[Command line](#command-line)&nbsp;/
+[Tool integration](#tool-integration)&nbsp;/
+[Declaration of LaTeX macros](#declaration-of-latex-macros)&nbsp;/
+[Handling of displayed equations](#handling-of-displayed-equations)&nbsp;/
 [Remarks on implementation](#remarks-on-implementation)
 
 <a name="general-description"></a>
-This is a Python script for the extraction of plain text from LaTeX documents.
+This is a [Python](https://www.python.org)
+script for the extraction of plain text from
+[LaTeX](https://www.latex-project.org) documents.
 In some sense, it compares to tools like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
 [TeXtidote](https://github.com/sylvainhalle/textidote), and
@@ -57,8 +59,8 @@ in the script at label LAB:EQUATIONS.
 
 The Python script may be seen as an exercise in application of regular
 expressions.
-Its internal design could be more orderly, but formal structuring with usage,
-for instance, of classes would probably increase the program size
+Its internal design could be more orderly, but stronger structuring,
+for instance with classes, would probably increase the program size
 (currently, less than 900 effective lines of code).
 In section [Remarks on implementation](#remarks-on-implementation),
 some general topics are considered.
@@ -67,8 +69,6 @@ If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues).
 
 Happy TeXing!
-
-&emsp;&emsp;&ndash; M.&thinsp;B.
 
 ## Selected actions
 Here is a list of the most important script operations.
@@ -241,8 +241,8 @@ to Macro().
 Project specific extension of all these collections is possible with
 option --defs and an additional Python file.
 The corresponding collections there, for instance defs.project\_macros,
-have to be defined using simple tuples (x,y,z,) without lambda construct;
-compare section [Command line](#command-line).
+have to be defined using simple tuples without lambda construct;
+compare the example in section [Command line](#command-line).
 
 Synopsis of `Macro(name, args, repl='')`:
 - argument `name`:
@@ -257,10 +257,10 @@ Synopsis of `Macro(name, args, repl='')`:
 - optional argument `repl`:
     - replacement pattern, r'...\\d...' (d: single digit) extracts text
       from position d in args (counting from 1)
-    - other escape rules: see escape handling at myexpand();
+    - other escape rules: see escape handling at function myexpand();
       e.g., include a single backslash: repl=r'...\\\\...'
     - inclusion of % only accepted as escaped version r'...\\\\%...',
-      will be resolved to % at the end by resolve_escapes()
+      will be resolved to % at the end by function resolve_escapes()
     - inclusion of double backslash \\\\ and replacement ending with \\
       will be rejected
 
