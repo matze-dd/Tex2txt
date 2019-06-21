@@ -267,7 +267,9 @@ Synopsis of `Macro(name, args, repl='')`:
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
 necessary interpunction.
-At least the German version of LanguageTool (LT) will detect a missing dot
+At least the German version of
+[LanguageTool](https://www.languagetool.org) (LT)
+will detect a missing dot
 in the following snippet, where 'a' to 'd' stand for arbitrary mathematical
 terms (meaning: “We conclude math Therefore, ...”).
 ```
@@ -387,5 +389,15 @@ This calls for hacks like the regular expression in skip\_space\_macro
 together with the placeholder mark\_begin\_env.
 It aims to avoid that a macro without arguments consumes leading space
 inside of an already resolved following environment.
+
+Our mechanism for line number tracking relies on a partial reimplementation
+of the substitution function re.sub() from the standard Python module
+for regular expressions.
+Here, the manipulated text string is replaced by a pair of this same string
+and a tuple of integers.
+These represent the estimated original line numbers of the lines in the
+current text string part.
+During substitutions, the line numbers are adjusted with deletion or
+inclusion of line breaks.
 
 Under category [Issues](../../issues), some known shortcomings are listed.
