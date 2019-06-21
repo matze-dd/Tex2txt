@@ -151,6 +151,18 @@ with good quality.
 Integration with a language checker and features like tracking of
 \\input{...} directives have to be implemented “on top”.
 
+A first simple Bash script that checks a single LaTeX file is given in
+file [shell.sh](shell.sh).
+The command
+```
+bash shell.sh
+```
+will read the LaTeX file designated by script variable $file and create
+plain text and line number files with extensions .txt and .lin, respectively.
+Then it will call [LanguageTool](https://www.languagetool.org)
+and filter line numbers in output messages.
+
+### More complex integration
 A Bash script for language checking of a whole document tree is proposed
 in file [checks.sh](checks.sh).
 For instance, the command
