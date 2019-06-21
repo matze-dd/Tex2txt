@@ -1,10 +1,10 @@
 # Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line numbers
-[General description](#general-description)&nbsp;/
-[Selected actions](#selected-actions)&nbsp;/
-[Command line](#command-line)&nbsp;/
-[Tool integration](#tool-integration)&nbsp;/
-[Declaration of LaTeX macros](#declaration-of-latex-macros)&nbsp;/
-[Handling of displayed equations](#handling-of-displayed-equations)&nbsp;/
+[General description](#general-description)&nbsp;\|
+[Selected actions](#selected-actions)&nbsp;\|
+[Command line](#command-line)&nbsp;\|
+[Tool integration](#tool-integration)&nbsp;\|
+[Declaration of LaTeX macros](#declaration-of-latex-macros)&nbsp;\|
+[Handling of displayed equations](#handling-of-displayed-equations)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
 
 <a name="general-description"></a>
@@ -400,8 +400,8 @@ current text string part.
 During substitutions, the line numbers are adjusted with deletion or
 inclusion of line breaks.
 
-In order to avoid the creation of new empty lines that might break
-the text flow, we use a simple scheme.
+Since the creation of new empty lines may break the text flow, we use a
+simple scheme to avoid it.
 Whenever a LaTeX macro is expanded or an environment frame is deleted,
 a special mark is left in the text string.
 At the very end, these marks are deleted, and lines only consisting
