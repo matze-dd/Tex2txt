@@ -372,21 +372,21 @@ In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
 to avoid false warnings from the language checker.
 See also file [Example.md](Example.md).
 
-### Replacements in English version
+### Replacements for English documents
 The replacement collection in variable parms.display\_math works
 quite well, if German is the main language.
 Requirements for replacements are summarized in the script in function
 set\_language\_de().
 Till now, we could not yet select replacements that work equally well
 with the English version of LanguageTool.
-More specifically, sensitivity of the collection set in function
-set\_language\_en() is not good in these cases:
+For example, sensitivity is not good with the collection provided in function
+set\_language\_en() in these cases:
 - missing final dot in an equation, if something like 'Therefore'
   is following;
 - lower-case text continuation after an equation with final dot.
 
-If you find good replacements for English or other languages, please
-leave a note under category [Issues](../../issues),
+If you can advice on good replacements for English or other languages,
+please leave a note under category [Issues](../../issues),
 or initiate a pull request.
 Many thanks in advance!
 
