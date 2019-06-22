@@ -161,8 +161,9 @@ will read the LaTeX file designated by script variable $file and create
 plain text and line number files with extensions .txt and .lin, respectively.
 Then it will call [LanguageTool](https://www.languagetool.org)
 and filter line numbers in output messages.
+File [Example.md](Example.md) demonstrates the script.
 
-### More complex integration
+### More complete integration
 A Bash script for language checking of a whole document tree is proposed
 in file [checks.sh](checks.sh).
 For instance, the command
@@ -412,7 +413,7 @@ current text string part.
 During substitutions, the line numbers are adjusted with deletion or
 inclusion of line breaks.
 
-Since the creation of new empty lines may break the text flow, we use a
+Since creation of new empty lines may break the text flow, we use a
 simple scheme to avoid it.
 Whenever a LaTeX macro is expanded or an environment frame is deleted,
 a special mark is left in the text string.
