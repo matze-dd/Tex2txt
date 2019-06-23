@@ -66,7 +66,11 @@ In section [Remarks on implementation](#remarks-on-implementation),
 some general topics are considered.
 
 If you use this tool and encounter a bug or have other suggestions
-for improvement, please leave a note under category [Issues](../../issues).
+for improvement, please leave a note under category [Issues](../../issues),
+or initiate a pull request.
+(See, for example, the problem in section
+[Replacements for English documents](#replacements-for-english-documents)
+below.)
 
 Happy TeXing!
 
@@ -384,11 +388,6 @@ set\_language\_en() in these cases:
 - missing final dot in an equation, if something like 'Therefore'
   is following;
 - lower-case text continuation after an equation with final dot.
-
-If you can advice on good replacements for English or other languages,
-please leave a note under category [Issues](../../issues),
-or initiate a pull request.
-Many thanks in advance!
 
 ### Inclusion of “normal” text
 In variant “Full version”, the argument of \\text\{...\}
