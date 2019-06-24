@@ -408,6 +408,12 @@ set\_language\_en() in these cases:
   is following;
 - lower-case text continuation after an equation with final dot.
 
+Currently (LanguageTool version 4.5), only the second case is detected in
+only variant “Simple version” above, e.g.:
+```
+EquEnv('align', repl='  relation'),
+```
+
 [Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
 
 ## Remarks on implementation
