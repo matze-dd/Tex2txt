@@ -387,6 +387,14 @@ In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
 to avoid false warnings from the language checker.
 See also file [Example.md](Example.md).
 
+### Inclusion of “normal” text
+In variant “Full version”, the argument of \\text\{...\}
+(variable for macro name in script: parms.text\_macro) is directly copied.
+Outside of \\text, only math space like \\; and \\quad is considered as space.
+Therefore, one will get warnings from the language checker, if subsequent
+\\text and math parts are not properly separated.
+See file [Example.md](Example.md).
+
 ### Replacements in English documents
 The replacement collection in variable parms.display\_math works
 quite well, if German is the main language.
@@ -399,14 +407,6 @@ set\_language\_en() in these cases:
 - missing final dot in an equation, if something like 'Therefore'
   is following;
 - lower-case text continuation after an equation with final dot.
-
-### Inclusion of “normal” text
-In variant “Full version”, the argument of \\text\{...\}
-(variable for macro name in script: parms.text\_macro) is directly copied.
-Outside of \\text, only math space like \\; and \\quad is considered as space.
-Therefore, one will get warnings from the language checker, if subsequent
-\\text and math parts are not properly separated.
-See file [Example.md](Example.md).
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
 
@@ -440,7 +440,7 @@ Here, the manipulated text string is replaced by a pair of this same string
 and a tuple of integers.
 These represent the estimated original line numbers of the lines in the
 current text string part.
-During substitutions, the line numbers are adjusted with deletion or
+During substitution, the line number tuple is adjusted upon deletion or
 inclusion of line breaks.
 
 Since creation of new empty lines may break the text flow, we avoid it
