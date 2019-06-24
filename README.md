@@ -67,12 +67,14 @@ some general topics are considered.
 
 If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues),
-or initiate a pull request.
+or initiate a pull request; many thanks in advance.
 (See, for example, the problem in section
-[Replacements for English documents](#replacements-for-english-documents)
+[Replacements in English documents](#replacements-in-english-documents)
 below.)
 
 Happy TeXing!
+
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
 
 ## Selected actions
 Here is a list of the most important script operations.
@@ -110,6 +112,8 @@ Here is a list of the most important script operations.
   \\LTskip{}, \\LTalter{}{} in the LaTeX text with suitable macro definition
   there; e.g., adding something that only the language checker should see:
   \newcommand{\\LTadd}\[1\]{}
+
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
 
 ## Command line
 The script expects the following parameters.
@@ -149,13 +153,16 @@ python3 tex2txt.py [--nums file] [--repl file] [--defs file] \
   declared macros do appear here, if a mandatory argument is missing
   in input text
 
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
 with good quality.
 Integration with a language checker and features like tracking of
 \\input{...} directives have to be implemented “on top”.
 
-A first simple Bash script that checks a single LaTeX file is given in
+### A simple script
+A first Bash script that checks a single LaTeX file is given in
 file [shell.sh](shell.sh).
 The command
 ```
@@ -233,6 +240,8 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]
 - option `--delete`<br>
   only remove auxiliary directory in script variable $txtdir, and exit
 
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+
 ## Declaration of LaTeX macros
 The first section of the Python script consists of collections for
 LaTeX macros and environments.
@@ -280,6 +289,8 @@ Synopsis of `Macro(name, args, repl='')`:
       will be resolved to % at the end by function resolve_escapes()
     - inclusion of double backslash \\\\ and replacement ending with \\
       will be rejected
+
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
 
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
@@ -376,7 +387,7 @@ In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
 to avoid false warnings from the language checker.
 See also file [Example.md](Example.md).
 
-### Replacements for English documents
+### Replacements in English documents
 The replacement collection in variable parms.display\_math works
 quite well, if German is the main language.
 Requirements for replacements are summarized in the script in function
@@ -396,6 +407,8 @@ Outside of \\text, only math space like \\; and \\quad is considered as space.
 Therefore, one will get warnings from the language checker, if subsequent
 \\text and math parts are not properly separated.
 See file [Example.md](Example.md).
+
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
 
 ## Remarks on implementation
 Parsing with regular expressions is fun, but it remains a rather coarse
@@ -430,8 +443,8 @@ current text string part.
 During substitutions, the line numbers are adjusted with deletion or
 inclusion of line breaks.
 
-Since creation of new empty lines may break the text flow, we use a
-simple scheme to avoid it.
+Since creation of new empty lines may break the text flow, we avoid it
+with a simple scheme.
 Whenever a LaTeX macro is expanded or an environment frame is deleted,
 a special mark is left in the text string.
 At the very end, these marks are deleted, and lines only consisting
@@ -440,3 +453,5 @@ This also means that initially blank lines remain in the text (except
 those only containing a % comment).
 
 Under category [Issues](../../issues), some known shortcomings are listed.
+
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
