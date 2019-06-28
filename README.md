@@ -26,7 +26,8 @@ equation environments were simply removed or replaced by fixed text.
 Altogether, the script can help to create a compact report from language
 examination of a single file or a complete document tree.
 
-For ease of problem localisation, we make an effort to track line numbers.
+For ease of problem localisation, we implement a mechanism which tracks
+line number changes during the text manipulations.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
 This is demonstrated in file [Example.md](Example.md),
