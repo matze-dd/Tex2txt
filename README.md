@@ -26,7 +26,7 @@ equation environments were simply removed or replaced by fixed text.
 Altogether, the script can help to create a compact report from language
 examination of a single file or a complete document tree.
 
-For ease of problem localisation, we implement a mechanism which tracks
+For ease of problem localisation, we implement a mechanism that tracks
 line number changes during the text manipulations.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
@@ -444,10 +444,10 @@ Our mechanism for line number tracking relies on a partial reimplementation
 of the substitution function re.sub() from the standard Python module
 for regular expressions.
 Here, the manipulated text string is replaced by a pair of this same string
-and a tuple of integers.
+and an array of integers.
 These represent the estimated original line numbers of the lines in the
 current text string part.
-During substitution, the line number tuple is adjusted upon deletion or
+During substitution, the line number array is adjusted upon deletion or
 inclusion of line breaks.
 
 Since creation of new empty lines may break the text flow, we avoid it
