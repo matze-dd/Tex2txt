@@ -1,6 +1,9 @@
 "Unreleased"
 ------------
-- README.md: added section on declaration of LaTeX macros
+- tex2txt.py: fixed bug in function calc\_numbers(), shifted its code
+  into now simplified function mysub()
+- Example.md: updated
+- README.md: added section on declaration of LaTeX macros, updated
 
 Release 1.5.5
 -------------
