@@ -680,10 +680,7 @@ def verbatim(s, mark, ast):
 #   placeholder is inserted in the number list.
 #
 def mysub(expr, repl, text, flags=0, extract=None, track_repl=None):
-    if type(text) is not tuple:
-        fatal('wrong arg for mysub()')
-    txt = text[0]
-    numbers = text[1]
+    (txt, numbers) = text
     res = ''
     last = 0
     for m in re.finditer(expr, txt, flags=flags):
@@ -711,27 +708,14 @@ def mysub(expr, repl, text, flags=0, extract=None, track_repl=None):
             extract(r, numbers[lin:lin+nr+1])
         if track_repl:
             track_repl(t, r)
-        if nt != 0 or nr != 0:
-            # ll: original line number of line lin
-            ll = abs(numbers[lin])
-            if nr > 0 or not r:
-                if nums2:
-                    # replacement with line number information
-                    numbers = calc_numbers(res, r, numbers, lin, nt, nums2)
-                else:
-                    numbers = numbers[:lin] + (-ll,) * nr + numbers[lin+nt:]
-            else:
-                # join to single line: keep correct line number
-                numbers = numbers[:lin] + (-ll,) + numbers[lin+nt+1:]
-        res += r
-    return (res + txt[last:], numbers)
 
-#   helper function for mysub()
-#
-def calc_numbers(res, repl, numbers, lin, nt, nums2):
-    t = text_combine((res, numbers[:lin+1]), ('', nums2))
-    t = text_combine((repl, t[1]), ('', numbers[lin+nt:]))
-    return t[1]
+        if nums2 is None:
+            ll = numbers[lin]
+            nums2 = (ll,) + (-abs(ll),) * nr
+        tmp = text_combine((res, numbers[:lin+1]), (r, nums2))
+        (res, numbers) = text_combine(tmp, ('', numbers[lin+nt:]))
+
+    return (res + txt[last:], numbers)
 
 #   combine (add) two text elements with line number information
 #
@@ -833,9 +817,8 @@ def myexpand(m, repl, text):
     return t
 
 def mysearch(expr, text, flags=0):
-    if type(text) is not tuple:
-        fatal('wrong arg for mysearch()')
-    return re.search(expr, text[0], flags=flags)
+    (txt, n) = text
+    return re.search(expr, txt, flags=flags)
 def text_get_txt(text):
     return text[0]
 def text_get_num(text):
