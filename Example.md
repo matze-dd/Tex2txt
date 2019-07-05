@@ -3,8 +3,10 @@ Assume the following input text.
 We see
 %
 \begin{itemize}
-\item that all is acceptable andx
-\item that it can be improved.
+\item
+    that all is acceptable andx
+\item
+    that it can be improved.
 \end{itemize}
 
 Thus, with a constant $C$ and a domain $\Omega$,
@@ -23,37 +25,40 @@ We see
   that all is acceptable andx
   that it can be improved.
 
-Thus, with a constant B and a domain C,
+Thus, with a constant C and a domain D,
   U  equal V for all W, 
   X  equal Y for Z 
   Z in caseU. 
 ```
-With the filter from the Bash script [shell.sh](shell.sh),
-the typo 'andx' will be related to line 4.
+With the filter from Bash script [shell.sh](shell.sh), the typo 'andx'
+will be related to line 5.
 The problems in the equation (missing comma leads to word repetition,
-missing space to spelling error) will be related to line 12+ and 14+,
-respectively (line 12 is \\begin\{cases\}).
+missing space to spelling error) will be related to line 14+ and 16+,
+respectively (line 14 is that of \\begin\{cases\}).
 
-Here is the output of [shell.sh](shell.sh).
+Here is the output of Bash script [shell.sh](shell.sh), if the above input
+text is stored in a file named z.tex.
 Line numbers in \[\] brackets have been added by the filter in variable
 \$repl\_lines of the Bash script.
 ```
-1.) Line 2 [4], Rule ID: MORFOLOGIK_RULE_EN_GB
+Expected text language: English (GB)
+Working on z.tex.txt...
+1.) Line 2 [5], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: and; Andy; and x
 We see   that all is acceptable andx   that it can be improved.  Thus, with a con...
                                 ^^^^                                             
 
-2.) Line 7 [12+], Rule ID: ENGLISH_WORD_REPEAT_RULE
+2.) Line 7 [14+], Rule ID: ENGLISH_WORD_REPEAT_RULE
 Message: Possible typo: you repeated a word
 Suggestion: Z
-...C,   U  equal V for all W,    X  equal Y for Z    Z in caseU.  
+...D,   U  equal V for all W,    X  equal Y for Z    Z in caseU.  
                                                 ^^^^^^            
 
-3.) Line 8 [14+], Rule ID: MORFOLOGIK_RULE_EN_GB
+3.) Line 8 [16+], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: case; cases; Casey; cased; CSEU; case U
 ...ual V for all W,    X  equal Y for Z    Z in caseU.  
                                                 ^^^^^   
-Time: 2917ms for 3 sentences (1.0 sentences/sec)
+Time: 1862ms for 3 sentences (1.6 sentences/sec)
 ```
