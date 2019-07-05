@@ -175,6 +175,11 @@ Then it will call [LanguageTool](https://www.languagetool.org)
 and filter line numbers in output messages.
 File [Example.md](Example.md) demonstrates the script.
 
+It is assumed that Java is installed, and that the directory with
+relative path ../LT/ contains an unzipped LanguageTool archive.
+The latter, for example LanguageTool-4.4.zip, can be obtained
+from [here](https://www.languagetool.org/download).
+
 ### More complete integration
 A Bash script for language checking of a whole document tree is proposed
 in file [checks.sh](checks.sh).
