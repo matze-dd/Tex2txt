@@ -1,7 +1,9 @@
 "Unreleased"
 ------------
-- tex2txt.py: fixed bug in function calc\_numbers(), shifted its code
-  into now simplified function mysub()
+- tex2txt.py:
+    - fixed bug in function calc\_numbers(), shifted its code
+      into now simplified function mysub()
+    - simplified function text\_combine()
 - Example.md: updated
 - README.md: added section on declaration of LaTeX macros, updated
 
