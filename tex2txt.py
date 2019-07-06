@@ -720,13 +720,11 @@ def mysub(expr, repl, text, flags=0, extract=None, track_repl=None):
 #   combine (add) two text elements with line number information
 #
 def text_combine(text1, text2):
-    space = (r'\A(' + mark_deleted + r'|' + re_begin_env
-                + r'|' + re_end_env + r'|\s)*\Z')
     (t1, n1) = text1
     (t2, n2) = text2
-    if n1[-1] == n2[0] or re.search(space, t1[t1.rfind('\n')+1:]):
+    if n1[-1] == n2[0] or re.search(r'\A\s*\Z', t1[t1.rfind('\n')+1:]):
         # same line numbers at junction or
-        # only "space" after last line break in text1:
+        # only space after last line break in text1:
         # use first line number from text2 at junction
         n = n1[:-1] + n2
     else:
