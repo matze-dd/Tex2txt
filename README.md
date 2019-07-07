@@ -30,8 +30,8 @@ For ease of problem localisation, we implement a mechanism that tracks
 line number changes during the text manipulations.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
-This is demonstrated in file [Example.md](Example.md),
-and a more complete application of the script is addressed
+This is demonstrated in file [Example.md](Example.md).
+A simple and a more complete application of the script are addressed
 in section [Tool integration](#tool-integration) below.
 
 The first part of the Python script gathers LaTeX macros and environments
@@ -174,10 +174,13 @@ plain text and line number files with extensions .txt and .lin, respectively.
 Then it will call [LanguageTool](https://www.languagetool.org)
 and filter line numbers in output messages.
 File [Example.md](Example.md) demonstrates the script.
+Note that footnotes and captions are not checked, as these are not
+treated like in the more complete script below.
 
-It is assumed that Java is installed, and that the directory with
-relative path ../LT/ contains an unzipped LanguageTool archive.
-The latter, for example LanguageTool-4.4.zip, can be obtained
+We assume that [Java](https://java.com) is installed, and that the directory
+with relative path ../LT/ contains an unzipped archive of the LanguageTool
+software.
+This archive, for example LanguageTool-4.4.zip, can be obtained
 from [here](https://www.languagetool.org/download).
 
 ### More complete integration
@@ -220,7 +223,8 @@ without request.
 They can be deleted with option --delete.
 
 ### Actions of the Bash script
-- convert content of given LaTeX files to plain text
+- convert content of given LaTeX files to plain text, extract special text
+  flows like footnotes
 - call LanguageTool for native-language main text and separately for footnotes
   and captions
 - check foreign-language text using Hunspell
