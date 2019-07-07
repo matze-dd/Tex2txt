@@ -4,7 +4,7 @@
     - fixed bug in function calc\_numbers(), shifted its code
       into now simplified function mysub()
     - simplified function text\_combine()
-    - parse_equ(): better line number tracking for last equation
+    - parse\_equ(): better line number tracking for last equation
       in an equation environment
 - Example.md: updated
 - README.md: added section on declaration of LaTeX macros, updated
