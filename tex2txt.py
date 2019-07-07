@@ -1371,7 +1371,8 @@ def parse_equ(equ):
             break
 
     # important: non-greedy *? repetition
-    line = skip_space + r'((.|\n)*?)(' + mark_linebreak + r'|\Z)'
+    line = (skip_space + r'((.|\n)*?)' + skip_space
+                + r'(' + mark_linebreak + r'|\Z)')
     # return replacement for RE line
     def repl_line(m):
         # finally, split line into sections delimited by '&'
