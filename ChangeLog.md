@@ -1,11 +1,14 @@
 "Unreleased"
 ------------
-- tex2txt.py:
-    - fixed bug in function calc\_numbers(), shifted its code
-      into now simplified function mysub()
-    - simplified function text\_combine()
-    - parse\_equ(): better line number tracking for last equation
-      in an equation environment
+- fixed bug in function calc\_numbers(), shifted its code into now
+  simplified function mysub()
+- simplified function text\_combine()
+- change in parse\_equ(): better line number tracking for last equation
+  in an equation environment
+- added default label collection parms.default\_item\_enum\_labs
+  for \\item in enumerate environment
+- added variable parms.item\_label\_repeat\_punct to control repetition
+  of preceding punctuation after an \\item\[...\] label
 - Example.md: updated
 - README.md: added section on declaration of LaTeX macros, updated
 
