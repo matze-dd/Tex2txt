@@ -241,6 +241,9 @@ parms.environments = lambda: (
 #   - args: as for Macro()
 #   - repl: as for Macro()
 #
+#   ATTENTION:  do not include itemize and enumerate here,
+#               see label LAB:ENUMERATE below
+#   
 parms.environment_begins = lambda: (
 
     EnvBegin('figure', 'O'),
@@ -349,10 +352,27 @@ parms.max_depth_br = 20         # for {} braces and [] brackets
 parms.max_depth_env = 10        # for environments of the same type
 
 
-#   see LAB:ITEMS below
+#   keep \item labels, if given in [...] option?
+#   (if set to False: use default labels defined next)
 #
 parms.keep_item_labels = True
-parms.default_item_lab = ''
+
+#   default \item labels in itemize environment
+#   (used for \item without [...], or if not parms.keep_item_labels)
+#
+parms.default_item_labs = ('',)
+
+#   default \item labels in enumerate environment
+#   (used for \item without [...], or if not parms.keep_item_labels)
+#
+parms.default_item_enum_labs = ('1.', '2.', '3.', '4.', '5.',
+                                '6.', '7.', '8.', '9.', '10.')
+# parms.default_item_enum_labs = ('',)    # turn labels off
+
+#   repeat punctuation sign in front of an \item with [...] option?
+#   see LAB:ITEMS
+#
+parms.item_label_repeat_punct = True
 
 
 #   message on warnings / errors that should be found by LT;
@@ -1466,35 +1486,75 @@ while mysearch(re_macro_arg, text):
     text = mysub(re_macro_arg, mark_deleted + r'\1', text)
 text = mysub(re_macro + skip_space_macro, mark_deleted, text)
 
+#   handle \item without [...] option,
+#   or also with option, if not parms.keep_item_labels
+#   - in itemize environment:
+#     use values from parms.default_item_labs
+#   - LAB:ENUMERATE in enumerate environment:
+#     replace by values from parms.default_item_enum_labs
+#
+itemize_dict = {'itemize': parms.default_item_labs,
+                'enumerate': parms.default_item_enum_labs}
+
+# a stack to follow nested environments
+# - if a lonely \item appears: pretend to be in itemize
+itemize_stack = [itemize_dict['itemize']]
+
+# this regular expression matches an \item
+# (\item may skip arbitrary subsequent space) ...
+if parms.keep_item_labels:
+    # do not match \item with [...] option (done below at LAB:ITEMS)
+    expr = r'(\\item' + end_mac + r'(?!' + sp_bracketed + r')\s*)'
+else:
+    # \item option may be present
+    expr = r'(\\item' + end_mac + r'(?:' + sp_bracketed + r')?\s*)'
+# ... and \begin / \end for environments listed in itemize_dict
+expr += (r'|(?:\\(begin|end)' + skip_space
+            + r'\{(' + r'|'.join(itemize_dict.keys()) + r')\})')
+
+def f(m):
+    if m.group(1):
+        # an \item: return value from active label collection, rotate
+        lab = itemize_stack[-1][0]
+        itemize_stack[-1] = itemize_stack[-1][1:] + itemize_stack[-1][:1]
+        return ' ' + lab + ' '
+    if m.group(3) == 'begin':
+        # entering an environment (group 2 is in sp_bracketed)
+        itemize_stack.append(itemize_dict[m.group(4)])
+    elif len(itemize_stack) > 1:
+        # leaving an environment
+        itemize_stack.pop()
+    return mark_deleted
+text = mysub(expr, f, text)
+
 #   delete remaining environment frames outside of equations
 #   - only after treatment of macros: protect line break before \begin;
 #     here we also delete placeholders \begin{%} from above
+#   - only after handling of itemize vs. enumerate
 #
 text = mysub(re_begin_env, mark_deleted, text)
 text = mysub(re_end_env, mark_deleted, text)
 
 #   LAB:ITEMS
-#   item lists may pose problems with interpunction checking
+#   \item(s) with [...] label may pose problems with interpunction checking
 #   - one can simply remove the \item[...] label
+#       - active, if parms.keep_item_labels == False
 #   - one can look backwards in the text and repeat a present interpunction
 #     sign after the item label
-#       --> this also checks text in the label
-#   - this should be done after removal of \begin{itemize}
-#   \item[...] may skip arbitrary space
+#       - active, if parms.item_label_repeat_punct == True
+#       - works well with (German version of) LanguageTool
+#       - this also checks text in the label
+#       - this should be done after removal of all environment frames between
+#         \item and a previous sentence
+#   (\item[...] may skip arbitrary subsequent space)
 #
 if parms.keep_item_labels:
-    # first try with preceding interpunction [.,;:!?] ...
-    text = mysub(r'(((?<!\\)[.,;:!?])(?:\s|' + mark_deleted
+    if parms.item_label_repeat_punct:
+        # try with preceding interpunction [.,;:!?] ...
+        text = mysub(r'(((?<!\\)[.,;:!?])(?:\s|' + mark_deleted
                 + r')*)\\item' + sp_bracketed + r'\s*', r'\1 \3\2 ', text)
     # ... otherwise simply extract the text in \item[...]
     text = mysub(r'\\item' + sp_bracketed + r'\s*', r' \1 ', text)
-else:
-    text = mysub(r'\\item' + sp_bracketed + r'\s*',
-                        ' ' + parms.default_item_lab + ' ', text)
-
-# finally, items without [...]
-text = mysub(r'\\item' + end_mac + r'\s*',
-                        ' ' + parms.default_item_lab + ' ', text)
 
 #   LAB:SMALLMACS
 #   actions only after macro resolution: preceding macro could eat space
