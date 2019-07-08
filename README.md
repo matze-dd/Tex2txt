@@ -98,7 +98,9 @@ Here is a list of the most important script operations.
   see the section
   [Handling of displayed equations](#handling-of-displayed-equations),
   file [Example.md](Example.md), and LAB:EQUATIONS in script
-- some treatment for \item\[...\] labels, see LAB:ITEMS in script
+- some treatment for specified \\item\[...\] labels, see LAB:ITEMS in script
+- default \\item labels in enumerate environment are taken from rotating
+  collection in script variable parms.default\_item\_enum\_labs
 - letters with text-mode accents as '\\\`' or '\\v' are translated to 
   corresponding UTF8 characters, see LAB:ACCENTS in script
 - replacement of things like double quotes '\`\`' and dashes '\-\-' with
