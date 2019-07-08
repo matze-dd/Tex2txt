@@ -1,5 +1,5 @@
-"Unreleased"
-------------
+Release 1.5.6
+-------------
 - fixed bug in function calc\_numbers(), shifted its code into now
   simplified function mysub()
 - simplified function text\_combine()
