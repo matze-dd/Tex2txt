@@ -209,7 +209,8 @@ while todo:
         continue
     if f not in done:
         done.append(f)
-    p = os.popen("python3 '$tex2txt_py' --extr '$input_macros' " + f)
+    p = os.popen(
+        "python3 '$tex2txt_py' '"$tex2txt_defs"' --extr '$input_macros' " + f)
     fs = p.read()
     if p.close():
         sys.stderr.write("\n'$0': error while checking file \"" + f + "\"\n")
