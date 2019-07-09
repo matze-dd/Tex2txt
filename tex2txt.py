@@ -1453,6 +1453,11 @@ if cmdline.unkn:
         'end',
         'item',
     )
+    envsknown = (
+        mark_internal_pre,      # compare mark_begin_env
+        'itemize',
+        'enumerate',
+    )
     macs = []
     for m in re.finditer(r'\\(' + macro_name + r')', text_get_txt(text)):
         if m.group(1) not in macs:
@@ -1468,7 +1473,7 @@ if cmdline.unkn:
             envs += [m.group(1)]
     envs.sort()
     for e in envs:
-        if e != mark_internal_pre:
+        if e not in envsknown:
             print(r'\begin{' + e + '}')
     exit()
 
