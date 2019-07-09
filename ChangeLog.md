@@ -1,3 +1,10 @@
+"Unreleased"
+------------
+- fixed bug with option --unkn: itemize and enumerate environments
+  are not listed as undeclared any more
+- checks.sh: fixed bug, tracking of file inclusions with option --recurse
+  now takes accont of definitions from $tex2txt\_defs
+
 Release 1.5.6
 -------------
 - fixed bug in function calc\_numbers(), shifted its code into now
