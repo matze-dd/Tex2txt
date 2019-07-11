@@ -705,19 +705,17 @@ def mysub(expr, repl, text, flags=0, extract=None, track_repl=None):
     last = 0
     for m in re.finditer(expr, txt, flags=flags):
         t = m.group(0)
-        if not t:
-            continue
         if type(repl) is str:
             ex = myexpand(m, repl, text)
         else:
             ex = repl(m)
         if type(ex) is tuple:
             # replacement contains line number information
-            r = ex[0]
-            nums2 = ex[1]
+            (r, nums2) = ex
         else:
             r = ex
             nums2 = None
+
         res += txt[last:m.start(0)]
         last = m.end(0)
         # lin: first line number of current replacement action
@@ -1390,14 +1388,14 @@ def parse_equ(equ):
                         re.sub(mark_linebreak, r'\\\\', text_get_txt(equ)))
             break
 
-    # important: non-greedy *? repetition
-    line = (skip_space + r'((.|\n)*?)' + skip_space
+    # important: non-greedy *? repetition, and avoid zero-width matches
+    line = (skip_space + r'((.|\n)*?(?!\Z)|(.|\n)+?)' + skip_space
                 + r'(' + mark_linebreak + r'|\Z)')
     # return replacement for RE line
     def repl_line(m):
         # finally, split line into sections delimited by '&'
-        # important: non-greedy *? repetition
-        sec = r'((.|\n)*?)((?<!\\)&|\Z)'
+        # important: non-greedy *? repetition, and avoid zero-width matches
+        sec = r'((.|\n)*?(?!\Z)|(.|\n)+?)((?<!\\)&|\Z)'
         flag = Aux()
         flag.first_on_line = True
         def repl_sec(m):
