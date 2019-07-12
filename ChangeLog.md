@@ -4,8 +4,12 @@
   are not listed as undeclared any more
 - function parse\_equ():
     - now avoid zero-width matches
-      --> corresponding check in mysub() could be removed
-    - recognize \\\\ directly at end of an equation environment, e.g. \\\\%
+      --> corresponding missplaced check in mysub() could be removed
+    - recognize \\\\ directly at end of an equation environment, e.g. as \\\\%
+- fixed bugs in text mode: \\quad did not work, and a lonely \\; could leave
+  a blank line
+- function split\_sec(): fixed bug e.g. on ... \\text{for\\quad} x ...
+- OOPS: [issue #15](../../issues/15) needs to be fixed
 - checks.sh: fixed bug, tracking of file inclusions with option --recurse
   now takes account of definitions from $tex2txt\_defs
 
