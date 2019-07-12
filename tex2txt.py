@@ -1409,7 +1409,11 @@ def parse_equ(equ):
         t = mysub(sec, repl_sec, t)
         return text_add_frame('  ', '\n', t)
 
-    return mysub(line, repl_line, equ)
+    ret = mysub(line, repl_line, equ)
+    if text_get_txt(equ).endswith(mark_linebreak):
+        # for example: last equation ends with \\%
+        ret = text_add_frame('', '\n', ret)
+    return ret
 
 #   replace equation environments listed above
 #
