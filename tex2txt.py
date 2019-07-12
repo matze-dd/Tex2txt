@@ -605,9 +605,13 @@ def EnvRepl(name, repl=''):
 def EnvBegin(name, args='', repl=''):
     return (name, args, repl)
 def re_code_args(args, repl, who, s, no_backslash=False):
-    # return regular expression for 'OAA' code in args,
-    # do some checks for replacment string repl
-    # CROSS-CHECK with mark_internal_pre und mark_internal_post
+    # return regular expression for 'OAA' code in args, and modified
+    # replacement string repl
+    # - do some checks for replacment string repl:
+    #   CROSS-CHECK with mark_internal_pre und mark_internal_post
+    # - modify replacement:
+    #   append mark_deleted to each expanded argument, otherwise problem in
+    #   ... \textcolor{red}{This\xyz} is ...
     ret = ''
     for a in args:
         if a == 'A':
@@ -633,7 +637,9 @@ def re_code_args(args, repl, who, s, no_backslash=False):
     if repl.endswith('\\') or repl.count('\\\\\\\\'):
         # ensure that double backslashs do not appear in text
         err('backslash at end or insertion of double backslash')
-    return ret
+
+    repl = re.sub(r'((?<!\\)(?:\\\\)*\\(\d))', r'\1' + mark_deleted, repl)
+    return (ret, repl)
 
 #   this is an eligible name of a "normal" macro
 #
@@ -1091,7 +1097,7 @@ for (name, args, repl) in (
     if name in cmdline.extr_list:
         continue
     expr = r'\\' + name + end_mac
-    re_args = re_code_args(args, repl, 'Macro', name)
+    (re_args, repl) = re_code_args(args, repl, 'Macro', name)
     if not args:
         # consume all space allowed after macro without arguments
         expr += skip_space_macro
@@ -1104,8 +1110,8 @@ for (name, args, repl) in (
         expr += re_args
     list_macs_envs.append((expr, mark_deleted + repl))
 for (name, args, repl) in parms.environment_begins():
-    expr = begin_lbr + name + r'\}' + re_code_args(args, repl,
-                                                    'EnvBegin', name)
+    (re_args, repl) = re_code_args(args, repl, 'EnvBegin', name)
+    expr = begin_lbr + name + r'\}' + re_args
     list_macs_envs.append((expr, mark_begin_env_sub + repl))
 
 flag = True
@@ -1286,7 +1292,7 @@ for (mac, acc) in (
 #     math part: still present or replaced with non-space
 
 parms.mathspace = (r'(?:\\[ ,;:\n]|(?<!\\)~|\\q?quad'
-                        + end_mac + skip_space + r')')
+                        + end_mac + skip_space_macro + r')')
 parms.mathop = (
     r'\+|-|\*|/'
     + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
@@ -1425,7 +1431,7 @@ def parse_equ(equ):
 #
 for (name, args, replacement) in parms.equation_environments():
     if not replacement:
-        re_args = re_code_args(args, replacement, 'EquEnv', name)
+        (re_args, _) = re_code_args(args, replacement, 'EquEnv', name)
         expr = re_nested_env(name, parms.max_depth_env, re_args)
         def f(m):
             t = text_from_match(m, 'body', text)
