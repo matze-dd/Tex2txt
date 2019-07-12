@@ -2,8 +2,10 @@
 ------------
 - fixed bug with option --unkn: itemize and enumerate environments
   are not listed as undeclared any more
-- function parse\_equ(): now avoid zero-width matches; corresponding
-  check in mysub() removed
+- function parse\_equ():
+    - now avoid zero-width matches
+      --> corresponding check in mysub() could be removed
+    - recognize \\\\ directly at end of an equation environment, e.g. \\\\%
 - checks.sh: fixed bug, tracking of file inclusions with option --recurse
   now takes account of definitions from $tex2txt\_defs
 
