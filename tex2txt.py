@@ -135,6 +135,8 @@ parms.system_macros = lambda: (
     Macro('newcommand', 'AOA'),
     Simple('newline', ' '),
     Macro('pageref', 'A', '99'),
+    # \qquad: treated at LAB:SPACE, parms.mathspace
+    # \quad: treated at LAB:SPACE, parms.mathspace
     Macro('ref', 'A', '13'),
     Macro('texorpdfstring', 'AA', r'\1'),
     # \textasciicircum: defined below
@@ -293,11 +295,11 @@ parms.theorem_environments = lambda: (
 #   a list of 2-tuples for other things to be replaced
 #       [0]: search pattern as regular expression
 #       [1]: replacement text
-#   see also resolve_escapes() and LAB:SMALLMACS below
+#   see also resolve_escapes() and LAB:SPACE below
 #
 #   ATTENTION:
 #   - prepend mark_deleted, if replacement may evaluate to empty string
-#     or white space
+#     or begin with white space
 #   - do not use replacement that
 #       - ends with a backslash
 #       - may insert a double backslash
@@ -319,6 +321,8 @@ parms.misc_replace = lambda: (
     (r'(?<!\\)``', utf8_lqq),
     # ''    ==> UTF-8 double quotation mark (right)
     (r'(?<!\\)' + "''", utf8_rqq),
+    # \! \- ==> delete
+    (r'\\[!-]', mark_deleted),
 
 ) + parms.misc_replace_lang() + defs.misc_replace
 
@@ -1281,7 +1285,8 @@ for (mac, acc) in (
 #   - math macros like \epsilon or \Omega that might constitute a
 #     math part: still present or replaced with non-space
 
-parms.mathspace = r'(?:\\[ ,;:\n]|(?<!\\)~|\\q?quad' + end_mac + r')'
+parms.mathspace = (r'(?:\\[ ,;:\n]|(?<!\\)~|\\q?quad'
+                        + end_mac + skip_space + r')')
 parms.mathop = (
     r'\+|-|\*|/'
     + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
@@ -1359,7 +1364,8 @@ def split_sec(txt, first_on_line):
         # math part between last and current \text
         res += math2txt(txt[last:m.start(0)], first_on_line)
         # content of \text{...}
-        res += m.group(1)
+        res += mark_deleted + m.group(1) + mark_deleted
+            # avoid problem e.g. on ... \text{for\quad} x ...
         last = m.end(0)
         first_on_line = False
         display_math_update()
@@ -1439,6 +1445,15 @@ for (name, args, replacement) in parms.equation_environments():
             s += m.group(1)
         return mark_begin_env + s + mark_end_env
     text = mysub_check_nested(env, f, text)
+
+#   LAB:SPACE
+#   replace space macros including ~, \, and &
+#   - only after treatment of equation environments
+#
+text = mysub(r'\\,', mark_deleted + utf8_nnbsp, text)
+text = mysub(r'(?<!\\)~', mark_deleted + utf8_nbsp, text)
+text = mysub(r'(?<!\\)&', mark_deleted + ' ', text)
+text = mysub(parms.mathspace, mark_deleted + ' ', text)
 
 
 #######################################################################
@@ -1562,17 +1577,6 @@ if parms.keep_item_labels:
                 + r')*)\\item' + sp_bracketed + r'\s*', r'\1 \3\2 ', text)
     # ... otherwise simply extract the text in \item[...]
     text = mysub(r'\\item' + sp_bracketed + r'\s*', r' \1 ', text)
-
-#   LAB:SMALLMACS
-#   actions only after macro resolution: preceding macro could eat space
-#   - replace space macros including ~, \, and &
-#   - delete \!, \-
-#
-text = mysub(r'\\,', utf8_nnbsp, text)
-text = mysub(r'(?<!\\)~', utf8_nbsp, text)
-text = mysub(r'(?<!\\)&', ' ', text)
-text = mysub(parms.mathspace, ' ', text)
-text = mysub(r'\\[!-]', '', text)
 
 #   - finally remove mark_deleted,
 #     delete a line, if it only contains such marks;
