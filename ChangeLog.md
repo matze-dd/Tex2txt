@@ -9,7 +9,8 @@
 - fixed bugs in text mode: \\quad did not work, and a lonely \\; could leave
   a blank line
 - function split\_sec(): fixed bug e.g. on ... \\text{for\\quad} x ...
-- OOPS: [issue #15](../../issues/15) needs to be fixed
+- fixed bug from [issue #15](../../issues/15): modifications in function
+  re\_code\_args()
 - checks.sh: fixed bug, tracking of file inclusions with option --recurse
   now takes account of definitions from $tex2txt\_defs
 
