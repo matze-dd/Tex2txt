@@ -19,7 +19,7 @@
 #   Extract raw text from LaTeX file, write result to standard output
 #
 #   Usage and main operations:
-#   - see README
+#   - see README.md
 #
 #   Principle of operation:
 #   - read complete input text into a string, then make replacements
@@ -27,7 +27,7 @@
 #     re.sub() in order to observe deletion and inclusion of line breaks
 #   - in order to treat nested braces / brackets and some nested
 #     environments, we construct regular expressions by iteration;
-#     maximum recognized nesting depth (and thus length of these expressions)
+#     maximum recognised nesting depth (and thus length of these expressions)
 #     is controlled by the variables parms.max_depth_br and
 #     parms.max_depth_env
 #
@@ -39,7 +39,7 @@
 #     of them, warnings are generated)
 #   - severe general problem: resolution of macros not in the order of
 #     TeX (strictly left to right in the text);
-#     work-arounds with hacks mark_begin_env and mark_deleted are used to
+#     workarounds with hacks mark_begin_env and mark_deleted are used to
 #     avoid consumption of too much space by macros without argument
 #
 #
@@ -79,7 +79,7 @@ parms = Aux()
 #   REMARKS:
 #       - if a macro does not find its mandatory argument(s) in the text,
 #         it is treated as unknown and can be seen with option --unkn
-#       - if refering to an optional argument, e.g.
+#       - if referring to an optional argument, e.g.
 #               Macro('xxx', 'OA', r'\1\2'),
 #         Python version of at least 3.5 is required (non-matched group
 #         yields empty string); otherwise re module may raise exceptions
@@ -200,7 +200,7 @@ parms.heading_macros = lambda: (
 #     if the actual content ends with a character from variable
 #     parms.mathpunct (ignoring macros from LAB:EQU_MACROS and variable
 #     parms.mathspace), then this sign is appended
-#   - repl: plain string, no backslashs accepted
+#   - repl: plain string, no backslashes accepted
 #
 parms.equation_environments = lambda: (
 
@@ -223,7 +223,7 @@ parms.equation_environments = lambda: (
 #   these environments are deleted or replaced completely (with body)
 #
 #   EnvRepl(name, repl='')
-#   - repl: plain string, no backslashs accepted
+#   - repl: plain string, no backslashes accepted
 #
 parms.environments = lambda: (
 
@@ -313,9 +313,9 @@ parms.misc_replace = lambda: (
     # \]    ==> ... 
     (r'\\\]', r'\\end{equation*}'),
 
-    # ---    ==> UTF-8 emdash
+    # ---    ==> UTF-8 em dash
     (r'(?<!\\)---', utf8_emdash),   # (?<!x)y matches y not preceded by x
-    # --    ==> UTF-8 endash
+    # --    ==> UTF-8 en dash
     (r'(?<!\\)--', utf8_endash),
     # ``    ==> UTF-8 double quotation mark (left)
     (r'(?<!\\)``', utf8_lqq),
@@ -331,9 +331,9 @@ parms.misc_replace_de = lambda: (
 
     # "=    ==> -
     (r'(?<!\\)"=', '-'),
-    # "`    ==> UTF-8 german double quotation mark (left)
+    # "`    ==> UTF-8 German double quotation mark (left)
     (r'(?<!\\)"`', utf8_glqq),
-    # "'    ==> UTF-8 german double quotation mark (right)
+    # "'    ==> UTF-8 German double quotation mark (right)
     (r'(?<!\\)"' + "'", utf8_grqq),
     # "-    ==> delete
     (r'(?<!\\)"-', mark_deleted),
@@ -391,10 +391,10 @@ def set_language_de():
 
     # properties of these replacements for inline formulas:
     #   - no need to add to LT dictionary
-    #   - absent leading / trailing space causes spelling erros
+    #   - absent leading / trailing space causes spelling errors
     #   - LT accepts e.g. 'mit einer Konstanten $C$ folgt', 'für alle $x$',
     #     'für ein $x$'
-    #   - LT recognizes mistakes like 'die $\epsilon$-Argument'
+    #   - LT recognises mistakes like 'die $\epsilon$-Argument'
     #   - word repetitions are detected
     #   - resulting text can be checked for single letters (German)
     # other variant: AInlA, BInlB, ... (but has to be added to dictionary)
@@ -402,7 +402,7 @@ def set_language_de():
     # parms.inline_math = ('AInlA', 'BInlB', 'CInlC',
     #                       'DInlD', 'EInlE', 'FInlF')
 
-    # replacements for math parts in displayed formulas
+    # replacements for maths parts in displayed formulas
     parms.display_math = ('D1D', 'D2D', 'D3D', 'D4D', 'D5D', 'D6D')
     # parms.display_math = ('ADsplA', 'BDsplB', 'CDsplC',
     #                       'DDsplD', 'EDsplE', 'FDsplF')
@@ -411,7 +411,7 @@ def set_language_de():
     # this check is important if replacements had to be added to dictionary
     parms.check_equation_replacements = True
 
-    # texts for math operators; default: key None
+    # texts for maths operators; default: key None
     parms.mathoptext = {'+': ' plus ', '-': ' minus ',
                         '*': ' mal ', '/': ' durch ',
                         None: ' gleich '}
@@ -446,7 +446,7 @@ def set_language_en():
 #   further replacements performed below:
 #
 #   - translation of $$...$$ to equation* environment
-#   - replacement of $...$ and \(...\) inline math
+#   - replacement of $...$ and \(...\) inline maths
 #   - macros \textbackslash, \textasciicircum, \textasciitilde
 #   - treatment of text-mode accents
 #   - handling of displayed equations
@@ -495,8 +495,8 @@ def myopen(f, mode='r'):
     except:
         fatal('could not open file "' + f + '"')
 
-#   for internal marks: cannot apear in text after removal of % comments
-#   (has to be nonsymmetrical)
+#   for internal marks: cannot appear in text after removal of % comments
+#   (has to be asymmetrical)
 #
 mark_internal_pre = '%%%%'      # CROSS-CHECK with re_code_args()
 mark_internal_post = '%%'       # CROSS-CHECK with re_code_args()
@@ -563,7 +563,7 @@ braced = re_braced(parms.max_depth_br, '', '')
 sp_braced = skip_space + braced
 
 #   the same for [] brackets
-#   BUG (without warning): enclosed {} pairs are not recognized
+#   BUG (without warning): enclosed {} pairs are not recognised
 #
 def re_bracketed(max_depth, inner_beg, inner_end):
     atom = r'[^]\\[]|\\.|\\\n'
@@ -607,8 +607,8 @@ def EnvBegin(name, args='', repl=''):
 def re_code_args(args, repl, who, s, no_backslash=False):
     # return regular expression for 'OAA' code in args, and modified
     # replacement string repl
-    # - do some checks for replacment string repl:
-    #   CROSS-CHECK with mark_internal_pre und mark_internal_post
+    # - do some checks for replacement string repl:
+    #   CROSS-CHECK with mark_internal_pre and mark_internal_post
     # - modify replacement:
     #   append mark_deleted to each expanded argument, otherwise problem in
     #   ... \textcolor{red}{This\xyz} is ...
@@ -625,7 +625,7 @@ def re_code_args(args, repl, who, s, no_backslash=False):
     def err(e):
         fatal('error in replacement for ' + who + "('" + s + "', ...):\n" + e)
     if no_backslash and repl.count('\\'):
-        err('no backslashs allowed')
+        err('no backslashes allowed')
     for m in re.finditer(r'(?<!\\)(?:\\\\)*\\(\d)', repl):
         # avoid exceptions from re module
         n = int(m.group(1))
@@ -978,12 +978,14 @@ text = mysub(r'^(([^\n\\%]|\\.)*)\\verb' + end_mac + r'(\S)(.*?)\3',
 
 #######################################################################
 #
+#   LAB:COMMENTS
 #   remove % comments
 #   - line beginning with % is completely removed
 #
 text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
 
-#   - join current and next lines, if no space before first unescaped %
+#   - join current and next lines, if no space before first unescaped %;
+#     skip then leading white space on next line
 #       + not, if next line is empty
 #       + not, if \macro call directly before %
 #
@@ -1264,23 +1266,23 @@ for (mac, acc) in (
 #   1. split equation environment into 'lines' delimited by \\
 #      alias mark_linebreak
 #   2. split each 'line' into 'sections' delimited by &
-#   3. split each 'section' into math and \text parts
+#   3. split each 'section' into maths and \text parts
 #
 #   - argument of \text{...} (variable parms.macro_text) is reproduced
 #     without change
-#   - math parts are replaced by values from variable parms.display_math
+#   - maths parts are replaced by values from variable parms.display_math
 #   - interpunction signs (see variable parms.mathpunct) at end of a
-#     math part, ignoring parms.mathspace, are appended to replacement
-#   - relational operators at beginning of a math part are prepended
-#     as ' gleich ...', if math part is not first on line ('&' is a part)
+#     maths part, ignoring parms.mathspace, are appended to replacement
+#   - relational operators at beginning of a maths part are prepended
+#     as ' gleich ...', if maths part is not first on line ('&' is a part)
 #   - other operators like +, -, *, / are prepended e.g. as ' minus ...'
 #   - see variables parms.mathop and parms.mathoptext for text replacements
 #   - the basic replacement steps to next value from parms.display_math,
 #       - if the part includes a leading operator,
 #       - after intermediate \text{...},
-#       - and if last math part ended with interpunction
+#       - and if last maths part ended with interpunction
 #         (this only for parms.change_repl_after_punct == True)
-#   - math space (variable parms.mathspace) like \quad is replaced by ' '
+#   - maths space (variable parms.mathspace) like \quad is replaced by ' '
 
 #   Assumptions:
 #   - \\ has been changed to mark_linebreak, & is still present
@@ -1288,8 +1290,8 @@ for (mac, acc) in (
 #   - \text{...} has been resolved not yet
 #   - mathematical space as \; and \quad (variable parms.mathspace)
 #     is still present
-#   - math macros like \epsilon or \Omega that might constitute a
-#     math part: still present or replaced with non-space
+#   - maths macros like \epsilon or \Omega that might constitute a
+#     maths part: still present or replaced with non-space
 
 parms.mathspace = (r'(?:\\[ ,;:\n]|(?<!\\)~|\\q?quad'
                         + end_mac + skip_space_macro + r')')
@@ -1313,10 +1315,10 @@ def display_math_get(update):
         display_math_update()
     return parms.display_math[0]
 
-#   replace a math part by suitable raw text
+#   replace a maths part by suitable raw text
 #
 def math2txt(txt, first_on_line):
-    # check for leading operator, possibly after mathspace;
+    # check for leading operator, possibly after maths space;
     # there also might be a '{}' or r'\mbox{}' for making e.g. '-' binary
     m = re.search(r'\A(' + parms.mathspace
                     + r'|(?:\\mbox' + skip_space + r')?\{\}|\s)*'
@@ -1327,7 +1329,7 @@ def math2txt(txt, first_on_line):
         txt = txt[m.end(0):]
         update = True
     else:
-        # check for leading mathspace
+        # check for leading maths space
         m = re.search(r'\A(' + skip_space + parms.mathspace + r')+', txt)
         if m:
             pre = ' '
@@ -1336,7 +1338,7 @@ def math2txt(txt, first_on_line):
             pre = ''
         update = False
 
-    # check for trailing mathspace
+    # check for trailing maths space
     m = re.search(r'(' + parms.mathspace + skip_space + r')+\Z', txt)
     if m:
         post = ' '
@@ -1360,14 +1362,14 @@ def math2txt(txt, first_on_line):
         display_math_update()
     return ret
 
-#   split a section between & delimiters into \text{...} and math parts
+#   split a section between & delimiters into \text{...} and maths parts
 #
 def split_sec(txt, first_on_line):
     last = 0
     res = ''
     # iterate over \text parts
     for m in re.finditer(r'\\' + parms.text_macro + sp_braced, txt):
-        # math part between last and current \text
+        # maths part between last and current \text
         res += math2txt(txt[last:m.start(0)], first_on_line)
         # content of \text{...}
         res += mark_deleted + m.group(1) + mark_deleted
@@ -1375,7 +1377,7 @@ def split_sec(txt, first_on_line):
         last = m.end(0)
         first_on_line = False
         display_math_update()
-    # math part after last \text
+    # maths part after last \text
     res += math2txt(txt[last:], first_on_line)
     return res
 
@@ -1411,7 +1413,7 @@ def parse_equ(equ):
         flag = Aux()
         flag.first_on_line = True
         def repl_sec(m):
-            # split this section into math and text parts
+            # split this section into maths and text parts
             # BUG (without warning):
             # we assume that '&' always creates white space
             ret = split_sec(m.group(1), flag.first_on_line) + ' '
