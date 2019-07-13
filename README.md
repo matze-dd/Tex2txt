@@ -15,7 +15,7 @@ In some sense, it compares to tools like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
 [TeXtidote](https://github.com/sylvainhalle/textidote), and
 [tex2txt](http://hackage.haskell.org/package/tex2txt).
-For the naming conflict with the latter project, we want to apologize.
+For the naming conflict with the latter project, we want to apologise.
 
 While virtually no text should be dropped by the filter,
 our aim is to provoke as few as possible “false” warnings when feeding
@@ -55,7 +55,7 @@ amsmath), and trailing interpunction of these equations
 can be taken into account during language check of the main text flow.
 Further details are given in section
 [Handling of displayed equations](#handling-of-displayed-equations).
-An example is shown in file [Example.md](Example.md), operation is summarized
+An example is shown in file [Example.md](Example.md), operation is summarised
 in the script at label LAB:EQUATIONS.
 
 The Python script may be seen as an exercise in application of regular
@@ -90,7 +90,7 @@ Here is a list of the most important script operations.
 - text in heading macros as \\section\{...\} is extracted with
   added interpunction
 - suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
-- inline math $...$ and \\(...\\) is replaced with text from rotating
+- inline maths $...$ and \\(...\\) is replaced with text from rotating
   collection in variable parms.inline\_math in script
 - equation environments are resolved in a way suitable for check of
   interpunction and spacing, argument of \\text\{...\} is included into output
@@ -110,7 +110,7 @@ Here is a list of the most important script operations.
 - treatment of \\verb(\*) macros and verbatim(\*) environments,
   see LAB:VERBATIM in script; note, however, [issue #6](../../issues/6)
 - handling of % comments near to TeX: skipping of line break under certain
-  circumstances
+  circumstances, see LAB:COMMENTS in script
 - rare warnings from language checker can be suppressed using \\LTadd{},
   \\LTskip{}, \\LTalter{}{} in the LaTeX text with suitable macro definition
   there; e.g., adding something that only the language checker should see:
@@ -133,7 +133,7 @@ python3 tex2txt.py [--nums file] [--repl file] [--defs file] \
   can be used later to correct line numbers in messages
 - option `--repl file`<br>
   file with phrase replacements performed at the end, for instance after
-  changing inline math to text, and German hyphen "= to - ;
+  changing inline maths to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
 - option `--defs file`<br>
   file with additional declarations, example file content (defs members,
@@ -147,7 +147,7 @@ python3 tex2txt.py [--nums file] [--repl file] [--defs file] \
   or for tracking of file inclusions
 - option `--lang xy`<br>
   language de or en, default: de;
-  used for adaptation of equation replacements, math operator names,
+  used for adaptation of equation replacements, maths operator names,
   proof titles, for handling of macros like \"\=, and for replacement
   of foreign-language text;
   see LAB:LANGUAGE in script
@@ -217,7 +217,7 @@ uses [Java](https://java.com) together with
 desktop version for offline use,
 [Hunspell](https://github.com/hunspell/hunspell),
 and some standard [Linux](https://www.linux.org) tools.
-Before application, variables in the script have to be customized.
+Before application, variables in the script have to be customised.
 For placement of intermediate text and line number files, the script uses an
 auxiliary directory designated by variable $txtdir.
 This directory and possibly necessary subdirectories will be created
@@ -311,7 +311,7 @@ At least the German version of
 [LanguageTool](https://www.languagetool.org) (LT)
 will detect a missing dot
 in the following snippet, where 'a' to 'd' stand for arbitrary mathematical
-terms (meaning: “We conclude math Therefore, ...”).
+terms (meaning: “We conclude maths Therefore, ...”).
 ```
 Wir folgern
 \begin{align}
@@ -349,7 +349,7 @@ Wir folgern
 Daher ...
 ```
 Adding a dot “= d.” in the equation will lead to “Relation.” in the output.
-This will also hold true, if the interpunction sign is followed by math space
+This will also hold true, if the interpunction sign is followed by maths space
 or by macros as \\label and \\nonumber.
 
 ### Full version
@@ -402,15 +402,15 @@ See also file [Example.md](Example.md).
 ### Inclusion of “normal” text
 In variant “Full version”, the argument of \\text\{...\}
 (variable for macro name in script: parms.text\_macro) is directly copied.
-Outside of \\text, only math space like \\; and \\quad is considered as space.
+Outside of \\text, only maths space like \\; and \\quad is considered as space.
 Therefore, one will get warnings from the language checker, if subsequent
-\\text and math parts are not properly separated.
+\\text and maths parts are not properly separated.
 See file [Example.md](Example.md).
 
 ### Replacements in English documents
 The replacement collection in variable parms.display\_math works
 quite well, if German is the main language.
-Requirements for replacements are summarized in the script in function
+Requirements for replacements are summarised in the script in function
 set\_language\_de().
 Till now, we could not yet select replacements that work equally well
 with the English version of LanguageTool.
