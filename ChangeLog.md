@@ -1,5 +1,5 @@
-"Unreleased"
-------------
+Release 1.5.7
+-------------
 - fixed bug with option --unkn: itemize and enumerate environments
   are not listed as undeclared any more
 - function parse\_equ():
@@ -8,7 +8,8 @@
     - recognize \\\\ directly at end of an equation environment, e.g. as \\\\%
 - fixed bugs in text mode: \\quad did not work, and a lonely \\; could leave
   a blank line
-- function split\_sec(): fixed bug e.g. on ... \\text{for\\quad} x ...
+- fixed bug in split\_sec(): problem appeared e.g. on
+  \\\[ ... \\text{for\\quad} x ... \\\]
 - fixed bug from [issue #15](../../issues/15): modifications in function
   re\_code\_args()
 - checks.sh: fixed bug, tracking of file inclusions with option --recurse
