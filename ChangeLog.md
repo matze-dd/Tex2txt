@@ -1,3 +1,7 @@
+"Unreleased"
+------------
+- fixed bug from [issue #15](../../issues/15) for "undeclared" macros, too
+
 Release 1.5.7
 -------------
 - fixed bug with option --unkn: itemize and enumerate environments
