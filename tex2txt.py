@@ -1513,7 +1513,7 @@ re_macro = r'\\(?!(?:' + excl + r')' + end_mac + r')' + macro_name
 re_macro_arg = re_macro + sp_braced
 while mysearch(re_macro_arg, text):
     # macros with braced argument might be nested
-    text = mysub(re_macro_arg, mark_deleted + r'\1', text)
+    text = mysub(re_macro_arg, mark_deleted + r'\1' + mark_deleted, text)
 text = mysub(re_macro + skip_space_macro, mark_deleted, text)
 
 #   handle \item without [...] option,
