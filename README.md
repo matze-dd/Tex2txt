@@ -446,10 +446,17 @@ resource usage.
 A severe general problem is order of macro expansion.
 While TeX strictly evaluates from left to right, the order of treatment by
 regular expressions is completely different.
+Additionally, we implement TeX's behaviour to skip white space between macro
+name and next non-space character.
 This calls for hacks like the regular expression in skip\_space\_macro
-together with the placeholder mark\_begin\_env.
-It aims to avoid that a macro without arguments consumes leading space
-inside of an already resolved following environment.
+together with the temporary placeholder mark\_begin\_env.
+It avoids that a macro without arguments consumes leading space inside of
+an already resolved following environment.
+Another issue emerges with input text like '\\y{a\\z} b' that can lead
+to the output 'ab', if macro \\z is expanded after macro \\y{...} taking an
+argument.
+The workaround includes the temporary placeholder mark\_deleted for each
+closing } brace or \] bracket when expanding a macro argument.
 
 Our mechanism for line number tracking relies on a partial reimplementation
 of the substitution function re.sub() from the standard Python module
