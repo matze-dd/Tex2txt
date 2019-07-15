@@ -448,14 +448,14 @@ While TeX strictly evaluates from left to right, the order of treatment by
 regular expressions is completely different.
 Additionally, we implement TeX's behaviour to skip white space between macro
 name and next non-space character.
-This calls for hacks like the regular expression in skip\_space\_macro
-together with the temporary placeholder mark\_begin\_env.
+This calls for hacks like the regular expression in variable skip\_space\_macro
+together with the temporary placeholder in mark\_begin\_env.
 It avoids that a macro without arguments consumes leading space inside of
 an already resolved following environment.
 Another issue emerges with input text like '\\y{a\\z} b' that can lead
 to the output 'ab', if macro \\z is expanded after macro \\y{...} taking an
 argument.
-The workaround includes the temporary placeholder mark\_deleted for each
+The workaround inserts the temporary placeholder in mark\_deleted for each
 closing } brace or \] bracket when expanding a macro argument.
 
 Our mechanism for line number tracking relies on a partial reimplementation
@@ -471,7 +471,7 @@ inclusion of line breaks.
 Since creation of new empty lines may break the text flow, we avoid it
 with a simple scheme.
 Whenever a LaTeX macro is expanded or an environment frame is deleted,
-a special mark is left in the text string.
+the mark from variable mark\_deleted is left in the text string.
 At the very end, these marks are deleted, and lines only consisting
 of space and such marks are removed completely.
 This also means that initially blank lines remain in the text (except
