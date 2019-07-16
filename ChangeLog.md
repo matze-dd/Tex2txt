@@ -1,5 +1,5 @@
-"Unreleased"
-------------
+Release 1.5.8
+-------------
 - fixed bug from [issue #15](../../issues/15) for "undeclared" macros, too
 
 Release 1.5.7
