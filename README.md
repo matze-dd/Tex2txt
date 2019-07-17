@@ -64,7 +64,7 @@ Its internal design could be more orderly, but stronger structuring,
 for instance with classes, would probably increase the program size
 (currently, less than 900 effective lines of code).
 In section [Remarks on implementation](#remarks-on-implementation),
-some general topics are considered.
+some general points are indicated.
 
 If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues),
@@ -102,10 +102,10 @@ Here is a list of the most important script operations.
 - default \\item labels in enumerate environment are taken from rotating
   collection in script variable parms.default\_item\_enum\_labs
 - letters with text-mode accents as '\\\`' or '\\v' are translated to 
-  corresponding UTF8 characters, see LAB:ACCENTS in script
+  corresponding UTF-8 characters, see LAB:ACCENTS in script
 - replacement of things like double quotes '\`\`' and dashes '\-\-' with
-  corresponding UTF8 characters;
-  replacement of '\~' and '\\,' by UTF8 non-breaking space and
+  corresponding UTF-8 characters;
+  replacement of '\~' and '\\,' by UTF-8 non-breaking space and
   narrow non-breaking space
 - treatment of \\verb(\*) macros and verbatim(\*) environments,
   see LAB:VERBATIM in script; note, however, [issue #6](../../issues/6)
