@@ -23,7 +23,7 @@
 #
 #   Principle of operation:
 #   - read complete input text into a string, then make replacements
-#   - replacements are performed via the "re-implementation" mysub() of
+#   - replacements are performed via the "reimplementation" mysub() of
 #     re.sub() in order to observe deletion and inclusion of line breaks
 #   - in order to treat nested braces / brackets and some nested
 #     environments, we construct regular expressions by iteration;
@@ -46,7 +46,8 @@
 #                                   Matthias Baumann, 2018-2019
 #
 
-class Aux: pass
+class Aux:
+    pass
 parms = Aux()
 
 #   LAB:MACROS
@@ -67,7 +68,7 @@ parms = Aux()
 #       - O: an optional [...] argument
 #       - P: a mandatory [...] argument, see for instance \cite
 #   repl:
-#       - replacement pattern, r'\d' (d: single digit) extracts text
+#       - replacement pattern, r'...\d...' (d: single digit) extracts text
 #         from position d in args (counting from 1)
 #       - other escape rules: see escape handling at myexpand() below;
 #         e.g., include a single backslash: repl=r'...\\...'
@@ -472,7 +473,7 @@ import unicodedata
 #   first of all ...
 #
 def strip_internal_marks(s):
-    # will be re-defined below
+    # will be redefined below
     return s
 def fatal(msg, detail=None):
     sys.stdout.write(parms.warning_error_msg)
@@ -635,7 +636,7 @@ def re_code_args(args, repl, who, s, no_backslash=False):
         # ensure that mark_linebreak and mark_deleted do work
         err(r"please use r'\\%' to insert escaped percent sign")
     if repl.endswith('\\') or repl.count('\\\\\\\\'):
-        # ensure that double backslashs do not appear in text
+        # ensure that double backslashes do not appear in text
         err('backslash at end or insertion of double backslash')
 
     repl = re.sub(r'((?<!\\)(?:\\\\)*\\(\d))', r'\1' + mark_deleted, repl)
@@ -693,7 +694,7 @@ def verbatim(s, mark, ast):
 
 #######################################################################
 #
-#   This "re-implementation" of re.sub() operates a small machinery for
+#   This "reimplementation" of re.sub() operates a small machinery for
 #   line number tracking.
 #   Argument text is a 2-tuple.
 #       text[0]: the text as string
@@ -877,9 +878,8 @@ else:
             + '" given in option')
 
 if cmdline.extr:
-    cmdline.extr = cmdline.extr.strip(',')
-    cmdline.extr_re = cmdline.extr.replace(',', '|')
-    cmdline.extr_list = cmdline.extr.split(',')
+    cmdline.extr_list = [m for m in cmdline.extr.split(',') if m]
+    cmdline.extr_re = '|'.join(cmdline.extr_list)
 else:
     cmdline.extr_list = []
 
@@ -1054,7 +1054,7 @@ check_nesting_limits(text)
 
 #   check will be repeated during macro expansion and environment handling:
 #   - detect insertion of braces, brackets, \begin, or \end
-#   - re-check nesting depths
+#   - recheck nesting depths
 #
 def mysub_check_nested(expr, repl, text):
     flag = Aux()
@@ -1207,12 +1207,12 @@ for (name, repl) in parms.environments():
 ##################################################################
 #
 #   LAB:ACCENTS
-#   translate text-mode accents to corresponding UTF8 characters
+#   translate text-mode accents to corresponding UTF-8 characters
 #   - if not found: raise warning and keep accent macro in text
 #
 def replace_accent(mac, accent, text):
     def f(m):
-        # find the UTF8 character for the matched letter [a-zA-Z]
+        # find the UTF-8 character for the matched letter [a-zA-Z]
         # with the accent given in argument of replace_accent()
         c = m.group(2)
         if c.islower():
@@ -1223,7 +1223,7 @@ def replace_accent(mac, accent, text):
         try:
             return unicodedata.lookup(u)
         except:
-            warning('could not find UTF8 character "' + u
+            warning('could not find UTF-8 character "' + u
                     + '"\nfor accent macro "' + m.group(0) + '"')
             return m.group(0)
     if mac.isalpha():
