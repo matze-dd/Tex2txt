@@ -1,3 +1,8 @@
+"Unreleased"
+------------
+- fixed bug triggered e.g. by 'python3 tex2txt.py --extr , t.tex':
+  was not treated as empty list of macros
+
 Release 1.5.8
 -------------
 - fixed bug from [issue #15](../../issues/15) for "undeclared" macros, too
