@@ -62,7 +62,7 @@ The Python script may be seen as an exercise in application of regular
 expressions.
 Its internal design could be more orderly, but stronger structuring,
 for instance with classes, would probably increase the program size
-(currently, about 900 effective lines of code).
+of currently about 900 effective code lines.
 In section [Remarks on implementation](#remarks-on-implementation),
 some general points are indicated.
 
@@ -298,7 +298,7 @@ Synopsis of `Macro(name, args, repl='')`:
     - other escape rules: see escape handling at function myexpand();
       e.g., include a single backslash: repl=r'...\\\\...'
     - inclusion of % only accepted as escaped version r'...\\\\%...',
-      will be resolved to % at the end by function resolve_escapes()
+      will be resolved to % at the end by function before\_output()
     - inclusion of double backslash \\\\ and replacement ending with \\
       will be rejected
 
