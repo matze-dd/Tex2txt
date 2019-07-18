@@ -73,7 +73,7 @@ parms = Aux()
 #       - other escape rules: see escape handling at myexpand() below;
 #         e.g., include a single backslash: repl=r'...\\...'
 #       - inclusion of % only accepted as escaped version r'...\\%...',
-#         will be resolved to % at the end by resolve_escapes()
+#         will be resolved to % at the end by before_output()
 #       - inclusion of double backslash \\ and replacement ending with \
 #         will be rejected
 #
@@ -296,7 +296,7 @@ parms.theorem_environments = lambda: (
 #   a list of 2-tuples for other things to be replaced
 #       [0]: search pattern as regular expression
 #       [1]: replacement text
-#   see also resolve_escapes() and LAB:SPACE below
+#   see also LAB:SPACE and before_output() below
 #
 #   ATTENTION:
 #   - prepend mark_deleted, if replacement may evaluate to empty string
@@ -527,7 +527,7 @@ mark_end_env_sub = r'\\end{' + mark_internal_pre + r'}'
 mark_linebreak = mark_internal_pre + 'L' + mark_internal_post
 
 #   mark for internal representation of a single verbatim character,
-#   will be resolved only at output by resolve_escapes()
+#   will be resolved only at output by before_output()
 #
 mark_verbatim = (mark_internal_pre + 'V', 'V' + mark_internal_post)
 mark_verbatim_tmp = ('____V', 'V__')    # before removal of % comments
@@ -687,7 +687,7 @@ def verbatim(s, mark, ast):
             c = '⊔'
         ret += mark[0] + str(ord(c)) + mark[1]
         if c == '\n':
-            # for line number tracking, compare resolve_escapes()
+            # for line number tracking, compare before_output()
             ret += c
     return ret
 
@@ -724,8 +724,7 @@ def mysub(expr, repl, text, flags=0, extract=None, track_repl=None):
             # replacement contains line number information
             (r, nums2) = ex
         else:
-            r = ex
-            nums2 = None
+            (r, nums2) = (ex, None)
 
         res += txt[last:m.start(0)]
         last = m.end(0)
@@ -926,7 +925,7 @@ text = (text, numbers)
 #   LAB:VERBATIM
 #   treat verbatim(*) environments and \verb(*) macros
 #   (the given verbatim text is expanded to a coded version that is only
-#    resolved directly at output by resolve_escapes())
+#    resolved directly at output by before_output())
 #
 #   - expanded content of verbatim(*) environment is enclosed in
 #     \begin{verbatim(*)}...\end{verbatim(*)}
@@ -1456,12 +1455,14 @@ for (name, args, replacement) in parms.equation_environments():
 
 #   LAB:SPACE
 #   replace space macros including ~, \, and &
+#   replace \\ placeholder
 #   - only after treatment of equation environments
 #
 text = mysub(r'\\,', mark_deleted + utf8_nnbsp, text)
 text = mysub(r'(?<!\\)~', mark_deleted + utf8_nbsp, text)
 text = mysub(r'(?<!\\)&', mark_deleted + ' ', text)
 text = mysub(parms.mathspace, mark_deleted + ' ', text)
+text = mysub(mark_linebreak, mark_deleted + ' ', text)
 
 
 #######################################################################
@@ -1586,14 +1587,6 @@ if parms.keep_item_labels:
     # ... otherwise simply extract the text in \item[...]
     text = mysub(r'\\item' + sp_bracketed + r'\s*', r' \1 ', text)
 
-#   - finally remove mark_deleted,
-#     delete a line, if it only contains such marks;
-#   - replace \\ placeholder
-#
-text = mysub(r'^([ \t]*' + mark_deleted + r'[ \t]*)+\n', '', text, flags=re.M)
-text = mysub(mark_deleted, '', text)
-text = mysub(mark_linebreak, ' ', text)
-
 
 ##################################################################
 #
@@ -1609,7 +1602,7 @@ text = mysub(mark_linebreak, ' ', text)
 #   - if no replacement given: just delete phrase
 #   - space in phrase to be replaced is arbitrary (expression r'\s+')
 #
-if cmdline.repl:
+def do_option_repl(text):
     for lin in myopen(cmdline.repl):
         i = lin.find('#')
         if i >= 0:
@@ -1635,6 +1628,7 @@ if cmdline.repl:
                                 + cmdline.repl + '"', r)
         r = re.sub('\\\\', '\\\\\\\\', r)       # \ ==> \\
         text = mysub(t, r, text)
+    return text
 
 
 ##################################################################
@@ -1657,11 +1651,26 @@ def write_numbers(nums, mx):
             s = '?'
         cmdline.nums.write(s + '\n')
 
-#   - resolve backslash escapes for {, }, $, %, _, &, #
-#   - resolve verbatim characters
+#   work to be done just before output
 #
-def resolve_escapes(txt):
-    # subsequent replacement runs would lead to mistakes
+def before_output(text):
+    # if braces {...} did remain somewhere: delete them
+    while mysearch(braced, text):
+        text = mysub(braced, mark_deleted + r'\1' + mark_deleted, text)
+
+    # remove mark_deleted:
+    # delete a line, if it only contains such marks
+    text = mysub(r'^([ \t]*' + mark_deleted + r'[ \t]*)+\n', '', text,
+                        flags=re.M)
+    text = mysub(mark_deleted, '', text)
+
+    # option --repl
+    if cmdline.repl:
+        text = do_option_repl(text)
+
+    # resolve backslash escapes for {, }, $, %, _, &, #
+    # resolve verbatim characters
+    # - subsequent replacement runs would lead to mistakes
     def f(m):
         if m.group(1):
             return m.group(1)
@@ -1670,8 +1679,9 @@ def resolve_escapes(txt):
             # for line number tracking, compare verbatim()
             return ''
         return c
-    return re.sub(r'\\([{}$%_&#])|' 
-            + mark_verbatim[0] + r'(\d+)' + mark_verbatim[1], f, txt)
+    text = mysub(r'\\([{}$%_&#])|' 
+            + mark_verbatim[0] + r'(\d+)' + mark_verbatim[1], f, text)
+    return text
 
 #   on option --extr: only print arguments of these macros
 #
@@ -1682,25 +1692,20 @@ if cmdline.extr:
     extract_list = []
     mysub(r'\\(?:' + cmdline.extr_re + r')(?:' + sp_bracketed
                     + r')*' + sp_braced, r'\2', text, extract=extr)
-
-    for (txt, nums) in extract_list:
-        txt = txt.rstrip('\n') + '\n\n'
-        sys.stdout.write(resolve_escapes(txt))
-        write_numbers(nums, txt.count('\n'))
+    for t in extract_list:
+        t = before_output(t)
+        txt = text_get_txt(t).rstrip('\n') + '\n\n'
+        sys.stdout.write(txt)
+        write_numbers(text_get_num(t), txt.count('\n'))
     exit()
-
-#   if braces {...} did remain somewhere: delete
-#
-while mysearch(braced, text):
-    text = mysub(braced, r'\1', text)
 
 #   write text to stdout
 #
-txt = text_get_txt(text)
-numbers = text_get_num(text)
-sys.stdout.write(resolve_escapes(txt))
+text = before_output(text)
+sys.stdout.write(text_get_txt(text))
 
 #   if option --nums given: write line number information
 #
+numbers = text_get_num(text)
 write_numbers(numbers, len(numbers))
 
