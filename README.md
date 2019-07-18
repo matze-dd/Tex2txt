@@ -8,10 +8,10 @@
 [Remarks on implementation](#remarks-on-implementation)
 
 <a name="general-description"></a>
-This is a [Python](https://www.python.org)
+This is a modest, self-contained [Python](https://www.python.org)
 script for the extraction of plain text from
 [LaTeX](https://www.latex-project.org) documents.
-In some sense, it compares to tools like
+In some sense, it relates to tools like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
 [TeXtidote](https://github.com/sylvainhalle/textidote), and
 [tex2txt](http://hackage.haskell.org/package/tex2txt).
