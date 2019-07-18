@@ -2,6 +2,8 @@
 ------------
 - fixed bug triggered e.g. by 'python3 tex2txt.py --extr , t.tex':
   was not treated as empty list of macros
+- fixed bugs from [issue #16](../../issues/16): function before\_output()
+  now collects all final clearing steps
 
 Release 1.5.8
 -------------
