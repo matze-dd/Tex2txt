@@ -62,7 +62,7 @@ The Python script may be seen as an exercise in application of regular
 expressions.
 Its internal design could be more orderly, but stronger structuring,
 for instance with classes, would probably increase the program size
-(currently, less than 900 effective lines of code).
+(currently, about 900 effective lines of code).
 In section [Remarks on implementation](#remarks-on-implementation),
 some general points are indicated.
 
@@ -431,8 +431,10 @@ EquEnv('align', repl='  relation'),
 ## Remarks on implementation
 Parsing with regular expressions is fun, but it remains a rather coarse
 approximation of the “real thing”.
-Nevertheless, it seems to work quite well in practice, and it inherits high
-flexibility from the Python environment.
+Nevertheless, it seems to work quite well for our purposes, and it inherits
+high flexibility from the Python environment.
+A more strict approach could be based on software like
+[plasTeX](https://github.com/tiarno/plastex).
 
 In order to parse nested structures, some regular expressions are constructed
 by iteration.
