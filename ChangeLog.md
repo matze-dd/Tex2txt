@@ -1,9 +1,10 @@
-"Unreleased"
-------------
+Release 1.5.9
+-------------
 - fixed bug triggered e.g. by 'python3 tex2txt.py --extr , t.tex':
   was not treated as empty list of macros
 - fixed bugs from [issue #16](../../issues/16): function before\_output()
   now collects all final clearing steps
+- revised error messages
 - shell.sh: LaTeX file name now given as script parameter
 - Example.md: updated accordingly
 
