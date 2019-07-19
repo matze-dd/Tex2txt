@@ -3,7 +3,18 @@
 #   Example for filtering line numbers
 #
 
-file=z.tex
+if [ $# -ne 1 ]
+then
+    echo "usage: bash $0 file_name" >&2
+    exit 1
+fi
+file=$1
+
+if [ ! -r "$file" ]
+then
+    echo "$0: cannot read file '$file'" >&2
+    exit 1
+fi
 
 #   Python3:
 #   add original line numbers to messages

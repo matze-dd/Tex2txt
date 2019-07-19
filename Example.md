@@ -33,8 +33,8 @@ The problems in the equation (missing comma leads to word repetition,
 missing space leads to spelling error) will be related to line 11+ and 13+,
 respectively; line 11 is marked with a comment.
 
-Here is the output of Bash script [shell.sh](shell.sh), if the above input
-text is stored in a file named z.tex.
+Here is the output of the command `bash shell.sh z.tex`, if the above input
+text is stored in file z.tex.
 Line numbers in \[\] brackets have been added by the filter in variable
 \$repl\_lines of the Bash script.
 ```

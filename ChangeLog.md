@@ -4,6 +4,8 @@
   was not treated as empty list of macros
 - fixed bugs from [issue #16](../../issues/16): function before\_output()
   now collects all final clearing steps
+- shell.sh: LaTeX file name now given as script parameter
+- Example.md: updated accordingly
 
 Release 1.5.8
 -------------

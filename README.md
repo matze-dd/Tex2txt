@@ -18,8 +18,8 @@ In some sense, it relates to tools like
 For the naming conflict with the latter project, we want to apologise.
 
 While virtually no text should be dropped by the filter,
-our aim is to provoke as few as possible “false” warnings when feeding
-the result into a language checker.
+our aim is to provoke as few as possible “false” warnings when the result
+is fed into a proofreading software.
 The goal especially applies to documents containing displayed equations.
 Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
@@ -88,7 +88,7 @@ Here is a list of the most important script operations.
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
   tailored behaviour for environment types listed in script
 - text in heading macros as \\section\{...\} is extracted with
-  added interpunction
+  added interpunction (suppresses false positives from LanguageTool)
 - suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
 - inline maths $...$ and \\(...\\) is replaced with text from rotating
   collection in variable parms.inline\_math in script
@@ -111,9 +111,9 @@ Here is a list of the most important script operations.
   see LAB:VERBATIM in script; note, however, [issue #6](../../issues/6)
 - handling of % comments near to TeX: skipping of line break under certain
   circumstances, see LAB:COMMENTS in script
-- rare warnings from language checker can be suppressed using \\LTadd{},
+- rare warnings from proofreading program can be suppressed using \\LTadd{},
   \\LTskip{}, \\LTalter{}{} in the LaTeX text with suitable macro definition
-  there; e.g., adding something that only the language checker should see:
+  there; e.g., adding something that only the proofreader should see:
   \newcommand{\\LTadd}\[1\]{}
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
@@ -161,7 +161,7 @@ python3 tex2txt.py [--nums file] [--repl file] [--defs file] \
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
 with good quality.
-Integration with a language checker and features like tracking of
+Integration with a proofreading software and features like tracking of
 \\input{...} directives have to be implemented “on top”.
 
 ### A simple script
@@ -169,10 +169,10 @@ A first Bash script that checks a single LaTeX file is given in
 file [shell.sh](shell.sh).
 The command
 ```
-bash shell.sh
+bash shell.sh file_name
 ```
-will read the LaTeX file designated by script variable $file and create
-plain text and line number files with extensions .txt and .lin, respectively.
+will read the specified LaTeX file and create plain text and line number
+files with additional extensions .txt and .lin, respectively.
 Then it will call [LanguageTool](https://www.languagetool.org)
 and filter line numbers in output messages.
 File [Example.md](Example.md) demonstrates the script.
@@ -195,7 +195,7 @@ bash checks.sh Banach/*.tex > errs
 will check the main text, extracted footnotes and captions (with their own
 text flows), as well as foreign-language text in all these files.
 The result file 'errs' will contain names of files with problems together
-with filtered messages from the language checker.
+with filtered messages from the proofreader.
 
 With option --recurse, file inclusions as \\input{...} will be tracked
 recursively.
@@ -396,14 +396,14 @@ will again produce an LT warning due to the missing comma after b,
 since the script replaces both b and -c by D2D without intermediate text.
 
 In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
-to avoid false warnings from the language checker.
+to avoid false warnings from the proofreader.
 See also file [Example.md](Example.md).
 
 ### Inclusion of “normal” text
 In variant “Full version”, the argument of \\text\{...\}
 (variable for macro name in script: parms.text\_macro) is directly copied.
 Outside of \\text, only maths space like \\; and \\quad is considered as space.
-Therefore, one will get warnings from the language checker, if subsequent
+Therefore, one will get warnings from the proofreading program, if subsequent
 \\text and maths parts are not properly separated.
 See file [Example.md](Example.md).
 
@@ -433,7 +433,7 @@ Parsing with regular expressions is fun, but it remains a rather coarse
 approximation of the “real thing”.
 Nevertheless, it seems to work quite well for our purposes, and it inherits
 high flexibility from the Python environment.
-A more strict approach could be based on software like
+A stricter approach could be based on software like
 [plasTeX](https://github.com/tiarno/plastex).
 
 In order to parse nested structures, some regular expressions are constructed
