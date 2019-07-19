@@ -177,6 +177,7 @@ parms.system_macros = lambda: (
 
 #   heading macros with optional argument [...]:
 #   copy content of {...} and add '.' if not ending with interpunction
+#   (avoids false positives from LanguageTool)
 #
 parms.heading_macros_punct = '!?'
         # do not add '.' if ending with that;
@@ -472,29 +473,27 @@ import unicodedata
 
 #   first of all ...
 #
-def strip_internal_marks(s):
-    # will be redefined below
-    return s
 def fatal(msg, detail=None):
-    sys.stdout.write(parms.warning_error_msg)
-    sys.stdout.flush()
-    err = '\n*** ' + sys.argv[0] + ': internal error:\n' + msg + '\n'
-    if detail:
-        err += strip_internal_marks(detail) + '\n'
-    sys.stderr.write(err)
-    exit(1)
+    raise_error('internal error', msg, detail, xit=1)
 def warning(msg, detail=None):
-    sys.stdout.write(parms.warning_error_msg)
-    sys.stdout.flush()
-    err = '\n*** ' + sys.argv[0] + ': warning:\n' + msg + '\n'
-    if detail:
-        err += strip_internal_marks(detail) + '\n'
-    sys.stderr.write(err)
+    raise_error('warning', msg, detail)
 def myopen(f, mode='r'):
     try:
         return open(f, mode=mode)
     except:
-        fatal('could not open file "' + f + '"')
+        raise_error('problem', 'could not open file "' + f + '"', xit=1)
+def raise_error(kind, msg, detail=None, xit=None):
+    sys.stdout.write(parms.warning_error_msg)
+    sys.stdout.flush()
+    err = '\n*** ' + sys.argv[0] + ': ' + kind + ':\n' + msg + '\n'
+    if detail:
+        err += strip_internal_marks(detail) + '\n'
+    sys.stderr.write(err)
+    if xit is not None:
+        exit(xit)
+def strip_internal_marks(s):
+    # will be redefined below
+    return s
 
 #   for internal marks: cannot appear in text after removal of % comments
 #   (has to be asymmetrical)
@@ -873,8 +872,8 @@ if not cmdline.lang or cmdline.lang == 'de':
 elif cmdline.lang == 'en':
     set_language_en()
 else:
-    fatal('unrecognized language "' + cmdline.lang
-            + '" given in option')
+    raise_error('problem', 'unrecognized language "' + cmdline.lang
+                    + '" given in option --lang', xit=1)
 
 if cmdline.extr:
     cmdline.extr_list = [m for m in cmdline.extr.split(',') if m]
@@ -903,7 +902,7 @@ if cmdline.defs:
         s = re.sub(r'\ATraceback \(most recent call last\):\n'
                         + r'  File "<string>"(, line \d+).*\n',
                         r'File "' + cmdline.defs + r'"\1\n', s)
-        fatal('problem in file "' + cmdline.defs + '"', s)
+        fatal('problem in file "' + cmdline.defs + '"\n' + s)
 
 if cmdline.file:
     text = myopen(cmdline.file).read()
