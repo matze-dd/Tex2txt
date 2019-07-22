@@ -133,6 +133,7 @@ parms.system_macros = lambda: (
     Macro('include', 'A'),
     Macro('includegraphics', 'OA'),
     Macro('input', 'A'),
+    # \medspace: treated at LAB:SPACE, parms.mathspace
     Macro('newcommand', 'AOA'),
     Simple('newline', ' '),
     Macro('pageref', 'A', '99'),
@@ -144,6 +145,8 @@ parms.system_macros = lambda: (
     # \textasciitilde: defined below
     # \textbackslash: defined below
     Macro('textcolor', 'AA', r'\2'),
+    # \thickspace: treated at LAB:SPACE, parms.mathspace
+    # \thinspace: treated at LAB:SPACE, parms.mathspace
     Macro('usepackage', 'OA'),
     Macro(r'vspace\*?', 'A'),
 
@@ -1291,7 +1294,8 @@ for (mac, acc) in (
 #   - maths macros like \epsilon or \Omega that might constitute a
 #     maths part: still present or replaced with non-space
 
-parms.mathspace = (r'(?:\\[ ,;:\n]|(?<!\\)~|\\q?quad'
+parms.mathspace = (r'(?:\\[ ,;:\n\t]|(?<!\\)~'
+                        + r'|\\(?:q?quad|(?:thin|med|thick)space)'
                         + end_mac + skip_space_macro + r')')
 parms.mathop = (
     r'\+|-|\*|/'
