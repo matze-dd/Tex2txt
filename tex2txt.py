@@ -1401,7 +1401,8 @@ def parse_equ(equ):
             break
 
     # important: non-greedy *? repetition, and avoid zero-width matches
-    line = (skip_space + r'((.|\n)*?(?!\Z)|(.|\n)+?)' + skip_space
+    # - do not disrupt trailing maths space like r'\ ' in equation line
+    line = (skip_space + r'((.|\n)*?(?!\Z)|(.|\n)+?)(?<!\\)' + skip_space
                 + r'(' + mark_linebreak + r'|\Z)')
     # return replacement for RE line
     def repl_line(m):
