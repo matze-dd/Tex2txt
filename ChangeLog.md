@@ -1,3 +1,12 @@
+"Unreleased"
+------------
+- fixed bug in parse\_equ(): trailing space as '\\ ' could hide interpunction
+  (has been solved in release 1.0.1 and re-introduced :-( in release 1.5.6)
+- added '\\\<tab\>' to spacing macro collection in parms.mathspace,
+  as well as macros \\thinspace, \\medspace, and \\thickspace
+- fixed bug in mysub\_check\_nested(): detection of "dangerous" replacements
+  was a bit sloppy
+
 Release 1.5.9
 -------------
 - fixed bug triggered e.g. by 'python3 tex2txt.py --extr , t.tex':
