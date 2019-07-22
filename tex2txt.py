@@ -1060,10 +1060,7 @@ check_nesting_limits(text)
 def mysub_check_nested(expr, repl, text):
     flag = Aux()
     def f(t, r):
-        for c in '{}[]':
-            if r.count(c) > t.count(c):
-                flag.flag = True
-        if r.count('\\begin') or r.count('\\end'):
+        if re.search(r'(?<!\\)[][{}]|\\(begin|end)' + end_mac, r):
             flag.flag = True
     flag.flag = False
     text = mysub(expr, repl, text, track_repl=f)
