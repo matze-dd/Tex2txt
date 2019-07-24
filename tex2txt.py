@@ -1103,6 +1103,9 @@ for (name, args, repl, extr) in (
         continue
     expr = r'\\' + name + end_mac
     (re_args, repl) = re_code_args(args, repl, 'Macro', name)
+    if extr:
+        # only test extraction pattern
+        re_code_args(args, extr, 'Macro', name)
     if not args:
         # consume all space allowed after macro without arguments
         expr += skip_space_macro
@@ -1150,7 +1153,7 @@ while flag:
                 # append extracted text to the end of main text
                 e = extract_repls(expr, extr, text)
                 text = mysub_check_nested(expr, repl, text)
-                text = text_combine(text, e)
+                text = mysub_check_nested(r'\Z', lambda m: e, text)
             else:
                 text = mysub_check_nested(expr, repl, text)
 
