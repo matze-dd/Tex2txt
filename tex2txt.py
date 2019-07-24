@@ -54,10 +54,10 @@ parms = Aux()
 #   these are macros with tailored treatment;
 #   replacement only if not given in option --extr
 #
-#   Simple(name, repl=''):
-#   abbreviation for Macro(name, '', repl)
+#   Simple(name, repl='', extr=''):
+#   abbreviation for Macro(name, '', repl, extr)
 #
-#   Macro(name, args, repl=''):
+#   Macro(name, args, repl='', extr=''):
 #   name:
 #       - macro name without leading backslash
 #       - characters with special meaning in regular expressions, e.g. '*',
@@ -76,6 +76,9 @@ parms = Aux()
 #         will be resolved to % at the end by before_output()
 #       - inclusion of double backslash \\ and replacement ending with \
 #         will be rejected
+#   extr:
+#       - append this replacement (specified as in repl) at the end
+#         of the text, separated by blank lines
 #
 #   REMARKS:
 #       - if a macro does not find its mandatory argument(s) in the text,
@@ -116,7 +119,7 @@ parms.project_macros = lambda: (
 #
 parms.system_macros = lambda: (
 
-    Macro('caption', 'OA'),         # own text flow, use option --extr
+    Macro('caption', 'OA', extr=r'\2'),         # extract to end of text
     Macro('cite', 'A', '[1]'),
     Macro('cite', 'PA', r'[1, \1]'),
     Macro('color', 'A'),
@@ -124,9 +127,9 @@ parms.system_macros = lambda: (
     Macro('documentclass', 'OA'),
     Macro('eqref', 'A', '(7)'),
     Macro('fcolorbox', 'AAA', r'\3'),
-    Macro('footnote', 'OA'),        # own text flow, use option --extr
+    Macro('footnote', 'OA', extr=r'\2'),        # extract to end of text
     Macro('footnotemark', 'O'),
-    Macro('footnotetext', 'OA'),    # own text flow, use option --extr
+    Macro('footnotetext', 'OA', extr=r'\2'),    # extract to end of text
     Macro('framebox', 'OOA', r'\3'),
     Simple('hfill', ' '),
     Macro(r'hspace\*?', 'A'),
@@ -597,10 +600,10 @@ def re_nested_env(s, max_depth, arg):
 
 #   helpers for "declaration" of macros and environments
 #
-def Macro(name, args, repl=''):
-    return (name, args, repl)
-def Simple(name, repl=''):
-    return (name, '', repl)
+def Macro(name, args, repl='', extr=''):
+    return (name, args, repl, extr)
+def Simple(name, repl='', extr=''):
+    return (name, '', repl, extr)
 def EquEnv(name, args='', repl=''):
     return (name, args, repl)
 def EnvRepl(name, repl=''):
@@ -850,6 +853,8 @@ def text_get_txt(text):
     return text[0]
 def text_get_num(text):
     return text[1]
+def text_new():
+    return ('', (-1,))
 
 
 #######################################################################
@@ -1090,7 +1095,7 @@ if parms.check_equation_replacements:
 #   )
 #
 list_macs_envs = []
-for (name, args, repl) in (
+for (name, args, repl, extr) in (
     parms.system_macros()
     + parms.project_macros()
 ):
@@ -1108,11 +1113,23 @@ for (name, args, repl) in (
     else:
         # at least one mandatory argument expected
         expr += re_args
-    list_macs_envs.append((expr, mark_deleted + repl))
+    list_macs_envs.append((expr, mark_deleted + repl, extr))
 for (name, args, repl) in parms.environment_begins():
     (re_args, repl) = re_code_args(args, repl, 'EnvBegin', name)
     expr = begin_lbr + name + r'\}' + re_args
-    list_macs_envs.append((expr, mark_begin_env_sub + repl))
+    list_macs_envs.append((expr, mark_begin_env_sub + repl, ''))
+
+#   return a text element that only contains the replacements,
+#   separated by blank lines
+#
+def extract_repls(expr, repl, text):
+    tmp = Aux()
+    tmp.text = text_new()
+    def f(t, r):
+        r = text_add_frame('\n\n\n', '\n', r)
+        tmp.text = text_combine(tmp.text, r)
+    mysub(expr, repl, text, track_repl=f)
+    return tmp.text
 
 flag = True
 cnt = 1
@@ -1124,12 +1141,18 @@ while flag:
                         match.group(0) if match else '')
     cnt += 1
     flag = False
-    for (expr, repl) in list_macs_envs:
+    for (expr, repl, extr) in list_macs_envs:
         m = mysearch(expr, text)
         if m:
             match = m
             flag = True
-            text = mysub_check_nested(expr, repl, text)
+            if extr:
+                # append extracted text to the end of main text
+                e = extract_repls(expr, extr, text)
+                text = mysub_check_nested(expr, repl, text)
+                text = text_combine(text, e)
+            else:
+                text = mysub_check_nested(expr, repl, text)
 
 
 ##################################################################
