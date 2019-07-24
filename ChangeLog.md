@@ -6,6 +6,11 @@
   as well as macros \\thinspace, \\medspace, and \\thickspace
 - fixed bug in mysub\_check\_nested(): detection of "dangerous" replacements
   was a bit sloppy
+- function mysub(): merged arguments 'extract' and 'track\_repl'
+- functions Macro() and Simple(): new optional argument 'extr';
+  applied for macros \\caption, \\footnote, \\footnotetext
+- restructured code for script output
+- checks.sh: simplified thanks to new argument 'extr' of Macro()
 
 Release 1.5.9
 -------------
