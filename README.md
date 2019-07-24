@@ -48,6 +48,13 @@ As in TeX, macro expansion consumes white space (possibly including a line
 break) between macro name and next non-space character within the current
 paragraph.
 
+Extra text flows like footnotes are normally appended to the output
+of the main text flow, each separated by blank lines.
+Activation of this behaviour is shown in the example for macro \\caption{...}
+in section [Declaration of LaTeX macros](#declaration-of-latex-macros).
+Script option --extr provides another possibility, which is also useful for
+the extraction of foreign-language text.
+
 An optional speciality is some parsing of LaTeX environments for displayed
 equations.
 Therefore, one may check embedded \\text{...} parts (macro from LaTeX package
@@ -176,8 +183,6 @@ files with additional extensions .txt and .lin, respectively.
 Then it will call [LanguageTool](https://www.languagetool.org)
 and filter line numbers in output messages.
 File [Example.md](Example.md) demonstrates the script.
-Note that footnotes and captions are not checked, as these are not
-treated like in the more complete script below.
 
 We assume that [Java](https://java.com) is installed, and that the directory
 with relative path ../LT/ contains an unzipped archive of the LanguageTool
@@ -192,8 +197,8 @@ For instance, the command
 ```
 bash checks.sh Banach/*.tex > errs
 ```
-will check the main text, extracted footnotes and captions (with their own
-text flows), as well as foreign-language text in all these files.
+will check the main text and extracted foreign-language parts in all these
+files.
 The result file 'errs' will contain names of files with problems together
 with filtered messages from the proofreader.
 
@@ -225,10 +230,9 @@ without request.
 They can be deleted with option --delete.
 
 ### Actions of the Bash script
-- convert content of given LaTeX files to plain text, extract special text
-  flows like footnotes
-- call LanguageTool for native-language main text and separately for footnotes
-  and captions
+- convert content of given LaTeX files to plain text, extract foreign-language
+  parts
+- call LanguageTool for native-language main text
 - check foreign-language text using Hunspell
 - only if variable $check\_for\_single\_letters set to 'yes':
   look for single letters, excluding abbreviations in script variable $acronyms
@@ -266,7 +270,7 @@ included.
 only later.)
 ```
 parms.system_macros = lambda: (
-    Macro('caption', 'OA'),         # own text flow, use option --extr
+    Macro('caption', 'OA', extr=r'\2'),         # extract to end of text
     Macro('cite', 'A', '[1]'),
     Macro('cite', 'PA', r'[1, \1]'),
     Macro('color', 'A'),
@@ -282,7 +286,7 @@ The corresponding collections there, for instance defs.project\_macros,
 have to be defined using simple tuples without lambda construct;
 compare the example in section [Command line](#command-line).
 
-Synopsis of `Macro(name, args, repl='')`:
+Synopsis of `Macro(name, args, repl='', extr='')`:
 - argument `name`:
     - macro name without leading backslash
     - characters with special meaning in regular expressions, e.g. '\*',
@@ -301,6 +305,9 @@ Synopsis of `Macro(name, args, repl='')`:
       will be resolved to % at the end by function before\_output()
     - inclusion of double backslash \\\\ and replacement ending with \\
       will be rejected
+- optional argument `extr`:
+    - append this replacement (specified as in repl) at the end
+      of the text, separated by blank lines
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
 
@@ -482,5 +489,6 @@ This also means that initially blank lines remain in the text (except
 those only containing a % comment).
 
 Under category [Issues](../../issues), some known shortcomings are listed.
+Additionally, we have marked several problems as BUG in the script.
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
