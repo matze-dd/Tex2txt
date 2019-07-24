@@ -703,8 +703,8 @@ def verbatim(s, mark, ast):
 #       text[1]: list (tuple) with line numbers
 #   Return value: tuple (string, number list)
 #   As for re.sub(), argument repl may be a callable.
-#   Argument extract: function for extracting replacements
-#   Argument track_repl: function for detection of inserted braces etc.
+#   Argument track_repl: function for extraction of replecements
+#                        and detection of inserted braces etc.
 #
 #   For each line in the current text string, the number list
 #   contains the original line number (before any changes took place).
@@ -712,7 +712,7 @@ def verbatim(s, mark, ast):
 #   list are removed. On creation of an additional line, a negative
 #   placeholder is inserted in the number list.
 #
-def mysub(expr, repl, text, flags=0, extract=None, track_repl=None):
+def mysub(expr, repl, text, flags=0, track_repl=None):
     (txt, numbers) = text
     res = ''
     last = 0
@@ -734,14 +734,13 @@ def mysub(expr, repl, text, flags=0, extract=None, track_repl=None):
         lin = res.count('\n')
         nt = t.count('\n')
         nr = r.count('\n')
-        if extract:
-            extract(r, numbers[lin:lin+nr+1])
-        if track_repl:
-            track_repl(t, r)
-
         if nums2 is None:
             ll = numbers[lin]
             nums2 = (ll,) + (-abs(ll),) * nr
+
+        if track_repl:
+            track_repl((t, numbers[lin:lin+nt+1]), (r, nums2))
+
         tmp = text_combine((res, numbers[:lin+1]), (r, nums2))
         (res, numbers) = text_combine(tmp, ('', numbers[lin+nt:]))
 
@@ -1060,7 +1059,8 @@ check_nesting_limits(text)
 def mysub_check_nested(expr, repl, text):
     flag = Aux()
     def f(t, r):
-        if re.search(r'(?<!\\)[][{}]|\\(begin|end)' + end_mac, r):
+        if re.search(r'(?<!\\)[][{}]|\\(begin|end)' + end_mac,
+                                text_get_txt(r)):
             flag.flag = True
     flag.flag = False
     text = mysub(expr, repl, text, track_repl=f)
@@ -1687,12 +1687,11 @@ def before_output(text):
 #   on option --extr: only print arguments of these macros
 #
 if cmdline.extr:
-    def extr(t, n):
-        global extract_list
-        extract_list += [(t,n)]
+    def extr(t, r):
+        extract_list.append(r)
     extract_list = []
     mysub(r'\\(?:' + cmdline.extr_re + r')(?:' + sp_bracketed
-                    + r')*' + sp_braced, r'\2', text, extract=extr)
+                    + r')*' + sp_braced, r'\2', text, track_repl=extr)
     for t in extract_list:
         t = before_output(t)
         txt = text_get_txt(t).rstrip('\n') + '\n\n'
