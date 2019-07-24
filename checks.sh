@@ -31,7 +31,7 @@ all_tex_files="vorwort.tex */*.tex"
 
 #   LanguageTool for check of native-language text
 #
-LTprefix=../LT/LanguageTool-4.5
+LTprefix=../LT/LanguageTool-4.6
 LTcommand="$LTprefix/languagetool-commandline.jar \
     --language de-DE --encoding utf-8 \
     --disable \
@@ -44,7 +44,6 @@ txtdir=$tooldir/Tex2txt     # directory for extraction of raw text
 ext=txt                     # file name extension for raw text
 num=lin                     # ... for line number information
 foreign=en                  # ... for foreign-language text
-foot=foot                   # ... for footnote texts and captions
 ori=ori                     # ... for original dictionary files in LT tree
 
 #   Tex2txt script
@@ -52,7 +51,6 @@ ori=ori                     # ... for original dictionary files in LT tree
 tex2txt_py=$tooldir/tex2txt.py
 tex2txt_repl="--repl $tooldir/repls.txt"
 tex2txt_defs="--defs $tooldir/defs.py"
-tex2txt_extr="--extr footnote,footnotetext,caption"
 
 #   sed filter for hunspell (on option --no-lt):
 #   '0' --> 'Null'
@@ -275,11 +273,6 @@ do
     python3 $tex2txt_py \
         $tex2txt_repl $tex2txt_defs --nums $txtdir/$i.$num $i \
         > $txtdir/$i.$ext
-    python3 $tex2txt_py \
-        $tex2txt_extr $tex2txt_repl $tex2txt_defs \
-        --nums $txtdir/$i.$foot.$num $i \
-        > $txtdir/$i.$foot.$ext
-    foot_text_size=$(wc -c < $txtdir/$i.$foot.$ext)
 
     #####################################################
     # call LT or hunspell
@@ -303,33 +296,10 @@ do
         then
             echo $LT_output >&2
         fi
-        if (( $foot_text_size > 0 ))
-        then        # save energy: only if file not empty
-            LT_foot_output=$(java -jar $LTcommand $txtdir/$i.$foot.$ext \
-                | LTfilter \
-                | python3 -c "$repl_lines" \
-                    '^\d+\.\) Line (\d+), column (\d+)' $txtdir/$i.$foot.$num)
-            LT_foot_output_lines=$(echo "$LT_foot_output" | wc -l)
-            if (( $LT_foot_output_lines == 1 ))
-            then
-                echo $LT_foot_output >&2
-            fi
-        else
-            LT_foot_output=
-            LT_foot_output_lines=
-        fi
     else
         echo Hunspell $txtdir/$i.$ext ... >&2
         errs_hunspell=$(sed -E $repls_hunspell $txtdir/$i.$ext \
                 | hunspell -l -p $priv_dic_native)
-        if (( $foot_text_size > 0 ))
-        then
-            echo Hunspell $txtdir/$i.$foot.$ext ... >&2
-            errs_hunspell_foot=$(sed -E $repls_hunspell $txtdir/$i.$foot.$ext \
-                    | hunspell -l -p $priv_dic_native)
-        else
-            errs_hunspell_foot=
-        fi
     fi
 
     #####################################################
@@ -341,14 +311,6 @@ do
         single_letters=$(grep -n '^' $txtdir/$i.$ext \
             | sed -E "s/\\<$acronyms//g" \
             | grep -E '\<[[:alpha:]]\>')
-        if (( $foot_text_size > 0 ))
-        then
-            single_letters_foot=$(grep -n '^' $txtdir/$i.$foot.$ext \
-                | sed -E "s/\\<$acronyms//g" \
-                | grep -E '\<[[:alpha:]]\>')
-        else
-            single_letters_foot=
-        fi
     fi
 
     #####################################################
@@ -364,26 +326,23 @@ do
     #   output of results
     #####################################################
 
-    if [[ ( -n "$single_letters$single_letters_foot" ) \
+    if [[ ( -n "$single_letters" ) \
             || ( -n "$errs_foreign" ) \
             || ( "$LT_output_lines" >  1 ) \
-            || ( "$LT_foot_output_lines" >  1 ) \
-            || ( -n "$errs_hunspell$errs_hunspell_foot" ) ]]
+            || ( -n "$errs_hunspell" ) ]]
     then
         echo '=================================================='
         echo $i
         echo '=================================================='
         echo
     fi
-    if [ -n "$single_letters$single_letters_foot" ]
+    if [ -n "$single_letters" ]
     then
         echo '=============='
         echo 'Single letters'
         echo '=============='
         echo "$single_letters" \
             | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$num
-        echo "$single_letters_foot" \
-            | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$foot.$num
         echo
     fi
     if [ -n "$errs_foreign" ]
@@ -395,14 +354,12 @@ do
             | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$foreign.$num
         echo
     fi
-    if [[ ( "$LT_output_lines" > 1 ) \
-            || ( "$LT_foot_output_lines" > 1 ) ]]
+    if [[ "$LT_output_lines" > 1 ]]
     then
         echo "$LT_output"
-        echo "$LT_foot_output"
         echo
     fi
-    if [ -n "$errs_hunspell$errs_hunspell_foot" ]
+    if [ -n "$errs_hunspell" ]
     then
         echo '============'
         echo 'Faulty lines'
@@ -411,15 +368,11 @@ do
             | sed -E $repls_hunspell \
             | hunspell -L -p $priv_dic_native \
             | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$num
-        grep -n '^' $txtdir/$i.$foot.$ext \
-            | sed -E $repls_hunspell \
-            | hunspell -L -p $priv_dic_native \
-            | python3 -c "$repl_lines" '^(\d+)():' $txtdir/$i.$foot.$num
         echo
         echo '============='
         echo 'Unknown words'
         echo '============='
-        echo "$errs_hunspell$errs_hunspell_foot"
+        echo "$errs_hunspell"
         echo
     fi
 
