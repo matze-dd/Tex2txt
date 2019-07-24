@@ -1661,20 +1661,6 @@ def do_option_repl(text):
 #
 ##################################################################
 
-#   if option --nums: write line number information
-#
-def write_numbers(nums, mx):
-    if not cmdline.nums:
-        return
-    for i in range(mx):
-        if i < len(nums):
-            s = str(abs(nums[i]))
-            if nums[i] < 0:
-                s += '+'
-        else:
-            s = '?'
-        cmdline.nums.write(s + '\n')
-
 #   work to be done just before output
 #
 def before_output(text):
@@ -1707,28 +1693,26 @@ def before_output(text):
             + mark_verbatim[0] + r'(\d+)' + mark_verbatim[1], f, text)
     return text
 
-#   on option --extr: only print arguments of these macros
+#   output of text string and line number information
 #
+def write_output(text):
+    text = before_output(text)
+    sys.stdout.write(text_get_txt(text))
+    if cmdline.nums:
+        for n in text_get_num(text):
+            s = str(abs(n))
+            if n < 0:
+                s += '+'
+            cmdline.nums.write(s + '\n')
+
 if cmdline.extr:
-    def extr(t, r):
-        extract_list.append(r)
-    extract_list = []
-    mysub(r'\\(?:' + cmdline.extr_re + r')(?:' + sp_bracketed
-                    + r')*' + sp_braced, r'\2', text, track_repl=extr)
-    for t in extract_list:
-        t = before_output(t)
-        txt = text_get_txt(t).rstrip('\n') + '\n\n'
-        sys.stdout.write(txt)
-        write_numbers(text_get_num(t), txt.count('\n'))
+    # on option --extr: only print arguments of these macros
+    expr = (r'\\(?:' + cmdline.extr_re + r')(?:' + sp_bracketed
+                    + r')*' + sp_braced)
+    write_output(extract_repls(expr, r'\2', text))
     exit()
 
-#   write text to stdout
+#   write results
 #
-text = before_output(text)
-sys.stdout.write(text_get_txt(text))
-
-#   if option --nums given: write line number information
-#
-numbers = text_get_num(text)
-write_numbers(numbers, len(numbers))
+write_output(text)
 
