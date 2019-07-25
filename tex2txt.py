@@ -76,6 +76,7 @@ parms = Aux()
 #         will be resolved to % at the end by before_output()
 #       - inclusion of double backslash \\ and replacement ending with \
 #         will be rejected
+#       - reference by r'\d' to an optional argument will be refused
 #   extr:
 #       - append this replacement (specified as in repl) at the end
 #         of the text, separated by blank lines
@@ -83,10 +84,6 @@ parms = Aux()
 #   REMARKS:
 #       - if a macro does not find its mandatory argument(s) in the text,
 #         it is treated as unknown and can be seen with option --unkn
-#       - if referring to an optional argument, e.g.
-#               Macro('xxx', 'OA', r'\1\2'),
-#         Python version of at least 3.5 is required (non-matched group
-#         yields empty string); otherwise re module may raise exceptions
 #
 #
 parms.project_macros = lambda: (
@@ -635,7 +632,7 @@ def re_code_args(args, repl, who, s, no_backslash=False):
     for m in re.finditer(r'(?<!\\)(?:\\\\)*\\(\d)', repl):
         # avoid exceptions from re module
         n = int(m.group(1))
-        if n < 1 or n > len(args):
+        if n < 1 or n > len(args) or args[n - 1] not in 'AP':
             err('invalid reference "\\' + m.group(1) + '"')
     if re.search(r'(?<!\\)\\(?:\\\\)*%', repl):
         # ensure that mark_linebreak and mark_deleted do work
@@ -706,7 +703,7 @@ def verbatim(s, mark, ast):
 #       text[1]: list (tuple) with line numbers
 #   Return value: tuple (string, number list)
 #   As for re.sub(), argument repl may be a callable.
-#   Argument track_repl: function for extraction of replecements
+#   Argument track_repl: function for extraction of replacements
 #                        and detection of inserted braces etc.
 #
 #   For each line in the current text string, the number list
