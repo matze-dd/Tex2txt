@@ -10,6 +10,12 @@
 - functions Macro() and Simple(): new optional argument 'extr';
   applied for macros \\caption, \\footnote, \\footnotetext
 - restructured code for script output
+- functions like Macro(): in replacements, do not accept r'\\d' references
+  to optional arguments
+- on option --repl: respect paragraph boundaries during phrase replacement
+- fixed bug from [issue #17](../../issues/17): function text\_combine()
+  did not recognise case of falling line numbers
+    - fixed uncovered problem with out-of-order replacement for item labels
 - checks.sh: simplified thanks to new argument 'extr' of Macro()
 
 Release 1.5.9
