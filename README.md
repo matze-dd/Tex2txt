@@ -232,7 +232,7 @@ They can be deleted with option --delete.
 ### Actions of the Bash script
 - convert content of given LaTeX files to plain text, extract foreign-language
   parts
-- call LanguageTool for native-language main text
+- call LanguageTool (or Hunspell on --no-lt) for native-language main text
 - check foreign-language text using Hunspell
 - only if variable $check\_for\_single\_letters set to 'yes':
   look for single letters, excluding abbreviations in script variable $acronyms
@@ -305,9 +305,10 @@ Synopsis of `Macro(name, args, repl='', extr='')`:
       will be resolved to % at the end by function before\_output()
     - inclusion of double backslash \\\\ and replacement ending with \\
       will be rejected
+    - reference by r'\\d' to an optional argument will be refused
 - optional argument `extr`:
-    - append this replacement (specified as in repl) at the end
-      of the text, separated by blank lines
+    - append this replacement (specified as in argument repl) to the end
+      of the main text, separated by blank lines
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
 
