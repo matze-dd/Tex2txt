@@ -751,14 +751,16 @@ def mysub(expr, repl, text, flags=0, track_repl=None):
 def text_combine(text1, text2):
     (t1, n1) = text1
     (t2, n2) = text2
-    if n1[-1] == n2[0] or re.search(r'\A\s*\Z', t1[t1.rfind('\n')+1:]):
+    if n1[-1] == n2[0] or not t1[t1.rfind('\n')+1:].strip():
         # same line numbers at junction or
         # only space after last line break in text1:
         # use first line number from text2 at junction
         n = n1[:-1] + n2
     else:
-        # use last line number from text1 at junction
-        n = n1[:-1] + (-abs(n1[-1]),) + n2[1:]
+        # use last line number from text1 at junction,
+        # but pay attention to possibility of decreasing line numbers
+        j = min(abs(n1[-1]), abs(n2[0]))
+        n = n1[:-1] + (-j,) + n2[1:]
     return (t1 + t2, n)
 
 #   prepend and append plain strings to a text with line number information
@@ -1605,8 +1607,16 @@ text = mysub(re_end_env, mark_deleted, text)
 if parms.keep_item_labels:
     if parms.item_label_repeat_punct:
         # try with preceding interpunction [.,;:!?] ...
+        def f(m):
+            # "manually" build replacement for r'\1 \3\2 ':
+            # otherwise, out-of-order inclusion r'\2' would deteriorate
+            # line number tracking
+            t1 = text_from_match(m, 1, text)
+            t3 = text_from_match(m, 3, text)
+            t3 = text_add_frame(' ', m.group(2) + ' ', t3)
+            return text_combine(t1, t3)
         text = mysub(r'(((?<!\\)[.,;:!?])(?:\s|' + mark_deleted
-                + r')*)\\item' + sp_bracketed + r'\s*', r'\1 \3\2 ', text)
+                        + r')*)\\item' + sp_bracketed + r'\s*', f, text)
     # ... otherwise simply extract the text in \item[...]
     text = mysub(r'\\item' + sp_bracketed + r'\s*', r' \1 ', text)
 
