@@ -1623,7 +1623,7 @@ if parms.keep_item_labels:
 #   - the words (delimiter: white space) in front of first separated '&'
 #     are replaced by the words following this '&'
 #   - if no replacement given: just delete phrase
-#   - space in phrase to be replaced is arbitrary (expression r'\s+')
+#   - space in phrase to be replaced is arbitrary (within current paragraph)
 #
 def do_option_repl(text):
     for lin in myopen(cmdline.repl):
@@ -1636,8 +1636,10 @@ def do_option_repl(text):
         for i in range(len(lin)):
             if lin[i] == '&':
                 break
-            t += s + re.escape(lin[i])  # protect e.g. '.' and '$'
-            s = r'\s+'
+            t += s + re.escape(lin[i])
+                    # protect e.g. '.' and '$'
+            s = r'(?:[ \t]*\n[ \t]*|[ \t]+)'
+                    # at least one space character, but stay in paragraph
         if not t:
             continue
         if t[0].isalpha():
