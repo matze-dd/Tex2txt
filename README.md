@@ -50,6 +50,7 @@ paragraph.
 
 Extra text flows like footnotes are normally appended to the output
 of the main text flow, each separated by blank lines.
+File [Example.md](Example.md) demonstrates such a case.
 Activation of this behaviour is shown in the example for macro \\caption{...}
 in section [Declaration of LaTeX macros](#declaration-of-latex-macros).
 Script option --extr provides another possibility, which is also useful for
