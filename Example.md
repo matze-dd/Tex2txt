@@ -1,6 +1,6 @@
 Assume the following input text.
 ```
-We consider
+We consider\footnote{Thix is a footnote.}
 \begin{itemize}
 \item a set $M$, a domain $\Omega\subset M$, andx
 \item a function $f:M \to [0,1]$.
@@ -26,12 +26,18 @@ With a constant F, we require
   U  equal V for all W, 
   X  equal Y for all Z 
   Z  equal U for allV. 
+
+
+
+Thix is a footnote.
 ```
 With the filter from Bash script [shell.sh](shell.sh), the typo 'andx'
 will be related to input line 3.
 The problems in the equation (missing comma leads to word repetition,
 missing space leads to spelling error) will be related to line 11+ and 13+,
 respectively; line 11 is marked with a comment.
+Extra text flows like footnotes are separately appended at the end,
+the typo 'Thix' is related to input line 1.
 
 Here is the output of the command `bash shell.sh z.tex`, if the above input
 text is stored in file z.tex.
@@ -49,13 +55,19 @@ We consider   a set C, a domain D, andx   a function E.  With a constant F, we r
 2.) Line 7 [11+], Rule ID: ENGLISH_WORD_REPEAT_RULE
 Message: Possible typo: you repeated a word
 Suggestion: Z
-... U  equal V for all W,    X  equal Y for all Z    Z  equal U for allV.  
-                                                ^^^^^^                     
+... U  equal V for all W,    X  equal Y for all Z    Z  equal U for allV.     Thix is a footnote. 
+                                                ^^^^^^                                            
 
 3.) Line 8 [13+], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: all; ally; alls; All; all V
-...W,    X  equal Y for all Z    Z  equal U for allV.  
-                                                ^^^^   
-Time: 3058ms for 3 sentences (1.0 sentences/sec)
+...W,    X  equal Y for all Z    Z  equal U for allV.     Thix is a footnote. 
+                                                ^^^^                          
+
+4.) Line 12 [1], Rule ID: MORFOLOGIK_RULE_EN_GB
+Message: Possible spelling mistake found
+Suggestion: This; Thin; Hix; Th ix
+...qual Y for all Z    Z  equal U for allV.     Thix is a footnote. 
+                                                ^^^^                
+Time: 2850ms for 4 sentences (1.4 sentences/sec)
 ```
