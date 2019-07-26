@@ -1,22 +1,23 @@
-"Unreleased"
-------------
-- fixed bug in parse\_equ(): trailing space as '\\ ' could hide interpunction
-  (has been solved in release 1.0.1 and re-introduced :-( in release 1.5.6)
+Release 1.6.0
+-------------
+- functions Macro() and Simple(): new optional argument 'extr';
+  applied for macros \\caption, \\footnote, \\footnotetext
+- on option --repl: respect paragraph boundaries during phrase replacement
 - added '\\\<tab\>' to spacing macro collection in parms.mathspace,
   as well as macros \\thinspace, \\medspace, and \\thickspace
+- checks.sh: simplified thanks to new argument 'extr' of Macro()
+  <br><br>
+- fixed bug in parse\_equ(): trailing space as '\\ ' could hide interpunction
+  (has been solved in release 1.0.1 and re-introduced :-( in release 1.5.6)
 - fixed bug in mysub\_check\_nested(): detection of "dangerous" replacements
   was a bit sloppy
 - function mysub(): merged arguments 'extract' and 'track\_repl'
-- functions Macro() and Simple(): new optional argument 'extr';
-  applied for macros \\caption, \\footnote, \\footnotetext
 - restructured code for script output
 - functions like Macro(): in replacements, do not accept r'\\d' references
   to optional arguments
-- on option --repl: respect paragraph boundaries during phrase replacement
 - fixed bug from [issue #17](../../issues/17): function text\_combine()
-  did not recognise case of falling line numbers
-    - fixed uncovered problem with out-of-order replacement for item labels
-- checks.sh: simplified thanks to new argument 'extr' of Macro()
+  did not recognise case of falling line numbers;
+  fixed now uncovered problem with out-of-order replacement for item labels
 
 Release 1.5.9
 -------------
