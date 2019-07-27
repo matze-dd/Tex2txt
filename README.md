@@ -1,4 +1,4 @@
-# Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line numbers
+# Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line or character positions
 [General description](#general-description)&nbsp;\|
 [Selected actions](#selected-actions)&nbsp;\|
 [Command line](#command-line)&nbsp;\|
@@ -25,14 +25,19 @@ Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
 Altogether, the script can help to create a compact report from language
 examination of a single file or a complete document tree.
+A simple and a more complete application of the script are addressed
+in section [Tool integration](#tool-integration) below.
 
 For ease of problem localisation, we implement a mechanism that tracks
 line number changes during the text manipulations.
 Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
 This is demonstrated in file [Example.md](Example.md).
-A simple and a more complete application of the script are addressed
-in section [Tool integration](#tool-integration) below.
+Reconstruction of both line and column numbers is possible with script
+option --chars.
+This activates position tracking for each single character of input.
+File [Example2.md](Example2.md) shows such an application.
+Very large input texts can lead to slow operation, however.
 
 The first part of the Python script gathers LaTeX macros and environments
 with tailored treatment, which is shortly described
@@ -83,7 +88,7 @@ below.)
 
 Happy TeXing!
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
 
 ## Selected actions
 Here is a list of the most important script operations.
@@ -124,21 +129,24 @@ Here is a list of the most important script operations.
   there; e.g., adding something that only the proofreader should see:
   \newcommand{\\LTadd}\[1\]{}
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
 
 ## Command line
 The script expects the following parameters.
 ```
-python3 tex2txt.py [--nums file] [--repl file] [--defs file] \
-                   [--extr list] [--lang xy] [--unkn] \
-                   [texfile]
+python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
+                   [--extr list] [--lang xy] [--unkn] [texfile]
 ```
 - without positional argument `texfile`: read standard input
 - option `--nums file`<br>
-  file for storing original line numbers:
-  for each line of output text, the file contains a line with the estimated
-  original line number;
+  file for storing original position numbers;
+  option --char not given: for each line of output text, the file contains a
+  line with the estimated original line number;
   can be used later to correct line numbers in messages
+- option `--char`<br>
+  activates character position tracking; if option --nums is given, then
+  the file contains the estimated input position for each character of
+  output; may be slow for very large texts
 - option `--repl file`<br>
   file with phrase replacements performed at the end, for instance after
   changing inline maths to text, and German hyphen "= to - ;
@@ -164,7 +172,7 @@ python3 tex2txt.py [--nums file] [--repl file] [--defs file] \
   declared macros do appear here, if a mandatory argument is missing
   in input text
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
 
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
@@ -184,6 +192,10 @@ files with additional extensions .txt and .lin, respectively.
 Then it will call [LanguageTool](https://www.languagetool.org)
 and filter line numbers in output messages.
 File [Example.md](Example.md) demonstrates the script.
+
+A script correcting both line and column numbers is given in
+file [shell2.sh](shell2.sh) with application example in file
+[Example2.md](Example2.md).
 
 We assume that [Java](https://java.com) is installed, and that the directory
 with relative path ../LT/ contains an unzipped archive of the LanguageTool
@@ -257,7 +269,7 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]
 - option `--delete`<br>
   only remove auxiliary directory in script variable $txtdir, and exit
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
 
 ## Declaration of LaTeX macros
 The first section of the Python script consists of collections for
@@ -311,7 +323,7 @@ Synopsis of `Macro(name, args, repl='', extr='')`:
     - append this replacement (specified as in argument repl) to the end
       of the main text, separated by blank lines
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
 
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
@@ -435,7 +447,7 @@ only variant “Simple version” above, e.g.:
 EquEnv('align', repl='  relation'),
 ```
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
 
 ## Remarks on implementation
 Parsing with regular expressions is fun, but it remains a rather coarse
@@ -493,4 +505,4 @@ those only containing a % comment).
 Under category [Issues](../../issues), some known shortcomings are listed.
 Additionally, we have marked several problems as BUG in the script.
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-numbers)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
