@@ -83,7 +83,7 @@ def f(m):
         n = -n
 
     # get line and column in tex file
-    if n >= len(tex):
+    if n > len(tex):
         return unkn()
     s = tex[:n]
     lin = s.count("\n") + 1
