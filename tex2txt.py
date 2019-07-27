@@ -860,12 +860,70 @@ def text_new(s=None):
 
 #######################################################################
 #
+#   the same machinery for tracking of character offset
+#
+def mysub_char(expr, repl, text, flags=0, track_repl=None):
+    (txt, numbers) = text
+    res = ''
+    last = 0
+    for m in re.finditer(expr, txt, flags=flags):
+        t = m.group(0)
+        if type(repl) is str:
+            ex = myexpand(m, repl, text)
+        else:
+            ex = repl(m)
+        if type(ex) is tuple:
+            # replacement contains line number information
+            (r, nums2) = ex
+        else:
+            (r, nums2) = (ex, None)
+
+        res += txt[last:m.start(0)]
+        last = m.end(0)
+        beg = len(res)
+        end = beg + len(t)
+
+        if nums2 is None:
+            nc = numbers[beg]
+            nums2 = (nc,) + (-abs(nc),) * len(r)
+
+        if track_repl:
+            track_repl((t, numbers[beg:end+1]), (r, nums2))
+
+        tmp = text_combine((res, numbers[:beg+1]), (r, nums2))
+        (res, numbers) = text_combine(tmp, ('', numbers[end:]))
+
+    return (res + txt[last:], numbers)
+
+def text_combine_char(t1, t2):
+    return (t1[0] + t2[0], t1[1][:-1] + t2[1])
+
+def text_add_frame_char(pre, post, text):
+    return (
+        pre + text[0] + post,
+        (text[1][0],) * len(pre) + text[1] + (text[1][-1],) * len(post)
+    )
+
+def text_from_match_char(m ,grp, text):
+    if m.string is not text[0]:
+        fatal('text_from_match_char(): bad match object')
+    return (m.group(grp), text[1][m.start(grp):m.end(grp)+1])
+
+def text_new_char(s=None):
+    if s is None:
+        return ('', (-1,))
+    return (s, tuple(range(1, len(s) + 2)))
+
+
+#######################################################################
+#
 #   parse command line, read complete input into 'text'
 #
 parser = argparse.ArgumentParser()
 parser.add_argument('file', nargs='?')
 parser.add_argument('--repl')
 parser.add_argument('--nums')
+parser.add_argument('--char', action='store_true')
 parser.add_argument('--defs')
 parser.add_argument('--extr')
 parser.add_argument('--lang')
@@ -874,6 +932,14 @@ cmdline = parser.parse_args()
 
 if cmdline.nums:
     cmdline.nums = myopen(cmdline.nums, mode='w')
+
+if cmdline.char:
+    # track character offsets instead of line numbers
+    mysub = mysub_char
+    text_combine = text_combine_char
+    text_add_frame = text_add_frame_char
+    text_from_match = text_from_match_char
+    text_new = text_new_char
 
 if not cmdline.lang or cmdline.lang == 'de':
     set_language_de()
