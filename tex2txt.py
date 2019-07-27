@@ -730,10 +730,7 @@ def mysub(expr, repl, text, flags=0, track_repl=None):
 
         res += txt[last:m.start(0)]
         last = m.end(0)
-        # lin: first line number of current replacement action
-        lin = res.count('\n')
-        nt = t.count('\n')
-        nr = r.count('\n')
+        (lin, nt, nr) = mysub_calc(res, t, r)
         if nums2 is None:
             ll = numbers[lin]
             nums2 = (ll,) + (-abs(ll),) * nr
@@ -745,6 +742,11 @@ def mysub(expr, repl, text, flags=0, track_repl=None):
         (res, numbers) = text_combine(tmp, ('', numbers[lin+nt:]))
 
     return (res + txt[last:], numbers)
+
+#   will be changed for tracking of character positions
+#
+def mysub_calc(res, t, r):
+    return (res.count('\n'), t.count('\n'), r.count('\n'))
 
 #   combine (add) two text elements with line number information
 #
@@ -862,38 +864,8 @@ def text_new(s=None):
 #
 #   the same machinery for tracking of character offset
 #
-def mysub_char(expr, repl, text, flags=0, track_repl=None):
-    (txt, numbers) = text
-    res = ''
-    last = 0
-    for m in re.finditer(expr, txt, flags=flags):
-        t = m.group(0)
-        if type(repl) is str:
-            ex = myexpand(m, repl, text)
-        else:
-            ex = repl(m)
-        if type(ex) is tuple:
-            # replacement contains line number information
-            (r, nums2) = ex
-        else:
-            (r, nums2) = (ex, None)
-
-        res += txt[last:m.start(0)]
-        last = m.end(0)
-        beg = len(res)
-        end = beg + len(t)
-
-        if nums2 is None:
-            nc = numbers[beg]
-            nums2 = (nc,) + (-abs(nc),) * len(r)
-
-        if track_repl:
-            track_repl((t, numbers[beg:end+1]), (r, nums2))
-
-        tmp = text_combine((res, numbers[:beg+1]), (r, nums2))
-        (res, numbers) = text_combine(tmp, ('', numbers[end:]))
-
-    return (res + txt[last:], numbers)
+def mysub_calc_char(res, t, r):
+    return (len(res), len(t), len(r))
 
 def text_combine_char(t1, t2):
     return (t1[0] + t2[0], t1[1][:-1] + t2[1])
@@ -935,7 +907,7 @@ if cmdline.nums:
 
 if cmdline.char:
     # track character offsets instead of line numbers
-    mysub = mysub_char
+    mysub_calc = mysub_calc_char
     text_combine = text_combine_char
     text_add_frame = text_add_frame_char
     text_from_match = text_from_match_char
