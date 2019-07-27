@@ -34,7 +34,7 @@ Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
 This is demonstrated in file [Example.md](Example.md).
 Reconstruction of both line and column numbers is possible with script
-option --chars.
+option --char.
 This activates position tracking for each single character of input.
 File [Example2.md](Example2.md) shows such an application.
 Very large input texts can lead to slow operation, however.
