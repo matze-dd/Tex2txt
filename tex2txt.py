@@ -758,7 +758,7 @@ def text_combine(text1, text2):
         n = n1[:-1] + n2
     else:
         # use last line number from text1 at junction,
-        # but pay attention to possibility of decreasing line numbers
+        # but attention in case of decreasing line numbers
         j = min(abs(n1[-1]), abs(n2[0]))
         n = n1[:-1] + (-j,) + n2[1:]
     return (t1 + t2, n)
@@ -852,8 +852,10 @@ def text_get_txt(text):
     return text[0]
 def text_get_num(text):
     return text[1]
-def text_new():
-    return ('', (-1,))
+def text_new(s=None):
+    if s is None:
+        return ('', (-1,))
+    return (s, tuple(range(1, s.count('\n') + 2)))
 
 
 #######################################################################
@@ -915,14 +917,10 @@ if cmdline.file:
 else:
     text = sys.stdin.read()
 
-#   the initial list of line numbers: in fact "only" a tuple
-#
-numbers = tuple(range(1, text.count('\n') + 2))
-
 #   for mysub():
 #   text becomes a 2-tuple of text string and number list
 #
-text = (text, numbers)
+text = text_new(text)
 
 
 #######################################################################
@@ -1166,10 +1164,11 @@ while flag:
 actions = list(parms.misc_replace())
 
 def f(m):
-    txt = m.group(2)
+    ret = text_from_match(m, 2, text)
+    txt = text_get_txt(ret)
     if txt and txt[-1] not in parms.heading_macros_punct:
-        txt += '.'
-    return txt
+        ret = text_add_frame('', '.', ret)
+    return ret
 for s in parms.heading_macros():
     actions += [(
         r'\\' + s + r'(?:' + sp_bracketed + r')?' + sp_braced,
