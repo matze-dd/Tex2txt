@@ -1,5 +1,11 @@
 "Unreleased"
 ------------
+- added option --char: number file from option --nums will contain
+  character offsets
+- [shell2.sh](shell2.sh): Bash script with output filter for line and column
+  numbers
+- [Example2.md](Example2.md): demonstration of script [shell2.sh](shell2.sh)
+  <br><br>
 - heading macros like \\section: better line tracking
 - application of changed function text\_new()
 
