@@ -1,3 +1,8 @@
+"Unreleased"
+------------
+- heading macros like \\section: better line tracking
+- application of changed function text\_new()
+
 Release 1.6.0
 -------------
 - functions Macro() and Simple(): new optional argument 'extr';
