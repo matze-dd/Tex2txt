@@ -19,26 +19,25 @@ fi
 #
 #   Python3:
 #   replace line and column numbers
-#   - argv[1]: original LaTeX file
-#   - argv[2]: derived file with plain text
-#   - argv[3]: file with character offset mapping
-#   - expr: regular expression:
-#     matching group 1 is line number, group 2 is column number
+#   - argv[1]: regular expression:
+#              matching group 1 is line number, group 2 is column number
+#   - argv[2]: original LaTeX file
+#   - argv[3]: derived file with plain text
+#   - argv[4]: file with character offset mapping
 #
 filter_numbers='
 
-# LT produces: "1.) Line 25, column 13, Rule ID: ..."
-expr = r"^\d+\.\) Line (\d+), column (\d+), Rule ID: "
-
 import re, sys
-tex = open(sys.argv[1]).read()
-plain = open(sys.argv[2]).read()
+
+expr = sys.argv[1]
+tex = open(sys.argv[2]).read()
+plain = open(sys.argv[3]).read()
 def f(s):
     s = s.strip()
     if s[-1] == "+":
         return -int(s[:-1])
     return int(s)
-map = tuple(f(s) for s in open(sys.argv[3]))
+map = tuple(f(s) for s in open(sys.argv[4]))
 
 def f(m):
     def ret(s1, s2):
@@ -98,9 +97,12 @@ for s in sys.stdin:
 #
 python3 tex2txt.py --lang en --char --nums $file.num $file > $file.txt
 
-# call language checker, filter line numbers in output;
+# call language checker, filter line and column numbers in output;
+# LT produces: '1.) Line 25, column 13, Rule ID: ...'
 #
+expr='^\d+\.\) Line (\d+), column (\d+), Rule ID: '
+
 java -jar ../LT/LanguageTool-4.4/languagetool-commandline.jar \
         --language en-GB --disable WHITESPACE_RULE $file.txt \
-    | python3 -c "$filter_numbers" $file $file.txt $file.num
+    | python3 -c "$filter_numbers" "$expr" $file $file.txt $file.num
 
