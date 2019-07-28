@@ -38,11 +38,17 @@ LTcommand="$LTprefix/languagetool-commandline.jar \
 WHITESPACE_RULE,\
 KOMMA_VOR_UND_ODER"
 
+#   regular expression for filtering of LT's output
+#   LT produces: '1.) Line 25, column 13, Rule ID: ...'
+#
+LT_info_line='^\d+\.\) Line (\d+), column (\d+), Rule ID: '
+
 tooldir=Tools/LT            # Python scripts and private dictionaries
 txtdir=$tooldir/Tex2txt     # directory for extraction of raw text 
                             # (subdirectories will be created if necessary)
 ext=txt                     # file name extension for raw text
 num=lin                     # ... for line number information
+chr=chr                     # ... for character position information
 foreign=en                  # ... for foreign-language text
 ori=ori                     # ... for original dictionary files in LT tree
 
@@ -112,7 +118,7 @@ declare -A options
 while [ "${1:0:1}" == "-" ]
 do
     case $1 in
-    --recurse|--adapt-lt|--no-lt|--delete)
+    --recurse|--adapt-lt|--no-lt|--delete|--columns)
         options[$1]=1
         ;;
     --)
@@ -121,7 +127,7 @@ do
         ;;
     *)
         echo unknown option "'$1'" >&2
-        echo usage: bash $0 '[--recurse] [--adapt-lt] [--no-lt] [--delete] [files]' >&2
+        echo usage: bash $0 '[--recurse] [--adapt-lt] [--no-lt] [--delete] [--columns] [files]' >&2
         exit 1
     esac
     shift
@@ -190,6 +196,83 @@ def repl(m):
     return m.group(0)
 for lin in sys.stdin:
     sys.stdout.write(re.sub(expr, repl, lin))
+'
+
+#
+#   Python3:
+#   replace line and column numbers
+#   - argv[1]: regular expression:
+#              matching group 1 is line number, group 2 is column number
+#   - argv[2]: original LaTeX file
+#   - argv[3]: derived file with plain text
+#   - argv[4]: file with character offset mapping
+#
+repl_lines_columns='
+
+import re, sys
+
+expr = sys.argv[1]
+tex = open(sys.argv[2]).read()
+plain = open(sys.argv[3]).read()
+def f(s):
+    s = s.strip()
+    if s[-1] == "+":
+        return -int(s[:-1])
+    return int(s)
+map = tuple(f(s) for s in open(sys.argv[4]))
+
+def f(m):
+    def ret(s1, s2):
+        s = m.group(0)
+        return (s[:m.start(1)] + "[" + s1 + "]" + s[m.end(1):m.start(2)]
+                    + "[" + s2 + "]" + s[m.end(2):])
+    def unkn():
+        return ret("?", "?")
+
+    lin = int(m.group(1))
+    col = int(m.group(2))
+    if lin < 1 or col < 1:
+        return unkn()
+
+    # find start of line number lin in plain file
+    i = 0
+    n = -1
+    while i < lin - 1:
+        n += 1
+        if n >= len(plain):
+            break
+        if plain[n] == "\n":
+            i += 1
+    if i < lin - 1:
+        return unkn()
+    n += 1
+
+    # add column number col
+    s = plain[n:]
+    i = s.find("\n")
+    if i >= 0 and col > i or i < 0 and col > len(s):
+        return unkn()
+    n += col - 1
+
+    # map to character position in tex file
+    if n >= len(map):
+        return unkn()
+    n = map[n]
+    mark = ""
+    if n < 0:
+        mark = "+"
+        n = -n
+
+    # get line and column in tex file
+    if n > len(tex):
+        return unkn()
+    s = tex[:n]
+    lin = s.count("\n") + 1
+    col = len(s) - (s.rfind("\n") + 1)
+    return ret(str(lin) + mark, str(col) + mark)
+
+for s in sys.stdin:
+    sys.stdout.write(re.sub(expr, f, s))
 '
 
 #   Python3:
@@ -267,12 +350,18 @@ do
     fi
 
     #####################################################
-    # extract raw text, save line numbers
+    # extract raw text, save line numbers / character positions
     #####################################################
 
     python3 $tex2txt_py \
         $tex2txt_repl $tex2txt_defs --nums $txtdir/$i.$num $i \
         > $txtdir/$i.$ext
+    if [ -n "${options[--columns]}" ]
+    then
+        python3 $tex2txt_py \
+            $tex2txt_repl $tex2txt_defs --char --nums $txtdir/$i.$chr $i \
+            > /dev/null
+    fi
 
     #####################################################
     # call LT or hunspell
@@ -288,9 +377,7 @@ do
             LTfilter() { cat; }
         fi
         LT_output=$(java -jar $LTcommand $txtdir/$i.$ext \
-            | LTfilter \
-            | python3 -c "$repl_lines" \
-                    '^\d+\.\) Line (\d+), column (\d+)' $txtdir/$i.$num)
+            | LTfilter)
         LT_output_lines=$(echo "$LT_output" | wc -l)
         if (( $LT_output_lines == 1 ))
         then
@@ -356,7 +443,15 @@ do
     fi
     if [[ "$LT_output_lines" > 1 ]]
     then
-        echo "$LT_output"
+        if [ -z "${options[--columns]}" ]
+        then
+            echo "$LT_output" \
+                | python3 -c "$repl_lines" "$LT_info_line" $txtdir/$i.$num
+        else
+            echo "$LT_output" \
+                | python3 -c "$repl_lines_columns" "$LT_info_line" \
+                        $i $txtdir/$i.txt $txtdir/$i.$chr
+        fi
         echo
     fi
     if [ -n "$errs_hunspell" ]
