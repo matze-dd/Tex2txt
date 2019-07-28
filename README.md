@@ -253,7 +253,8 @@ They can be deleted with option --delete.
 
 ### Usage of the Bash script
 ```
-bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]
+bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
+               [--columns] [--delete] [files]
 ```
 - no positional arguments `files`:
   use files from script variable $all\_tex\_files
@@ -266,6 +267,9 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] [--delete] [files]
 - option `--no-lt`<br>
   do not use LanguageTool but instead Hunspell for native-language checks;
   perform replacements from script variable $repls\_hunspell beforehand
+- option `--columns`<br>
+  correct both line and column numbers in messages from LanguageTool;
+  this may be slow for very large LaTeX files
 - option `--delete`<br>
   only remove auxiliary directory in script variable $txtdir, and exit
 
