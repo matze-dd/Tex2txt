@@ -730,7 +730,7 @@ def mysub(expr, repl, text, flags=0, track_repl=None):
 
         res += txt[last:m.start(0)]
         last = m.end(0)
-        (lin, nt, nr) = mysub_calc(res, t, r)
+        (lin, nt, nr) = mysub_offsets(res, t, r)
         if nums2 is None:
             ll = numbers[lin]
             nums2 = [ll,] + [-abs(ll),] * nr
@@ -738,17 +738,26 @@ def mysub(expr, repl, text, flags=0, track_repl=None):
         if track_repl:
             track_repl((t, numbers[lin:lin+nt+1]), (r, nums2))
 
-        tmp = text_combine((res, numbers[:lin+1]), (r, nums2))
-        (res, numbers) = text_combine(tmp, ('', numbers[lin+nt:]))
+        (res, numbers) = mysub_combine(lin, res, r, nt, nr,
+                                            numbers, nums2, text)
 
     return (res + txt[last:], numbers)
 
 #   will be changed for tracking of character positions
 #
-def mysub_calc(res, t, r):
+def mysub_offsets(res, t, r):
     return (res.count('\n'), t.count('\n'), r.count('\n'))
 
+#   will be changed for tracking of character positions
+#
+def mysub_combine(lin, res, r, nt, nr, numbers, nums2, text):
+    tmp = text_combine((res, numbers[:lin+1]), (r, nums2))
+    return text_combine(tmp, ('', numbers[lin+nt:]))
+
 #   combine (add) two text elements with line number information
+#   ATTENTION:
+#   mysub() depends on the fact that we only look backwards in text1,
+#   but not forwards in text2
 #
 def text_combine(text1, text2):
     (t1, n1) = text1
@@ -864,8 +873,23 @@ def text_new(s=None):
 #
 #   the same machinery for tracking of character offset
 #
-def mysub_calc_char(res, t, r):
+def mysub_offsets_char(res, t, r):
     return (len(res), len(t), len(r))
+
+def mysub_combine_char(pos, res, r, nt, nr, numbers, nums2, text):
+    if nt + nr > 100:
+        # substantial change: build new number arrray
+        return (res + r, numbers[:pos] + nums2[:nr] + numbers[pos+nt:])
+
+    # smaller change: adapt number array in place
+    if numbers is text[1]:
+        # myexpand() in mysub() still needs the original array
+        numbers = numbers.copy()
+    for i in range(nt):
+        numbers.pop(pos)
+    for i in range(nr):
+        numbers.insert(pos + i, nums2[i])
+    return (res + r, numbers)
 
 def text_combine_char(t1, t2):
     return (t1[0] + t2[0], t1[1][:-1] + t2[1])
@@ -907,7 +931,8 @@ if cmdline.nums:
 
 if cmdline.char:
     # track character offsets instead of line numbers
-    mysub_calc = mysub_calc_char
+    mysub_offsets = mysub_offsets_char
+    mysub_combine = mysub_combine_char
     text_combine = text_combine_char
     text_add_frame = text_add_frame_char
     text_from_match = text_from_match_char
