@@ -38,6 +38,8 @@ def f(s):
         return -int(s[:-1])
     return int(s)
 map = tuple(f(s) for s in open(sys.argv[4]))
+starts = list(m.start(0) + 1 for m in re.finditer(r"\n", plain))
+starts.insert(0, 0)
 
 def f(m):
     def ret(s1, s2):
@@ -53,17 +55,9 @@ def f(m):
         return unkn()
 
     # find start of line number lin in plain file
-    i = 0
-    n = -1
-    while i < lin - 1:
-        n += 1
-        if n >= len(plain):
-            break
-        if plain[n] == "\n":
-            i += 1
-    if i < lin - 1:
+    if lin > len(starts):
         return unkn()
-    n += 1
+    n = starts[lin - 1]
 
     # add column number col
     s = plain[n:]
