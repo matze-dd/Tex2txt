@@ -700,17 +700,17 @@ def verbatim(s, mark, ast):
 #   line number tracking.
 #   Argument text is a 2-tuple.
 #       text[0]: the text as string
-#       text[1]: list (tuple) with line numbers
-#   Return value: tuple (string, number list)
+#       text[1]: array with line numbers
+#   Return value: tuple (string, number array)
 #   As for re.sub(), argument repl may be a callable.
 #   Argument track_repl: function for extraction of replacements
 #                        and detection of inserted braces etc.
 #
-#   For each line in the current text string, the number list
+#   For each line in the current text string, the number array
 #   contains the original line number (before any changes took place).
 #   On deletion of line breaks, the corresponding entries in the number
-#   list are removed. On creation of an additional line, a negative
-#   placeholder is inserted in the number list.
+#   array are removed. On creation of an additional line, a negative
+#   placeholder is inserted in the number array.
 #
 def mysub(expr, repl, text, flags=0, track_repl=None):
     (txt, numbers) = text
@@ -733,7 +733,7 @@ def mysub(expr, repl, text, flags=0, track_repl=None):
         (lin, nt, nr) = mysub_calc(res, t, r)
         if nums2 is None:
             ll = numbers[lin]
-            nums2 = (ll,) + (-abs(ll),) * nr
+            nums2 = [ll,] + [-abs(ll),] * nr
 
         if track_repl:
             track_repl((t, numbers[lin:lin+nt+1]), (r, nums2))
@@ -762,7 +762,7 @@ def text_combine(text1, text2):
         # use last line number from text1 at junction,
         # but attention in case of decreasing line numbers
         j = min(abs(n1[-1]), abs(n2[0]))
-        n = n1[:-1] + (-j,) + n2[1:]
+        n = n1[:-1] + [-j,] + n2[1:]
     return (t1 + t2, n)
 
 #   prepend and append plain strings to a text with line number information
@@ -770,8 +770,8 @@ def text_combine(text1, text2):
 def text_add_frame(pre, post, text):
     return (
         pre + text[0] + post,
-        (text[1][0],) * pre.count('\n') + text[1]
-                + (text[1][-1],) * post.count('\n')
+        [text[1][0],] * pre.count('\n') + text[1]
+                + [text[1][-1],] * post.count('\n')
     )
 
 #   extract text with line number information from a group of a match
@@ -856,8 +856,8 @@ def text_get_num(text):
     return text[1]
 def text_new(s=None):
     if s is None:
-        return ('', (-1,))
-    return (s, tuple(range(1, s.count('\n') + 2)))
+        return ('', [-1,])
+    return (s, list(range(1, s.count('\n') + 2)))
 
 
 #######################################################################
@@ -873,7 +873,7 @@ def text_combine_char(t1, t2):
 def text_add_frame_char(pre, post, text):
     return (
         pre + text[0] + post,
-        (text[1][0],) * len(pre) + text[1] + (text[1][-1],) * len(post)
+        [text[1][0],] * len(pre) + text[1] + [text[1][-1],] * len(post)
     )
 
 def text_from_match_char(m ,grp, text):
@@ -883,8 +883,8 @@ def text_from_match_char(m ,grp, text):
 
 def text_new_char(s=None):
     if s is None:
-        return ('', (-1,))
-    return (s, tuple(range(1, len(s) + 2)))
+        return ('', [-1,])
+    return (s, list(range(1, len(s) + 2)))
 
 
 #######################################################################
@@ -956,7 +956,7 @@ else:
     text = sys.stdin.read()
 
 #   for mysub():
-#   text becomes a 2-tuple of text string and number list
+#   text becomes a 2-tuple of text string and number array
 #
 text = text_new(text)
 
