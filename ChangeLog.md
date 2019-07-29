@@ -9,6 +9,8 @@
   <br><br>
 - heading macros like \\section: better line tracking
 - application of changed function text\_new()
+- use list instead of tuple for position number array; tailoring in mysub()
+  then allows speed-up for large files on option --char
 
 Release 1.6.0
 -------------
