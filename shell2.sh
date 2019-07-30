@@ -38,8 +38,7 @@ def f(s):
         return -int(s[:-1])
     return int(s)
 map = tuple(f(s) for s in open(sys.argv[4]))
-starts = list(m.start(0) + 1 for m in re.finditer(r"\n", plain))
-starts.insert(0, 0)
+starts = list(m.start(0) for m in re.finditer(r"\n", "\n" + plain))
 
 def f(m):
     def ret(s1, s2):
