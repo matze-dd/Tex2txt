@@ -1,4 +1,4 @@
-# Tex2txt: a flexible LaTeX filter with conservation of text flow and tracking of line or character positions
+# Tex2txt: a flexible LaTeX filter with tracking of line numbers or character positions
 [General description](#general-description)&nbsp;\|
 [Selected actions](#selected-actions)&nbsp;\|
 [Command line](#command-line)&nbsp;\|
@@ -75,7 +75,7 @@ The Python script may be seen as an exercise in application of regular
 expressions.
 Its internal design could be more orderly, but stronger structuring,
 for instance with classes, would probably increase the program size
-of currently about 900 effective code lines.
+of currently about 950 effective code lines.
 In section [Remarks on implementation](#remarks-on-implementation),
 some general points are indicated.
 
@@ -88,7 +88,7 @@ below.)
 
 Happy TeXing!
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
 ## Selected actions
 Here is a list of the most important script operations.
@@ -129,7 +129,7 @@ Here is a list of the most important script operations.
   there; e.g., adding something that only the proofreader should see:
   \newcommand{\\LTadd}\[1\]{}
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
 ## Command line
 The script expects the following parameters.
@@ -172,7 +172,7 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
   declared macros do appear here, if a mandatory argument is missing
   in input text
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
@@ -273,7 +273,7 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
 - option `--delete`<br>
   only remove auxiliary directory in script variable $txtdir, and exit
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
 ## Declaration of LaTeX macros
 The first section of the Python script consists of collections for
@@ -327,7 +327,7 @@ Synopsis of `Macro(name, args, repl='', extr='')`:
     - append this replacement (specified as in argument repl) to the end
       of the main text, separated by blank lines
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
@@ -451,7 +451,7 @@ only variant “Simple version” above, e.g.:
 EquEnv('align', repl='  relation'),
 ```
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
 ## Remarks on implementation
 Parsing with regular expressions is fun, but it remains a rather coarse
@@ -496,6 +496,7 @@ These represent the estimated original line numbers of the lines in the
 current text string part.
 During substitution, the line number array is adjusted upon deletion or
 inclusion of line breaks.
+The tracking of character positions for option --char works similarly.
 
 Since creation of new empty lines may break the text flow, we avoid it
 with a simple scheme.
@@ -509,4 +510,4 @@ those only containing a % comment).
 Under category [Issues](../../issues), some known shortcomings are listed.
 Additionally, we have marked several problems as BUG in the script.
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-conservation-of-text-flow-and-tracking-of-line-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
