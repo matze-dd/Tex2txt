@@ -2,8 +2,8 @@
 ------------
 - added option --char: number file from option --nums will contain
   character offsets
-- [shell2.sh](shell2.sh): Bash script with output filter for line and column
-  numbers
+- [shell2.sh](shell2.sh): new Bash script with output filter for line and
+  column numbers
 - [Example2.md](Example2.md): demonstration of script [shell2.sh](shell2.sh)
 - checks.sh: added option --columns for column number correction
   <br><br>
@@ -11,6 +11,7 @@
 - application of changed function text\_new()
 - use list instead of tuple for position number array; tailoring in mysub()
   then allows speed-up for large files on option --char
+- reopen stdin and stdout: handling of '\\r' as for text files
 
 Release 1.6.0
 -------------
