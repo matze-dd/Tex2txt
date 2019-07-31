@@ -96,6 +96,6 @@ python3 tex2txt.py --lang en --char --nums $file.num $file > $file.txt
 expr='^\d+\.\) Line (\d+), column (\d+), Rule ID: '
 
 java -jar ../LT/LanguageTool-4.4/languagetool-commandline.jar \
-        --language en-GB --disable WHITESPACE_RULE $file.txt \
+    --encoding utf-8 --language en-GB --disable WHITESPACE_RULE $file.txt \
     | python3 -c "$filter_numbers" "$expr" $file $file.txt $file.num
 
