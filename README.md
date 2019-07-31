@@ -2,8 +2,8 @@
 [General description](#general-description)&nbsp;\|
 [Selected actions](#selected-actions)&nbsp;\|
 [Command line](#command-line)&nbsp;\|
-[Encoding problems](#encoding-problems)&nbsp;\|
 [Tool integration](#tool-integration)&nbsp;\|
+[Encoding problems](#encoding-problems)&nbsp;\|
 [Declaration of LaTeX macros](#declaration-of-latex-macros)&nbsp;\|
 [Handling of displayed equations](#handling-of-displayed-equations)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
@@ -175,17 +175,6 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
-## Encoding problems
-The LaTeX files have to be encoded as plain ASCII or UTF-8.
-
-Under Cygwin with Java from the Windows installation, LanguageTool will
-produce Latin-1 output, even if option '--encoding utf-8' is specified.
-Therefore, a translator to UTF-8 has to be placed in front of a Python filter
-for line or column numbers.
-This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
-
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
-
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
 with good quality.
@@ -284,6 +273,17 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
   this may be slow for very large LaTeX files
 - option `--delete`<br>
   only remove auxiliary directory in script variable $txtdir, and exit
+
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+
+## Encoding problems
+The LaTeX files have to be encoded as plain ASCII or UTF-8.
+
+Under Cygwin with Java from the Windows installation, LanguageTool will
+produce Latin-1 output, even if option '--encoding utf-8' is specified.
+Therefore, a translator to UTF-8 has to be placed in front of a Python filter
+for line or column numbers.
+This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
