@@ -37,7 +37,7 @@ def f(s):
     if s[-1] == "+":
         return -int(s[:-1])
     return int(s)
-map = tuple(f(s) for s in open(sys.argv[4]))
+map = list(f(s) for s in open(sys.argv[4]))
 starts = list(m.start(0) for m in re.finditer(r"\n", "\n" + plain))
 
 def f(m):
