@@ -1,5 +1,5 @@
-"Unreleased"
-------------
+Release 1.6.1
+-------------
 - added option --char: number file from option --nums will contain
   character offsets
 - [shell2.sh](shell2.sh): new Bash script with output filter for line and
