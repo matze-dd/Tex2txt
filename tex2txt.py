@@ -1061,8 +1061,8 @@ text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
 def f(m):
     if re.search(r'(?<!\\)(\\\\)*\\' + macro_name + r'\Z', m.group(1)):
         # \macro call before %: do no remove line break
-        return m.group(0)
-    return m.group(1)
+        return text_from_match(m, 0, text)
+    return text_from_match(m, 1, text)
 text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n])%.*\n[ \t]*(?!\n)',
                         f, text, flags=re.M)
                 # r'(?<!x)y' matches 'y' not preceded by 'x'
