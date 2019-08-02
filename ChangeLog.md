@@ -1,3 +1,7 @@
+"Unreleased"
+------------
+- improved character position tracking for line join by % comment
+
 Release 1.6.1
 -------------
 - added option --char: number file from option --nums will contain
