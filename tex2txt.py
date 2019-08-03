@@ -705,6 +705,7 @@ def verbatim(s, mark, ast):
 #   As for re.sub(), argument repl may be a callable.
 #   Argument track_repl: function for extraction of replacements
 #                        and detection of inserted braces etc.
+#   Argument only_one: perform at most one replacement
 #
 #   For each line in the current text string, the number array
 #   contains the original line number (before any changes took place).
@@ -712,7 +713,7 @@ def verbatim(s, mark, ast):
 #   array are removed. On creation of an additional line, a negative
 #   placeholder is inserted in the number array.
 #
-def mysub(expr, repl, text, flags=0, track_repl=None):
+def mysub(expr, repl, text, flags=0, track_repl=None, only_one=False):
     (txt, numbers) = text
     res = ''
     last = 0
@@ -740,6 +741,8 @@ def mysub(expr, repl, text, flags=0, track_repl=None):
 
         (res, numbers) = mysub_combine(lin, res, r, nt, nr,
                                             numbers, nums2, text)
+        if only_one:
+            break
 
     return (res + txt[last:], numbers)
 
@@ -999,6 +1002,7 @@ text = text_new(text)
 #
 #   - expanded content of verbatim(*) environment is enclosed in
 #     \begin{verbatim(*)}...\end{verbatim(*)}
+#       --> blank lines are inserted before and behind this environment
 #       --> can be removed or replaced by fixed text with 'verbatim'
 #           or r'verbatim\*' entry in parms.environments
 #       --> complete removal without paragraph break:
@@ -1011,38 +1015,52 @@ text = text_new(text)
 #     if used in replacement for a declared macro of parms.*_macros
 #       --> won't work: Simple('textbackslash', r'\\verb?\\?')
 #
-def f(m):
-    # enclose coded text in \begin{verbatim(*)}...\end{verbatim(*)},
-    # enforce heading and trailing empty lines for environment content,
-    # even in case of single line like `A\begin{verbatim}X\end{verbatim}B'
-    def g(m):
-        return verbatim(m.group(0), mark_verbatim_tmp, verb_asterisk)
-    t = text_from_match(m, 3, text)
-    t = mysub(r'.|\n', g, t)
-    return text_add_frame(
-            m.group(1) + '\n\n\\begin{verbatim' + verb_asterisk + '}',
-            '\\end{verbatim' + verb_asterisk + '}\n\n', t)
-verb_asterisk = '*'
-text = mysub(r'^(([^\n\\%]|\\.)*)' + begin_lbr + r'verbatim\*\}((.|\n)*?)'
-                + r'\\end\{verbatim\*\}', f, text, flags=re.M)
-                        # important: non-greedy repetition *?
-verb_asterisk = ''
-text = mysub(r'^(([^\n\\%]|\\.)*)' + begin_lbr + r'verbatim\}((.|\n)*?)'
-                + r'\\end\{verbatim\}', f, text, flags=re.M)
-                        # important: non-greedy repetition *?
 
+verb_macro_tmp = mark_verbatim_tmp[0] + 'verb' + mark_verbatim_tmp[1]
+verbatim_beg_tmp = mark_verbatim_tmp[0] + 'verbatim_beg' + mark_verbatim_tmp[1]
+verbatim_end_tmp = mark_verbatim_tmp[0] + 'verbatim_end' + mark_verbatim_tmp[1]
+
+# we have to squeeze both variants into one regular expression, because
+# the order of appearance is unknown;
+# vital are the non-greedy repetitions *? in the bodies of \verb and
+# verbatim, as well as in front (group 1); the latter is important in
+# case of nesting
+expr = (r'^(([^\n\\%]|\\.)*?)'
+            + r'(?:(\\verb' + end_mac + r'(\*?)([^\s*])(.*?)\5)'
+            + r'|(?:' + begin_lbr + r'verbatim(\*?)\}((?:.|\n)*?)'
+                    + r'\\end\{verbatim\7\}))')
 def f(m):
-    # enclose coded text in \verb(*){...}
-    return (m.group(1) + '\\verb' + verb_asterisk + '{'
-                + verbatim(m.group(4), mark_verbatim_tmp, verb_asterisk) + '}')
-verb_asterisk = '*'
-text = mysub(r'^(([^\n\\%]|\\.)*)\\verb\*(\S)(.*?)\3',
-                f, text, flags=re.M)
-                        # important: non-greedy repetition *?
-verb_asterisk = ''
-text = mysub(r'^(([^\n\\%]|\\.)*)\\verb' + end_mac + r'(\S)(.*?)\3',
-                f, text, flags=re.M)
-                        # important: non-greedy repetition *?
+    if m.group(3):
+        # \verb macro
+        ast = m.group(4)
+        pre = verb_macro_tmp + ast + '{'
+        grp = 6
+        post = '}'
+    else:
+        # verbatim environment
+        ast = m.group(7)
+        pre = '\n\n' + verbatim_beg_tmp + ast + '}'
+        grp = 8
+        post = verbatim_end_tmp + ast + '}\n\n'
+    def h(m):
+        return verbatim(m.group(0), mark_verbatim_tmp, ast)
+    verb = mysub(r'.|\n', h, text_from_match(m, grp, text))
+    verb = text_add_frame(pre, post, verb)
+    return text_combine(text_from_match(m, 1, text), verb)
+
+# need a loop for replacement
+# - otherwise, e.g., a \verb?%? could hide a \verb later in same line
+# - this calls for verb_macro_tmp etc., as we want to retain \verb etc.
+# - without only_one=True for mysub(), we would fail with:
+#   \verb?%? \begin{verbatim}
+#   \verb?x?
+#   \end{verbatim}
+while mysearch(expr, text, flags=re.M):
+    text = mysub(expr, f, text, flags=re.M, only_one=True)
+
+text = mysub(verb_macro_tmp, r'\\verb', text)
+text = mysub(verbatim_beg_tmp, r'\\begin{verbatim', text)
+text = mysub(verbatim_end_tmp, r'\\end{verbatim', text)
 
 
 #######################################################################
