@@ -36,7 +36,7 @@ and paragraphs remain intact.
 This is demonstrated in file [Example.md](Example.md).
 Reconstruction of both line and column numbers is possible with script
 option --char.
-This activates position tracking for each single character of input.
+That activates position tracking for each single character of input.
 File [Example2.md](Example2.md) shows such an application.
 Very large input texts can lead to slow operation, however.
 
@@ -74,15 +74,17 @@ in the script at label LAB:EQUATIONS.
 
 The Python script may be seen as an exercise in application of regular
 expressions.
-Its internal design could be more orderly, but stronger structuring,
-for instance with classes, would probably increase the program size
-of currently about 950 effective code lines.
+Its internal design could be more orderly.
+Currently, it is mainly structured by comments, and it mixes definitions of
+variables and functions with statements that actually perform text replacement
+operations.
 In section [Remarks on implementation](#remarks-on-implementation),
-some general points are indicated.
+some general techniques and problems are addressed.
 
 If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues),
-or initiate a pull request; many thanks in advance.
+or initiate a pull request.
+Many thanks in advance.
 (See, for example, the problem in section
 [Replacements in English documents](#replacements-in-english-documents)
 below.)
@@ -278,6 +280,10 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
 
 ## Encoding problems
 The LaTeX files have to be encoded as plain ASCII or UTF-8.
+
+Files with Windows style line endings (CR LF) are accepted, but the text
+output will be Unix style (LF only), unless a Windows Python interpreter
+is used.
 
 Under Cygwin with Java from the Windows installation, LanguageTool will
 produce Latin-1 output, even if option '--encoding utf-8' is specified.
