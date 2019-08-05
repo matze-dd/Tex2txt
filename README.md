@@ -284,6 +284,8 @@ The LaTeX files have to be encoded as plain ASCII or UTF-8.
 Files with Windows style line endings (CR LF) are accepted, but the text
 output will be Unix style (LF only), unless a Windows Python interpreter
 is used.
+The output filters as in Bash script [shell2.sh](shell2.sh) will work
+properly, however.
 
 Under Cygwin with Java from the Windows installation, LanguageTool will
 produce Latin-1 output, even if option '--encoding utf-8' is specified.
