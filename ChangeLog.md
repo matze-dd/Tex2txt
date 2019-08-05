@@ -3,6 +3,7 @@
 - improved character position tracking for line join by % comment
 - reimplemented handling of \\verb macro and verbatim environment:
   fixed bugs from [issue #19](../../issues/19)
+- reopen of stdout was redundant (but that for stdin is not)
 
 Release 1.6.1
 -------------
