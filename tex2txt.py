@@ -984,9 +984,6 @@ else:
     # reopen stdin in text mode: handling of '\r'
     text = open(sys.stdin.fileno()).read()
 
-# reopen stdout in text mode: use of system-specific line break
-sys.stdout = open(sys.stdout.fileno(), 'w')
-
 #   for mysub():
 #   text becomes a 2-tuple of text string and number array
 #
