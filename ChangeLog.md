@@ -1,5 +1,5 @@
-"Unreleased"
-------------
+Release 1.6.2
+-------------
 - improved character position tracking for line join by % comment
 - reimplemented handling of \\verb macro and verbatim environment:
   fixed bugs from [issue #19](../../issues/19)
