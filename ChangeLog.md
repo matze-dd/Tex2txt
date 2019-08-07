@@ -1,3 +1,11 @@
+"Unreleased"
+------------
+- in branch dev, we develop a version that also can be used as Python module
+- starting at the creation of the tuple (text, number array), all code has
+  been put into a large function tex2txt()
+- shell2.py shows an application that is equivalent to Bash script shell2.sh;
+  no auxiliary files are created
+
 Release 1.6.2
 -------------
 - improved character position tracking for line join by % comment
