@@ -485,9 +485,10 @@ def myopen(f, mode='r'):
         return open(f, mode=mode)
     except:
         raise_error('problem', 'could not open file "' + f + '"', xit=1)
+warning_or_error = Aux()
+warning_or_error.msg = ''
 def raise_error(kind, msg, detail=None, xit=None):
-    sys.stdout.write(parms.warning_error_msg)
-    sys.stdout.flush()
+    warning_or_error.msg = parms.warning_error_msg
     err = '\n*** ' + sys.argv[0] + ': ' + kind + ':\n' + msg + '\n'
     if detail:
         err += strip_internal_marks(detail) + '\n'
@@ -916,24 +917,19 @@ def text_new_char(s=None):
 
 #######################################################################
 #
-#   parse command line, read complete input into 'text'
+#   text2txt(): collects all actual work on text input
+#   - argument txt: input text string
+#   - argument options: options
+#   - return: tuple (text string, number array)
 #
-parser = argparse.ArgumentParser()
-parser.add_argument('file', nargs='?')
-parser.add_argument('--repl')
-parser.add_argument('--nums')
-parser.add_argument('--char', action='store_true')
-parser.add_argument('--defs')
-parser.add_argument('--extr')
-parser.add_argument('--lang')
-parser.add_argument('--unkn', action='store_true')
-cmdline = parser.parse_args()
+#######################################################################
 
-if cmdline.nums:
-    cmdline.nums = myopen(cmdline.nums, mode='w')
+def tex2txt(txt, options):
 
-if cmdline.char:
+if options.char:
     # track character offsets instead of line numbers
+    global mysub_offsets, mysub_combine, text_combine
+    global text_add_frame, text_from_match, text_new
     mysub_offsets = mysub_offsets_char
     mysub_combine = mysub_combine_char
     text_combine = text_combine_char
@@ -941,53 +937,27 @@ if cmdline.char:
     text_from_match = text_from_match_char
     text_new = text_new_char
 
-if not cmdline.lang or cmdline.lang == 'de':
+if not options.lang or options.lang == 'de':
     set_language_de()
-elif cmdline.lang == 'en':
+elif options.lang == 'en':
     set_language_en()
 else:
-    raise_error('problem', 'unrecognized language "' + cmdline.lang
+    raise_error('problem', 'unrecognized language "' + options.lang
                     + '" given in option --lang', xit=1)
 
-if cmdline.extr:
-    cmdline.extr_list = [m for m in cmdline.extr.split(',') if m]
-    cmdline.extr_re = '|'.join(cmdline.extr_list)
+if options.extr:
+    options.extr_list = [m for m in options.extr.split(',') if m]
+    options.extr_re = '|'.join(options.extr_list)
 else:
-    cmdline.extr_list = []
+    options.extr_list = []
 
-defs = Aux()
-defs.project_macros = ()
-defs.system_macros = ()
-defs.heading_macros = ()
-defs.environments = ()
-defs.equation_environments = ()
-defs.environments = ()
-defs.environment_begins = ()
-defs.theorem_environments = ()
-defs.misc_replace = ()
-if cmdline.defs:
-    s = myopen(cmdline.defs).read()
-    try:
-        exec(s)
-    except BaseException as e:
-        import traceback
-        i = 0 if isinstance(e, SyntaxError) else -1
-        s = traceback.format_exc(limit=i)
-        s = re.sub(r'\ATraceback \(most recent call last\):\n'
-                        + r'  File "<string>"(, line \d+).*\n',
-                        r'File "' + cmdline.defs + r'"\1\n', s)
-        fatal('problem in file "' + cmdline.defs + '"\n' + s)
-
-if cmdline.file:
-    text = myopen(cmdline.file).read()
-else:
-    # reopen stdin in text mode: handling of '\r'
-    text = open(sys.stdin.fileno()).read()
+global defs
+defs = options.defs
 
 #   for mysub():
 #   text becomes a 2-tuple of text string and number array
 #
-text = text_new(text)
+text = text_new(txt)
 
 
 #######################################################################
@@ -1014,8 +984,10 @@ text = text_new(text)
 #
 
 verb_macro_tmp = mark_verbatim_tmp[0] + 'verb' + mark_verbatim_tmp[1]
-verbatim_beg_tmp = mark_verbatim_tmp[0] + 'verbatim_beg' + mark_verbatim_tmp[1]
-verbatim_end_tmp = mark_verbatim_tmp[0] + 'verbatim_end' + mark_verbatim_tmp[1]
+verbatim_beg_tmp = (mark_verbatim_tmp[0] + 'verbatim_beg'
+                        + mark_verbatim_tmp[1])
+verbatim_end_tmp = (mark_verbatim_tmp[0] + 'verbatim_end'
+                        + mark_verbatim_tmp[1])
 
 # we have to squeeze both variants into one regular expression, because
 # the order of appearance is unknown;
@@ -1110,8 +1082,8 @@ text = mysub(mark_verbatim_tmp[0] + r'(\d+)' + mark_verbatim_tmp[1],
 #   test, whether the innermost group matches
 #
 def check_nesting_limits(text):
-    for m in re.finditer(re_braced(parms.max_depth_br + 1, '(?P<inner>', ')'),
-                                text_get_txt(text)):
+    for m in re.finditer(re_braced(parms.max_depth_br + 1,
+                            '(?P<inner>', ')'), text_get_txt(text)):
         if m.group('inner'):
             # innermost {} braces did match
             fatal('maximum nesting depth for {} braces exceeded,'
@@ -1131,14 +1103,14 @@ def check_nesting_limits(text):
         for m in re.finditer(expr, text_get_txt(text)):
             if m.group('inner'):
                 fatal('maximum nesting depth for environments exceeded,'
-                        + ' parms.max_depth_env=' + str(parms.max_depth_env),
+                    + ' parms.max_depth_env=' + str(parms.max_depth_env),
                             m.group(0))
 
 check_nesting_limits(text)
 
-#   check will be repeated during macro expansion and environment handling:
-#   - detect insertion of braces, brackets, \begin, or \end
-#   - recheck nesting depths
+# check will be repeated during macro expansion and environment handling:
+# - detect insertion of braces, brackets, \begin, or \end
+# - recheck nesting depths
 #
 def mysub_check_nested(expr, repl, text):
     flag = Aux()
@@ -1178,7 +1150,7 @@ for (name, args, repl, extr) in (
     parms.system_macros()
     + parms.project_macros()
 ):
-    if name in cmdline.extr_list:
+    if name in options.extr_list:
         continue
     expr = r'\\' + name + end_mac
     (re_args, repl) = re_code_args(args, repl, 'Macro', name)
@@ -1190,7 +1162,7 @@ for (name, args, repl, extr) in (
     elif args == 'O' * len(args):
         # do the same, if actually no optional argument is following
         expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'\[)'
-                    + skip_space_macro + r')|(?:' + expr + re_args + r'))')
+                + skip_space_macro + r')|(?:' + expr + re_args + r'))')
     else:
         # at least one mandatory argument expected
         expr += re_args
@@ -1259,11 +1231,11 @@ for s in parms.heading_macros():
 
 #   replace $$...$$ by equation* environment
 #
-dollar_dollar_flag = False
+dollar_dollar_flag = Aux()
+dollar_dollar_flag.flag = False
 def f(m):
-    global dollar_dollar_flag
-    dollar_dollar_flag = not dollar_dollar_flag
-    if dollar_dollar_flag:
+    dollar_dollar_flag.flag = not dollar_dollar_flag.flag
+    if dollar_dollar_flag.flag:
         return r'\begin{equation*}'
     return r'\end{equation*}'
 actions += [(r'(?<!\\)\$\$', f)]
@@ -1275,8 +1247,8 @@ def f(m):
     m2 = re.search(r'(?<!\\)\$|\\\(|\\\)', m.group(1))
     if m2:
         warning('"' + m2.group(0)
-                + '" in {} braces (macro argument?): not properly handled',
-                m.group(0))
+            + '" in {} braces (macro argument?): not properly handled',
+            m.group(0))
     parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
     return parms.inline_math[0]
 actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\[^()])+)\$', f)]
@@ -1379,7 +1351,7 @@ for (mac, acc) in (
 #   - relational operators at beginning of a maths part are prepended
 #     as ' gleich ...', if maths part is not first on line ('&' is a part)
 #   - other operators like +, -, *, / are prepended e.g. as ' minus ...'
-#   - see variables parms.mathop and parms.mathoptext for text replacements
+#   - see variables parms.mathop & parms.mathoptext for text replacements
 #   - the basic replacement steps to next value from parms.display_math,
 #       - if the part includes a leading operator,
 #       - after intermediate \text{...},
@@ -1502,8 +1474,8 @@ def parse_equ(equ):
     for f in re.finditer(braced, text_get_txt(equ)):
         if re.search(mark_linebreak + r'|(?<!\\)&', f.group(1)):
             warning('"\\\\" or "&" in {} braces (macro argument?):'
-                        + ' not properly handled',
-                        re.sub(mark_linebreak, r'\\\\', text_get_txt(equ)))
+                    + ' not properly handled',
+                    re.sub(mark_linebreak, r'\\\\', text_get_txt(equ)))
             break
 
     # important: non-greedy *? repetition, and avoid zero-width matches
@@ -1513,7 +1485,7 @@ def parse_equ(equ):
     # return replacement for RE line
     def repl_line(m):
         # finally, split line into sections delimited by '&'
-        # important: non-greedy *? repetition, and avoid zero-width matches
+        # important: non-greedy *? repetition, avoid zero-width matches
         sec = r'((.|\n)*?(?!\Z)|(.|\n)+?)((?<!\\)&|\Z)'
         flag = Aux()
         flag.first_on_line = True
@@ -1579,7 +1551,8 @@ text = mysub(mark_linebreak, mark_deleted + ' ', text)
 
 #   only print unknown macros and environments?
 #
-if cmdline.unkn:
+if options.unkn:
+    unknowns = ''
     macsknown = (
         'begin', 
         'end',
@@ -1597,7 +1570,7 @@ if cmdline.unkn:
     macs.sort()
     for m in macs:
         if m not in macsknown:
-            print('\\' + m)
+            unknowns += '\\' + m + '\n'
     envs = []
     for m in re.finditer(begin_lbr + r'(' + environ_name + r')\}',
                             text_get_txt(text)):
@@ -1606,15 +1579,15 @@ if cmdline.unkn:
     envs.sort()
     for e in envs:
         if e not in envsknown:
-            print(r'\begin{' + e + '}')
-    exit()
+            unknowns += r'\begin{' + e + '}' + '\n'
+    return (unknowns, [])
 
 #   delete remaining \xxx macros unless given in --extr option;
 #   if followed by braced argument: copy its content
 #
 excl = r'begin|end|item'
-if cmdline.extr:
-    excl += r'|' + cmdline.extr_re
+if options.extr:
+    excl += r'|' + options.extr_re
 re_macro = r'\\(?!(?:' + excl + r')' + end_mac + r')' + macro_name
             # 'x(?!y)' matches 'x' not followed by 'y'
 re_macro_arg = re_macro + sp_braced
@@ -1673,16 +1646,16 @@ text = mysub(re_begin_env, mark_deleted, text)
 text = mysub(re_end_env, mark_deleted, text)
 
 #   LAB:ITEMS
-#   \item(s) with [...] label may pose problems with interpunction checking
+#   \item(s) with [.] label may pose problems with interpunction checking
 #   - one can simply remove the \item[...] label
 #       - active, if parms.keep_item_labels == False
-#   - one can look backwards in the text and repeat a present interpunction
-#     sign after the item label
+#   - one can look backwards in the text and repeat a present
+#     interpunction sign after the item label
 #       - active, if parms.item_label_repeat_punct == True
 #       - works well with (German version of) LanguageTool
 #       - this also checks text in the label
-#       - this should be done after removal of all environment frames between
-#         \item and a previous sentence
+#       - this should be done after removal of all environment frames
+#         between \item and a previous sentence
 #   (\item[...] may skip arbitrary subsequent space)
 #
 if parms.keep_item_labels:
@@ -1714,10 +1687,12 @@ if parms.keep_item_labels:
 #   - the words (delimiter: white space) in front of first separated '&'
 #     are replaced by the words following this '&'
 #   - if no replacement given: just delete phrase
-#   - space in phrase to be replaced is arbitrary (within current paragraph)
+#   - space in phrase to be replaced is arbitrary (but within current
+#     paragraph)
 #
 def do_option_repl(text):
-    for lin in myopen(cmdline.repl):
+    (lines, fname) = options.repl
+    for lin in lines:
         i = lin.find('#')
         if i >= 0:
             lin = lin[:i]
@@ -1741,7 +1716,7 @@ def do_option_repl(text):
         r = ' '.join(lin[i+1:])
         if re.search(r'(?<!\\)%', r):
             fatal('please use escaped \\% for replacement in file "'
-                                + cmdline.repl + '"', r)
+                                + fname + '"', r)
         r = re.sub('\\\\', '\\\\\\\\', r)       # \ ==> \\
         text = mysub(t, r, text)
     return text
@@ -1767,7 +1742,7 @@ def before_output(text):
     text = mysub(mark_deleted, '', text)
 
     # option --repl
-    if cmdline.repl:
+    if options.repl:
         text = do_option_repl(text)
 
     # resolve backslash escapes for {, }, $, %, _, &, #
@@ -1785,26 +1760,125 @@ def before_output(text):
             + mark_verbatim[0] + r'(\d+)' + mark_verbatim[1], f, text)
     return text
 
+if options.extr:
+    # on option --extr: only print arguments of these macros
+    expr = (r'\\(?:' + options.extr_re + r')(?:' + sp_bracketed
+                    + r')*' + sp_braced)
+    text = extract_repls(expr, r'\2', text)
+
+text = before_output(text)
+if warning_or_error.msg:
+    # there was a problem: include message, clear for next call
+    text = text_add_frame(warning_or_error.msg, '', text)
+    warning_or_error.msg = ''
+return text
+
+####################################################
+#
+#   end of function tex2txt()
+#
+####################################################
+
 #   output of text string and line number information
 #
-def write_output(text):
-    text = before_output(text)
-    sys.stdout.write(text_get_txt(text))
-    if cmdline.nums:
+def write_output(text, ft, fn):
+    if ft:
+        ft.write(text_get_txt(text))
+    if fn:
         for n in text_get_num(text):
             s = str(abs(n))
             if n < 0:
                 s += '+'
-            cmdline.nums.write(s + '\n')
+            fn.write(s + '\n')
 
-if cmdline.extr:
-    # on option --extr: only print arguments of these macros
-    expr = (r'\\(?:' + cmdline.extr_re + r')(?:' + sp_bracketed
-                    + r')*' + sp_braced)
-    write_output(extract_repls(expr, r'\2', text))
-    exit()
-
-#   write results
+#   function for reading replacement file
 #
-write_output(text)
+def read_replacements(fn):
+    if not fn:
+        return None
+    return (myopen(fn).readlines(), fn)
+
+#   class for parsing of file from option --defs
+#
+class Definitions:
+    def __init__(self, fn):
+        self.project_macros = ()
+        self.system_macros = ()
+        self.heading_macros = ()
+        self.environments = ()
+        self.equation_environments = ()
+        self.environments = ()
+        self.environment_begins = ()
+        self.theorem_environments = ()
+        self.misc_replace = ()
+        if fn:
+            defs = self
+            s = myopen(fn).read()
+            try:
+                exec(s)
+            except BaseException as e:
+                import traceback
+                i = 0 if isinstance(e, SyntaxError) else -1
+                s = traceback.format_exc(limit=i)
+                s = re.sub(r'\ATraceback \(most recent call last\):\n'
+                                + r'  File "<string>"(, line \d+).*\n',
+                                r'File "' + fn + r'"\1\n', s)
+                fatal('problem in file "' + fn + '"\n' + s)
+
+#   class for passing options to tex2txt()
+#
+class Options:
+    def __init__(self,
+            repl=None,      # or set by read_replacements()
+            char=False,     # True: character position tracking
+            defs=None,      # or set by Definitions()
+            extr=None,      # or set to comma-separated macro list
+            lang=None,      # or set to language code
+            unkn=False):    # True: print unknowns
+        self.repl = repl
+        self.char = char
+        if not defs:
+            self.defs = Definitions(None)
+        else:
+            self.defs = defs
+        self.extr = extr
+        self.lang = lang
+        self.unkn = unkn
+
+#   function to be called for stand-alone script
+#
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file', nargs='?')
+    parser.add_argument('--repl')
+    parser.add_argument('--nums')
+    parser.add_argument('--char', action='store_true')
+    parser.add_argument('--defs')
+    parser.add_argument('--extr')
+    parser.add_argument('--lang')
+    parser.add_argument('--unkn', action='store_true')
+    cmdline = parser.parse_args()
+
+    options = Options(
+                repl=read_replacements(cmdline.repl),
+                char=cmdline.char,
+                defs=Definitions(cmdline.defs),
+                extr=cmdline.extr,
+                lang=cmdline.lang,
+                unkn=cmdline.unkn)
+
+    if cmdline.file:
+        txt = myopen(cmdline.file).read()
+    else:
+        # reopen stdin in text mode: handling of '\r'
+        txt = open(sys.stdin.fileno()).read()
+
+    if cmdline.nums:
+        cmdline.nums = myopen(cmdline.nums, mode='w')
+
+    text = tex2txt(txt, options)
+    write_output(text, sys.stdout, cmdline.nums)
+
+if __name__ == '__main__':
+    main()
 
