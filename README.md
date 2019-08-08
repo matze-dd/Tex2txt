@@ -6,12 +6,14 @@
 [Encoding problems](#encoding-problems)&nbsp;\|
 [Declaration of LaTeX macros](#declaration-of-latex-macros)&nbsp;\|
 [Handling of displayed equations](#handling-of-displayed-equations)&nbsp;\|
+[Application as Python module](#application-as-python-module)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
 
 <a name="general-description"></a>
 This is a modest, self-contained [Python](https://www.python.org)
 script for the extraction of plain text from
 [LaTeX](https://www.latex-project.org) documents.
+It can also be used as Python module.
 In some sense, it relates to tools like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
 [TeXtidote](https://github.com/sylvainhalle/textidote), and
@@ -26,8 +28,8 @@ Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
 Altogether, the script can help to create a compact report from language
 examination of a single file or a complete document tree.
-A simple and a more complete application of the script are addressed
-in section [Tool integration](#tool-integration) below.
+A simple and a more complete application are addressed in section
+[Tool integration](#tool-integration) below.
 
 For ease of problem localisation, we implement a mechanism that tracks
 line number changes during the text manipulations.
@@ -35,8 +37,8 @@ Unnecessary creation of empty lines therefore can be avoided, sentences
 and paragraphs remain intact.
 This is demonstrated in file [Example.md](Example.md).
 Reconstruction of both line and column numbers is possible with script
-option --char.
-That activates position tracking for each single character of input.
+option --char, which activates position tracking for each single character
+of input.
 File [Example2.md](Example2.md) shows such an application.
 Very large input texts can lead to slow operation, however.
 
@@ -80,6 +82,9 @@ variables and functions with statements that actually perform text replacement
 operations.
 In section [Remarks on implementation](#remarks-on-implementation),
 some general techniques and problems are addressed.
+
+Application as Python module is shortly described in section
+[Application as Python module](#application-as-python-module) below.
 
 If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues),
@@ -182,8 +187,10 @@ The Python script is meant as small utility that performs a limited task
 with good quality.
 Integration with a proofreading software and features like tracking of
 \\input{...} directives have to be implemented “on top”.
+Apart from application in Bash scripts, extension is also possible like
+in section [Application as Python module](#application-as-python-module).
 
-### A simple script
+### Simple scripts
 A first Bash script that checks a single LaTeX file is given in
 file [shell.sh](shell.sh).
 The command
@@ -196,7 +203,7 @@ Then it will call [LanguageTool](https://www.languagetool.org)
 and filter line numbers in output messages.
 File [Example.md](Example.md) demonstrates the script.
 
-A script correcting both line and column numbers is given in
+A variant correcting both line and column numbers is given in
 file [shell2.sh](shell2.sh) with application example in file
 [Example2.md](Example2.md).
 
@@ -470,6 +477,34 @@ only variant “Simple version” above, e.g.:
 ```
 EquEnv('align', repl='  relation'),
 ```
+
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+
+## Application as Python module
+The module exports the following central function.
+```
+(plain, nums) = tex2txt.tex2txt(tex, options)
+```
+Argument 'tex' is the LaTeX text as string, return element 'plain' is the
+plain text as string.
+Array 'nums' contains the estimated original line or character positions,
+counting from one.
+Negative values indicate that the actual position may be larger.
+Argument 'options' can be created with class
+```
+options = tex2txt.Options(...)
+```
+which takes arguments similar to the command-line options of the script.
+They are documented at the definition of class 'Options'.
+The parameters 'defs' and 'repl' for this class can be set using
+tex2txt.Definitions(fn) and tex2txt.read\_replacements(fn), both expecting
+'None' or a file name as argument.
+
+All this is demonstrated in script function main().
+An example application is shown in Python script [shell2.py](shell2.py)
+which resembles the Bash script [shell2.sh](shell2.sh) from section
+[Tool integration](#tool-integration).
+It accepts multiple file names and does not create auxiliary files.
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
