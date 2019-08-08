@@ -926,852 +926,852 @@ def text_new_char(s=None):
 
 def tex2txt(txt, options):
 
-if options.char:
-    # track character offsets instead of line numbers
-    global mysub_offsets, mysub_combine, text_combine
-    global text_add_frame, text_from_match, text_new
-    mysub_offsets = mysub_offsets_char
-    mysub_combine = mysub_combine_char
-    text_combine = text_combine_char
-    text_add_frame = text_add_frame_char
-    text_from_match = text_from_match_char
-    text_new = text_new_char
+    if options.char:
+        # track character offsets instead of line numbers
+        global mysub_offsets, mysub_combine, text_combine
+        global text_add_frame, text_from_match, text_new
+        mysub_offsets = mysub_offsets_char
+        mysub_combine = mysub_combine_char
+        text_combine = text_combine_char
+        text_add_frame = text_add_frame_char
+        text_from_match = text_from_match_char
+        text_new = text_new_char
 
-if not options.lang or options.lang == 'de':
-    set_language_de()
-elif options.lang == 'en':
-    set_language_en()
-else:
-    raise_error('problem', 'unrecognized language "' + options.lang
-                    + '" given in option --lang', xit=1)
-
-if options.extr:
-    options.extr_list = [m for m in options.extr.split(',') if m]
-    options.extr_re = '|'.join(options.extr_list)
-else:
-    options.extr_list = []
-
-global defs
-defs = options.defs
-
-#   for mysub():
-#   text becomes a 2-tuple of text string and number array
-#
-text = text_new(txt)
-
-
-#######################################################################
-#
-#   LAB:VERBATIM
-#   treat verbatim(*) environments and \verb(*) macros
-#   (the given verbatim text is expanded to a coded version that is only
-#    resolved directly at output by before_output())
-#
-#   - expanded content of verbatim(*) environment is enclosed in
-#     \begin{verbatim(*)}...\end{verbatim(*)}
-#       --> blank lines are inserted before and behind this environment
-#       --> can be removed or replaced by fixed text with 'verbatim'
-#           or r'verbatim\*' entry in parms.environments
-#       --> complete removal without paragraph break:
-#           \LTskip{\begin{verbatim}...\end{verbatim}}
-#           or \LTalter{...}{replacement}
-#   - expanded text of \verb(*) macro is enclosed in \verb(*){...}
-#       --> can be removed or replaced with Macro('verb', 'A', ...)
-#           or Macro(r'verb\*', 'A', ...) in parms.*_macros
-#   - BUG: \verb(*) not handled correctly but treated as unknown macro,
-#     if used in replacement for a declared macro of parms.*_macros
-#       --> won't work: Simple('textbackslash', r'\\verb?\\?')
-#
-
-verb_macro_tmp = mark_verbatim_tmp[0] + 'verb' + mark_verbatim_tmp[1]
-verbatim_beg_tmp = (mark_verbatim_tmp[0] + 'verbatim_beg'
-                        + mark_verbatim_tmp[1])
-verbatim_end_tmp = (mark_verbatim_tmp[0] + 'verbatim_end'
-                        + mark_verbatim_tmp[1])
-
-# we have to squeeze both variants into one regular expression, because
-# the order of appearance is unknown;
-# vital are the non-greedy repetitions *? in the bodies of \verb and
-# verbatim, as well as in front (group 1); the latter is important in
-# case of nesting
-expr = (r'^(([^\n\\%]|\\.)*?)'
-            + r'(?:(\\verb' + end_mac + r'(\*?)([^\s*])(.*?)\5)'
-            + r'|(?:' + begin_lbr + r'verbatim(\*?)\}((?:.|\n)*?)'
-                    + r'\\end\{verbatim\7\}))')
-def f(m):
-    if m.group(3):
-        # \verb macro
-        ast = m.group(4)
-        pre = verb_macro_tmp + ast + '{'
-        grp = 6
-        post = '}'
+    if not options.lang or options.lang == 'de':
+        set_language_de()
+    elif options.lang == 'en':
+        set_language_en()
     else:
-        # verbatim environment
-        ast = m.group(7)
-        pre = '\n\n' + verbatim_beg_tmp + ast + '}'
-        grp = 8
-        post = verbatim_end_tmp + ast + '}\n\n'
-    def h(m):
-        return verbatim(m.group(0), mark_verbatim_tmp, ast)
-    verb = mysub(r'.|\n', h, text_from_match(m, grp, text))
-    verb = text_add_frame(pre, post, verb)
-    return text_combine(text_from_match(m, 1, text), verb)
+        raise_error('problem', 'unrecognized language "' + options.lang
+                        + '" given in option --lang', xit=1)
 
-# need a loop for replacement
-# - otherwise, e.g., a \verb?%? could hide a \verb later in same line
-# - this calls for verb_macro_tmp etc., as we want to retain \verb etc.
-# - without only_one=True for mysub(), we would fail with:
-#   \verb?%? \begin{verbatim}
-#   \verb?x?
-#   \end{verbatim}
-while mysearch(expr, text, flags=re.M):
-    text = mysub(expr, f, text, flags=re.M, only_one=True)
-
-text = mysub(verb_macro_tmp, r'\\verb', text)
-text = mysub(verbatim_beg_tmp, r'\\begin{verbatim', text)
-text = mysub(verbatim_end_tmp, r'\\end{verbatim', text)
-
-
-#######################################################################
-#
-#   LAB:COMMENTS
-#   remove % comments
-#   - line beginning with % is completely removed
-#
-text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
-
-#   - join current and next lines, if no space before first unescaped %;
-#     skip then leading white space on next line
-#       + not, if next line is empty
-#       + not, if \macro call directly before %
-#
-def f(m):
-    if re.search(r'(?<!\\)(\\\\)*\\' + macro_name + r'\Z', m.group(1)):
-        # \macro call before %: do no remove line break
-        return text_from_match(m, 0, text)
-    return text_from_match(m, 1, text)
-text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n])%.*\n[ \t]*(?!\n)',
-                        f, text, flags=re.M)
-                # r'(?<!x)y' matches 'y' not preceded by 'x'
-
-#   - "normal case": just remove rest of line, keeping the line break
-#
-text = mysub(r'^(([^\n\\%]|\\.)*)%.*$', r'\1', text, flags=re.M)
-
-#   now we can replace \\ with mark_linebreak
-#   which is needed for parsing of equation environments below
-#   --> no double backslash \\ from here on
-#
-text = mysub(r'\\\\', mark_linebreak, text)
-
-#   only afterwards remove option \\[...]:
-#   in expression bracketed, we do not account for \\
-#
-text = mysub(mark_linebreak + sp_bracketed, mark_linebreak, text)
-
-#   replace temporary marks for verbatim characters
-#
-text = mysub(mark_verbatim_tmp[0] + r'(\d+)' + mark_verbatim_tmp[1],
-                mark_verbatim[0] + r'\1' + mark_verbatim[1], text)
-
-
-#######################################################################
-#
-#   check nesting limits for braces, brackets, and environments;
-#   we construct regular expressions for a larger nesting depth and
-#   test, whether the innermost group matches
-#
-def check_nesting_limits(text):
-    for m in re.finditer(re_braced(parms.max_depth_br + 1,
-                            '(?P<inner>', ')'), text_get_txt(text)):
-        if m.group('inner'):
-            # innermost {} braces did match
-            fatal('maximum nesting depth for {} braces exceeded,'
-                    + ' parms.max_depth_br=' + str(parms.max_depth_br),
-                        m.group(0))
-    for m in re.finditer(re_bracketed(parms.max_depth_br + 1,
-                                '(?P<inner>', ')'), text_get_txt(text)):
-        if m.group('inner'):
-            fatal('maximum nesting depth for [] brackets exceeded,'
-                    + ' parms.max_depth_br=' + str(parms.max_depth_br),
-                        m.group(0))
-    for env in (
-        parms.equation_environments()
-        + parms.environments()
-    ):
-        expr = re_nested_env(env[0], parms.max_depth_env + 1, '')
-        for m in re.finditer(expr, text_get_txt(text)):
-            if m.group('inner'):
-                fatal('maximum nesting depth for environments exceeded,'
-                    + ' parms.max_depth_env=' + str(parms.max_depth_env),
-                            m.group(0))
-
-check_nesting_limits(text)
-
-# check will be repeated during macro expansion and environment handling:
-# - detect insertion of braces, brackets, \begin, or \end
-# - recheck nesting depths
-#
-def mysub_check_nested(expr, repl, text):
-    flag = Aux()
-    def f(t, r):
-        if re.search(r'(?<!\\)[][{}]|\\(begin|end)' + end_mac,
-                                text_get_txt(r)):
-            flag.flag = True
-    flag.flag = False
-    text = mysub(expr, repl, text, track_repl=f)
-    if flag.flag:
-        check_nesting_limits(text)
-    return text
-
-#   check whether equation replacements appear in original text
-#
-if parms.check_equation_replacements:
-    for repl in parms.inline_math + parms.display_math:
-        m = re.search(r'^.*' + re.escape(repl) + r'.*$',
-                        text_get_txt(text), flags=re.M)
-        if m:
-            warning('equation replacement "' + repl
-                + '" found in input text,'
-                + ' see LAB:CHECK_EQU_REPLS in script', m.group(0))
-
-
-#######################################################################
-#
-#   resolve macros and special environment starts listed above
-#   ( possible improvement:
-#     - gather macros with same argument pattern and replacement string:
-#       lists of names in a dictionary with tuple (args, repl) as key
-#     - handle macros in a dictionary entry with one replacement run
-#   )
-#
-list_macs_envs = []
-for (name, args, repl, extr) in (
-    parms.system_macros()
-    + parms.project_macros()
-):
-    if name in options.extr_list:
-        continue
-    expr = r'\\' + name + end_mac
-    (re_args, repl) = re_code_args(args, repl, 'Macro', name)
-    if extr:
-        (_, extr) = re_code_args(args, extr, 'Macro', name)
-    if not args:
-        # consume all space allowed after macro without arguments
-        expr += skip_space_macro
-    elif args == 'O' * len(args):
-        # do the same, if actually no optional argument is following
-        expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'\[)'
-                + skip_space_macro + r')|(?:' + expr + re_args + r'))')
+    if options.extr:
+        options.extr_list = [m for m in options.extr.split(',') if m]
+        options.extr_re = '|'.join(options.extr_list)
     else:
-        # at least one mandatory argument expected
-        expr += re_args
-    list_macs_envs.append((expr, mark_deleted + repl, extr))
-for (name, args, repl) in parms.environment_begins():
-    (re_args, repl) = re_code_args(args, repl, 'EnvBegin', name)
-    expr = begin_lbr + name + r'\}' + re_args
-    list_macs_envs.append((expr, mark_begin_env_sub + repl, ''))
+        options.extr_list = []
 
-#   return a text element that only contains the replacements,
-#   separated by blank lines
-#
-def extract_repls(expr, repl, text):
-    tmp = Aux()
-    tmp.text = text_new()
-    def f(t, r):
-        r = text_add_frame('\n\n\n', '\n', r)
-        tmp.text = text_combine(tmp.text, r)
-    mysub(expr, repl, text, track_repl=f)
-    return tmp.text
+    global defs
+    defs = options.defs
 
-flag = True
-cnt = 1
-match = None
-while flag:
-    # loop until no more replacements performed
-    if cnt > 2 * parms.max_depth_br:
-        fatal('infinite recursion in macro definition?',
-                        match.group(0) if match else '')
-    cnt += 1
-    flag = False
-    for (expr, repl, extr) in list_macs_envs:
-        m = mysearch(expr, text)
-        if m:
-            match = m
-            flag = True
-            if extr:
-                # append extracted text to the end of main text
-                e = extract_repls(expr, mark_deleted + extr, text)
-                text = mysub_check_nested(expr, repl, text)
-                text = mysub_check_nested(r'\Z', lambda m: e, text)
-            else:
-                text = mysub_check_nested(expr, repl, text)
-
-
-##################################################################
-#
-#   other replacements: collected in list actions
-#   list of 2-tuples:
-#       [0]: search pattern as regular expression
-#       [1]: replacement text
-#
-actions = list(parms.misc_replace())
-
-def f(m):
-    ret = text_from_match(m, 2, text)
-    txt = text_get_txt(ret)
-    if txt and txt[-1] not in parms.heading_macros_punct:
-        ret = text_add_frame('', '.', ret)
-    return ret
-for s in parms.heading_macros():
-    actions += [(
-        r'\\' + s + r'(?:' + sp_bracketed + r')?' + sp_braced,
-        f
-    )]
-
-#   replace $$...$$ by equation* environment
-#
-dollar_dollar_flag = Aux()
-dollar_dollar_flag.flag = False
-def f(m):
-    dollar_dollar_flag.flag = not dollar_dollar_flag.flag
-    if dollar_dollar_flag.flag:
-        return r'\begin{equation*}'
-    return r'\end{equation*}'
-actions += [(r'(?<!\\)\$\$', f)]
-
-# replace $...$ and \(...\) by text from variable parms.inline_math
-# BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
-#
-def f(m):
-    m2 = re.search(r'(?<!\\)\$|\\\(|\\\)', m.group(1))
-    if m2:
-        warning('"' + m2.group(0)
-            + '" in {} braces (macro argument?): not properly handled',
-            m.group(0))
-    parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
-    return parms.inline_math[0]
-actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\[^()])+)\$', f)]
-actions += [(r'\\\(((?:' + braced + r'|[^\\$]|\\[^()])*)\\\)', f)]
-
-#   macros \textxxx
-#
-for (m, c) in (
-    ('textbackslash', '\\'),
-    ('textasciicircum', '^'),
-    ('textasciitilde', '~'),
-):
-    actions += [(r'\\' + m + end_mac + skip_space_macro,
-                        verbatim(c, mark_verbatim, ''))]
-
-#   now perform the collected replacement actions
-#
-for (expr, repl) in actions:
-    text = mysub(expr, repl, text, flags=re.M)
-
-#   fix-text replacements for environments:
-#   check for inclusion of {} etc.
-#
-for (name, repl) in parms.environments():
-    env = re_nested_env(name, parms.max_depth_env, '')
-    re_code_args('', repl, 'EnvRepl', name, no_backslash=True)
-    text = mysub_check_nested(env,
-                    mark_begin_env_sub + repl + mark_end_env_sub, text)
-
-
-##################################################################
-#
-#   LAB:ACCENTS
-#   translate text-mode accents to corresponding UTF-8 characters
-#   - if not found: raise warning and keep accent macro in text
-#
-def replace_accent(mac, accent, text):
-    def f(m):
-        # find the UTF-8 character for the matched letter [a-zA-Z]
-        # with the accent given in argument of replace_accent()
-        c = m.group(2)
-        if c.islower():
-            t = 'SMALL'
-        else:
-            t = 'CAPITAL'
-        u = 'LATIN ' + t + ' LETTER ' + c.upper() + ' WITH ' + accent
-        try:
-            return unicodedata.lookup(u)
-        except:
-            warning('could not find UTF-8 character "' + u
-                    + '"\nfor accent macro "' + m.group(0) + '"')
-            return m.group(0)
-    if mac.isalpha():
-        # ensure space or brace after macro name
-        mac += end_mac
-    else:
-        mac = re.escape(mac)
-    # accept versions with and without {} braces
-    return mysub(r'\\' + mac + skip_space + r'(\{)?([a-zA-Z])(?(1)\})',
-                                f, text)
-
-for (mac, acc) in (
-    ("'", 'ACUTE'),
-    ('`', 'GRAVE'),
-    ('^', 'CIRCUMFLEX'),
-    ('v', 'CARON'),
-    ('~', 'TILDE'),
-    ('"', 'DIAERESIS'),
-    ('r', 'RING ABOVE'),
-    ('=', 'MACRON'),
-    ('b', 'LINE BELOW'),
-    ('u', 'BREVE'),
-    ('H', 'DOUBLE ACUTE'),
-    ('.', 'DOT ABOVE'),
-    ('d', 'DOT BELOW'),
-    ('c', 'CEDILLA'),
-    ('k', 'OGONEK'),
-):
-    text = replace_accent(mac, acc, text)
-
-
-##################################################################
-#
-#   LAB:EQUATIONS: replacement of equation environments
-#
-##################################################################
-
-#   example: see file Example.md
-#
-#   1. split equation environment into 'lines' delimited by \\
-#      alias mark_linebreak
-#   2. split each 'line' into 'sections' delimited by &
-#   3. split each 'section' into maths and \text parts
-#
-#   - argument of \text{...} (variable parms.macro_text) is reproduced
-#     without change
-#   - maths parts are replaced by values from variable parms.display_math
-#   - interpunction signs (see variable parms.mathpunct) at end of a
-#     maths part, ignoring parms.mathspace, are appended to replacement
-#   - relational operators at beginning of a maths part are prepended
-#     as ' gleich ...', if maths part is not first on line ('&' is a part)
-#   - other operators like +, -, *, / are prepended e.g. as ' minus ...'
-#   - see variables parms.mathop & parms.mathoptext for text replacements
-#   - the basic replacement steps to next value from parms.display_math,
-#       - if the part includes a leading operator,
-#       - after intermediate \text{...},
-#       - and if last maths part ended with interpunction
-#         (this only for parms.change_repl_after_punct == True)
-#   - maths space (variable parms.mathspace) like \quad is replaced by ' '
-
-#   Assumptions:
-#   - \\ has been changed to mark_linebreak, & is still present
-#   - macros from LAB:EQU_MACROS already have been deleted
-#   - \text{...} has been resolved not yet
-#   - mathematical space as \; and \quad (variable parms.mathspace)
-#     is still present
-#   - maths macros like \epsilon or \Omega that might constitute a
-#     maths part: still present or replaced with non-space
-
-parms.mathspace = (r'(?:\\[ ,;:\n\t]|(?<!\\)~'
-                        + r'|\\(?:q?quad|(?:thin|med|thick)space)'
-                        + end_mac + skip_space_macro + r')')
-parms.mathop = (
-    r'\+|-|\*|/'
-    + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
-    + r'|\\[gl]eq?' + end_mac
-    + r'|\\su[bp]set(?:eq)?' + end_mac
-    + r'|\\Leftrightarrow' + end_mac
-    + r'|\\to' + end_mac
-    + r'|\\stackrel' + sp_braced + skip_space + r'\{=\}'
-    + r'|\\c[au]p' + end_mac
-)
-parms.mathpunct = r'(?:(?<!\\)[;,.])'
-parms.change_repl_after_punct = True
-
-def display_math_update():
-    parms.display_math = parms.display_math[1:] + parms.display_math[:1]
-def display_math_get(update):
-    if update:
-        display_math_update()
-    return parms.display_math[0]
-
-#   replace a maths part by suitable raw text
-#
-def math2txt(txt, first_on_line):
-    # check for leading operator, possibly after maths space;
-    # there also might be a '{}' or r'\mbox{}' for making e.g. '-' binary
-    m = re.search(r'\A(' + parms.mathspace
-                    + r'|(?:\\mbox' + skip_space + r')?\{\}|\s)*'
-                    + r'(' + parms.mathop + r')', txt)
-    if m and not first_on_line:
-        # starting with operator, not first on current line
-        pre = parms.mathoptext.get(m.group(2), parms.mathoptext[None])
-        txt = txt[m.end(0):]
-        update = True
-    else:
-        # check for leading maths space
-        m = re.search(r'\A(' + skip_space + parms.mathspace + r')+', txt)
-        if m:
-            pre = ' '
-            txt = txt[m.end(0):]
-        else:
-            pre = ''
-        update = False
-
-    # check for trailing maths space
-    m = re.search(r'(' + parms.mathspace + skip_space + r')+\Z', txt)
-    if m:
-        post = ' '
-        txt = txt[:m.start(0)]
-    else:
-        post = ''
-    txt = txt.strip()
-    if not txt:
-        return pre + post
-
-    # check for trailing interpunction
-    m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
-    if not m:
-        return pre + display_math_get(update) + post
-    if txt == m.group(1):
-        ret = pre + txt + post
-    else:
-        ret = pre + display_math_get(update) + m.group(1) + post
-    if parms.change_repl_after_punct:
-        # after interpunction: next part with different replacement
-        display_math_update()
-    return ret
-
-#   split a section between & delimiters into \text{...} and maths parts
-#
-def split_sec(txt, first_on_line):
-    last = 0
-    res = ''
-    # iterate over \text parts
-    for m in re.finditer(r'\\' + parms.text_macro + sp_braced, txt):
-        # maths part between last and current \text
-        res += math2txt(txt[last:m.start(0)], first_on_line)
-        # content of \text{...}
-        res += mark_deleted + m.group(1) + mark_deleted
-            # avoid problem e.g. on ... \text{for\quad} x ...
-        last = m.end(0)
-        first_on_line = False
-        display_math_update()
-    # maths part after last \text
-    res += math2txt(txt[last:], first_on_line)
-    return res
-
-#   parse the text of an equation environment
-#
-def parse_equ(equ):
-    # first resolve sub-environments (e.g. cases) and mark_deleted
-    # in order to see interpunction
-    d = (r'((' + re_begin_env + r')|(' + re_end_env
-                    + r')|(' + mark_deleted + r'))')
-    equ = mysub(d, '', equ)
-
-    # then split into lines delimited by \\ alias mark_linebreak
-    # BUG (with warning for braced macro arguments):
-    # repl_line() and later repl_sec() may fail if \\ alias mark_linebreak
-    # or later & are argument of a macro
+    #   for mysub():
+    #   text becomes a 2-tuple of text string and number array
     #
-    for f in re.finditer(braced, text_get_txt(equ)):
-        if re.search(mark_linebreak + r'|(?<!\\)&', f.group(1)):
-            warning('"\\\\" or "&" in {} braces (macro argument?):'
-                    + ' not properly handled',
-                    re.sub(mark_linebreak, r'\\\\', text_get_txt(equ)))
-            break
+    text = text_new(txt)
 
-    # important: non-greedy *? repetition, and avoid zero-width matches
-    # - do not disrupt trailing maths space like r'\ ' in equation line
-    line = (skip_space + r'((.|\n)*?(?!\Z)|(.|\n)+?)(?<!\\)' + skip_space
-                + r'(' + mark_linebreak + r'|\Z)')
-    # return replacement for RE line
-    def repl_line(m):
-        # finally, split line into sections delimited by '&'
-        # important: non-greedy *? repetition, avoid zero-width matches
-        sec = r'((.|\n)*?(?!\Z)|(.|\n)+?)((?<!\\)&|\Z)'
-        flag = Aux()
-        flag.first_on_line = True
-        def repl_sec(m):
-            # split this section into maths and text parts
-            # BUG (without warning):
-            # we assume that '&' always creates white space
-            ret = split_sec(m.group(1), flag.first_on_line) + ' '
-            flag.first_on_line = False
-            return ret
-        t = text_from_match(m, 1, equ)
-        t = mysub(sec, repl_sec, t)
-        return text_add_frame('  ', '\n', t)
 
-    ret = mysub(line, repl_line, equ)
-    if text_get_txt(equ).endswith(mark_linebreak):
-        # for example: last equation ends with \\%
-        ret = text_add_frame('', '\n', ret)
-    return ret
+    #######################################################################
+    #
+    #   LAB:VERBATIM
+    #   treat verbatim(*) environments and \verb(*) macros
+    #   (the given verbatim text is expanded to a coded version that is only
+    #    resolved directly at output by before_output())
+    #
+    #   - expanded content of verbatim(*) environment is enclosed in
+    #     \begin{verbatim(*)}...\end{verbatim(*)}
+    #       --> blank lines are inserted before and behind this environment
+    #       --> can be removed or replaced by fixed text with 'verbatim'
+    #           or r'verbatim\*' entry in parms.environments
+    #       --> complete removal without paragraph break:
+    #           \LTskip{\begin{verbatim}...\end{verbatim}}
+    #           or \LTalter{...}{replacement}
+    #   - expanded text of \verb(*) macro is enclosed in \verb(*){...}
+    #       --> can be removed or replaced with Macro('verb', 'A', ...)
+    #           or Macro(r'verb\*', 'A', ...) in parms.*_macros
+    #   - BUG: \verb(*) not handled correctly but treated as unknown macro,
+    #     if used in replacement for a declared macro of parms.*_macros
+    #       --> won't work: Simple('textbackslash', r'\\verb?\\?')
+    #
 
-#   replace equation environments listed above
-#
-for (name, args, replacement) in parms.equation_environments():
-    if not replacement:
-        (re_args, _) = re_code_args(args, replacement, 'EquEnv', name)
-        expr = re_nested_env(name, parms.max_depth_env, re_args)
-        def f(m):
-            t = text_from_match(m, 'body', text)
-            t = parse_equ(t)
-            return text_add_frame(mark_begin_env, mark_end_env, t)
-        text = mysub(expr, f, text)
-        continue
-    # environment with fixed replacement and added interpunction
-    env = re_nested_env(name, parms.max_depth_env, '')
-    re_code_args('', replacement, 'EquEnv', name, no_backslash=True)
+    verb_macro_tmp = mark_verbatim_tmp[0] + 'verb' + mark_verbatim_tmp[1]
+    verbatim_beg_tmp = (mark_verbatim_tmp[0] + 'verbatim_beg'
+                            + mark_verbatim_tmp[1])
+    verbatim_end_tmp = (mark_verbatim_tmp[0] + 'verbatim_end'
+                            + mark_verbatim_tmp[1])
+
+    # we have to squeeze both variants into one regular expression, because
+    # the order of appearance is unknown;
+    # vital are the non-greedy repetitions *? in the bodies of \verb and
+    # verbatim, as well as in front (group 1); the latter is important in
+    # case of nesting
+    expr = (r'^(([^\n\\%]|\\.)*?)'
+                + r'(?:(\\verb' + end_mac + r'(\*?)([^\s*])(.*?)\5)'
+                + r'|(?:' + begin_lbr + r'verbatim(\*?)\}((?:.|\n)*?)'
+                        + r'\\end\{verbatim\7\}))')
     def f(m):
-        txt = parse_equ(text_from_match(m, 'body', text))
-        txt = text_get_txt(txt).strip()
-        s = replacement
-        m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
-        if m:
-            s += m.group(1)
-        return mark_begin_env + s + mark_end_env
-    text = mysub_check_nested(env, f, text)
+        if m.group(3):
+            # \verb macro
+            ast = m.group(4)
+            pre = verb_macro_tmp + ast + '{'
+            grp = 6
+            post = '}'
+        else:
+            # verbatim environment
+            ast = m.group(7)
+            pre = '\n\n' + verbatim_beg_tmp + ast + '}'
+            grp = 8
+            post = verbatim_end_tmp + ast + '}\n\n'
+        def h(m):
+            return verbatim(m.group(0), mark_verbatim_tmp, ast)
+        verb = mysub(r'.|\n', h, text_from_match(m, grp, text))
+        verb = text_add_frame(pre, post, verb)
+        return text_combine(text_from_match(m, 1, text), verb)
 
-#   LAB:SPACE
-#   replace space macros including ~, \, and &
-#   replace \\ placeholder
-#   - only after treatment of equation environments
-#
-text = mysub(r'\\,', mark_deleted + utf8_nnbsp, text)
-text = mysub(r'(?<!\\)~', mark_deleted + utf8_nbsp, text)
-text = mysub(r'(?<!\\)&', mark_deleted + ' ', text)
-text = mysub(parms.mathspace, mark_deleted + ' ', text)
-text = mysub(mark_linebreak, mark_deleted + ' ', text)
+    # need a loop for replacement
+    # - otherwise, e.g., a \verb?%? could hide a \verb later in same line
+    # - this calls for verb_macro_tmp etc., as we want to retain \verb etc.
+    # - without only_one=True for mysub(), we would fail with:
+    #   \verb?%? \begin{verbatim}
+    #   \verb?x?
+    #   \end{verbatim}
+    while mysearch(expr, text, flags=re.M):
+        text = mysub(expr, f, text, flags=re.M, only_one=True)
 
-
-#######################################################################
-#
-#   final clean-up
-#
-#######################################################################
-
-#   only print unknown macros and environments?
-#
-if options.unkn:
-    unknowns = ''
-    macsknown = (
-        'begin', 
-        'end',
-        'item',
-    )
-    envsknown = (
-        mark_internal_pre,      # compare mark_begin_env
-        'itemize',
-        'enumerate',
-    )
-    macs = []
-    for m in re.finditer(r'\\(' + macro_name + r')', text_get_txt(text)):
-        if m.group(1) not in macs:
-            macs += [m.group(1)]
-    macs.sort()
-    for m in macs:
-        if m not in macsknown:
-            unknowns += '\\' + m + '\n'
-    envs = []
-    for m in re.finditer(begin_lbr + r'(' + environ_name + r')\}',
-                            text_get_txt(text)):
-        if m.group(1) not in envs:
-            envs += [m.group(1)]
-    envs.sort()
-    for e in envs:
-        if e not in envsknown:
-            unknowns += r'\begin{' + e + '}' + '\n'
-    return (unknowns, [])
-
-#   delete remaining \xxx macros unless given in --extr option;
-#   if followed by braced argument: copy its content
-#
-excl = r'begin|end|item'
-if options.extr:
-    excl += r'|' + options.extr_re
-re_macro = r'\\(?!(?:' + excl + r')' + end_mac + r')' + macro_name
-            # 'x(?!y)' matches 'x' not followed by 'y'
-re_macro_arg = re_macro + sp_braced
-while mysearch(re_macro_arg, text):
-    # macros with braced argument might be nested
-    text = mysub(re_macro_arg, mark_deleted + r'\1' + mark_deleted, text)
-text = mysub(re_macro + skip_space_macro, mark_deleted, text)
-
-#   handle \item without [...] option,
-#   or also with option, if not parms.keep_item_labels
-#   - in itemize environment:
-#     use values from parms.default_item_labs
-#   - LAB:ENUMERATE in enumerate environment:
-#     replace by values from parms.default_item_enum_labs
-#
-itemize_dict = {'itemize': parms.default_item_labs,
-                'enumerate': parms.default_item_enum_labs}
-
-# a stack to follow nested environments
-# - if a lonely \item appears: pretend to be in itemize
-itemize_stack = [itemize_dict['itemize']]
-
-# this regular expression matches an \item
-# (\item may skip arbitrary subsequent space) ...
-if parms.keep_item_labels:
-    # do not match \item with [...] option (done below at LAB:ITEMS)
-    expr = r'(\\item' + end_mac + r'(?!' + sp_bracketed + r')\s*)'
-else:
-    # \item option may be present
-    expr = r'(\\item' + end_mac + r'(?:' + sp_bracketed + r')?\s*)'
-# ... and \begin / \end for environments listed in itemize_dict
-expr += (r'|(?:\\(begin|end)' + skip_space
-            + r'\{(' + r'|'.join(itemize_dict.keys()) + r')\})')
-
-def f(m):
-    if m.group(1):
-        # an \item: return value from active label collection, rotate
-        lab = itemize_stack[-1][0]
-        itemize_stack[-1] = itemize_stack[-1][1:] + itemize_stack[-1][:1]
-        return ' ' + lab + ' '
-    if m.group(3) == 'begin':
-        # entering an environment (group 2 is in sp_bracketed)
-        itemize_stack.append(itemize_dict[m.group(4)])
-    elif len(itemize_stack) > 1:
-        # leaving an environment
-        itemize_stack.pop()
-    return mark_deleted
-text = mysub(expr, f, text)
-
-#   delete remaining environment frames outside of equations
-#   - only after treatment of macros: protect line break before \begin;
-#     here we also delete placeholders \begin{%} from above
-#   - only after handling of itemize vs. enumerate
-#
-text = mysub(re_begin_env, mark_deleted, text)
-text = mysub(re_end_env, mark_deleted, text)
-
-#   LAB:ITEMS
-#   \item(s) with [.] label may pose problems with interpunction checking
-#   - one can simply remove the \item[...] label
-#       - active, if parms.keep_item_labels == False
-#   - one can look backwards in the text and repeat a present
-#     interpunction sign after the item label
-#       - active, if parms.item_label_repeat_punct == True
-#       - works well with (German version of) LanguageTool
-#       - this also checks text in the label
-#       - this should be done after removal of all environment frames
-#         between \item and a previous sentence
-#   (\item[...] may skip arbitrary subsequent space)
-#
-if parms.keep_item_labels:
-    if parms.item_label_repeat_punct:
-        # try with preceding interpunction [.,;:!?] ...
-        def f(m):
-            # "manually" build replacement for r'\1 \3\2 ':
-            # otherwise, out-of-order inclusion r'\2' would deteriorate
-            # line number tracking
-            t1 = text_from_match(m, 1, text)
-            t3 = text_from_match(m, 3, text)
-            t3 = text_add_frame(' ', m.group(2) + ' ', t3)
-            return text_combine(t1, t3)
-        text = mysub(r'(((?<!\\)[.,;:!?])(?:\s|' + mark_deleted
-                        + r')*)\\item' + sp_bracketed + r'\s*', f, text)
-    # ... otherwise simply extract the text in \item[...]
-    text = mysub(r'\\item' + sp_bracketed + r'\s*', r' \1 ', text)
+    text = mysub(verb_macro_tmp, r'\\verb', text)
+    text = mysub(verbatim_beg_tmp, r'\\begin{verbatim', text)
+    text = mysub(verbatim_end_tmp, r'\\end{verbatim', text)
 
 
-##################################################################
-#
-#   LAB:SPELLING
-#
-##################################################################
+    #######################################################################
+    #
+    #   LAB:COMMENTS
+    #   remove % comments
+    #   - line beginning with % is completely removed
+    #
+    text = mysub(r'^[ \t]*%.*\n', '', text, flags=re.M)
 
-#   perform replacements in file of option --repl
-#   line syntax:
-#   - '#: comment till end of line
-#   - the words (delimiter: white space) in front of first separated '&'
-#     are replaced by the words following this '&'
-#   - if no replacement given: just delete phrase
-#   - space in phrase to be replaced is arbitrary (but within current
-#     paragraph)
-#
-def do_option_repl(text):
-    (lines, fname) = options.repl
-    for lin in lines:
-        i = lin.find('#')
-        if i >= 0:
-            lin = lin[:i]
-        lin = lin.split()
+    #   - join current and next lines, if no space before first unescaped %;
+    #     skip then leading white space on next line
+    #       + not, if next line is empty
+    #       + not, if \macro call directly before %
+    #
+    def f(m):
+        if re.search(r'(?<!\\)(\\\\)*\\' + macro_name + r'\Z', m.group(1)):
+            # \macro call before %: do no remove line break
+            return text_from_match(m, 0, text)
+        return text_from_match(m, 1, text)
+    text = mysub(r'^(([^\n\\%]|\\.)*)(?<![ \t\n])%.*\n[ \t]*(?!\n)',
+                            f, text, flags=re.M)
+                    # r'(?<!x)y' matches 'y' not preceded by 'x'
 
-        t = s = ''
-        for i in range(len(lin)):
-            if lin[i] == '&':
-                break
-            t += s + re.escape(lin[i])
-                    # protect e.g. '.' and '$'
-            s = r'(?:[ \t]*\n[ \t]*|[ \t]+)'
-                    # at least one space character, but stay in paragraph
-        if not t:
+    #   - "normal case": just remove rest of line, keeping the line break
+    #
+    text = mysub(r'^(([^\n\\%]|\\.)*)%.*$', r'\1', text, flags=re.M)
+
+    #   now we can replace \\ with mark_linebreak
+    #   which is needed for parsing of equation environments below
+    #   --> no double backslash \\ from here on
+    #
+    text = mysub(r'\\\\', mark_linebreak, text)
+
+    #   only afterwards remove option \\[...]:
+    #   in expression bracketed, we do not account for \\
+    #
+    text = mysub(mark_linebreak + sp_bracketed, mark_linebreak, text)
+
+    #   replace temporary marks for verbatim characters
+    #
+    text = mysub(mark_verbatim_tmp[0] + r'(\d+)' + mark_verbatim_tmp[1],
+                    mark_verbatim[0] + r'\1' + mark_verbatim[1], text)
+
+
+    #######################################################################
+    #
+    #   check nesting limits for braces, brackets, and environments;
+    #   we construct regular expressions for a larger nesting depth and
+    #   test, whether the innermost group matches
+    #
+    def check_nesting_limits(text):
+        for m in re.finditer(re_braced(parms.max_depth_br + 1,
+                                '(?P<inner>', ')'), text_get_txt(text)):
+            if m.group('inner'):
+                # innermost {} braces did match
+                fatal('maximum nesting depth for {} braces exceeded,'
+                        + ' parms.max_depth_br=' + str(parms.max_depth_br),
+                            m.group(0))
+        for m in re.finditer(re_bracketed(parms.max_depth_br + 1,
+                                    '(?P<inner>', ')'), text_get_txt(text)):
+            if m.group('inner'):
+                fatal('maximum nesting depth for [] brackets exceeded,'
+                        + ' parms.max_depth_br=' + str(parms.max_depth_br),
+                            m.group(0))
+        for env in (
+            parms.equation_environments()
+            + parms.environments()
+        ):
+            expr = re_nested_env(env[0], parms.max_depth_env + 1, '')
+            for m in re.finditer(expr, text_get_txt(text)):
+                if m.group('inner'):
+                    fatal('maximum nesting depth for environments exceeded,'
+                        + ' parms.max_depth_env=' + str(parms.max_depth_env),
+                                m.group(0))
+
+    check_nesting_limits(text)
+
+    # check will be repeated during macro expansion and environment handling:
+    # - detect insertion of braces, brackets, \begin, or \end
+    # - recheck nesting depths
+    #
+    def mysub_check_nested(expr, repl, text):
+        flag = Aux()
+        def f(t, r):
+            if re.search(r'(?<!\\)[][{}]|\\(begin|end)' + end_mac,
+                                    text_get_txt(r)):
+                flag.flag = True
+        flag.flag = False
+        text = mysub(expr, repl, text, track_repl=f)
+        if flag.flag:
+            check_nesting_limits(text)
+        return text
+
+    #   check whether equation replacements appear in original text
+    #
+    if parms.check_equation_replacements:
+        for repl in parms.inline_math + parms.display_math:
+            m = re.search(r'^.*' + re.escape(repl) + r'.*$',
+                            text_get_txt(text), flags=re.M)
+            if m:
+                warning('equation replacement "' + repl
+                    + '" found in input text,'
+                    + ' see LAB:CHECK_EQU_REPLS in script', m.group(0))
+
+
+    #######################################################################
+    #
+    #   resolve macros and special environment starts listed above
+    #   ( possible improvement:
+    #     - gather macros with same argument pattern and replacement string:
+    #       lists of names in a dictionary with tuple (args, repl) as key
+    #     - handle macros in a dictionary entry with one replacement run
+    #   )
+    #
+    list_macs_envs = []
+    for (name, args, repl, extr) in (
+        parms.system_macros()
+        + parms.project_macros()
+    ):
+        if name in options.extr_list:
             continue
-        if t[0].isalpha():
-            t = r'\b' + t       # require word boundary
-        if t[-1].isalpha():
-            t = t + r'\b'
+        expr = r'\\' + name + end_mac
+        (re_args, repl) = re_code_args(args, repl, 'Macro', name)
+        if extr:
+            (_, extr) = re_code_args(args, extr, 'Macro', name)
+        if not args:
+            # consume all space allowed after macro without arguments
+            expr += skip_space_macro
+        elif args == 'O' * len(args):
+            # do the same, if actually no optional argument is following
+            expr = (r'(?:(?:' + expr + r'(?!' + skip_space + r'\[)'
+                    + skip_space_macro + r')|(?:' + expr + re_args + r'))')
+        else:
+            # at least one mandatory argument expected
+            expr += re_args
+        list_macs_envs.append((expr, mark_deleted + repl, extr))
+    for (name, args, repl) in parms.environment_begins():
+        (re_args, repl) = re_code_args(args, repl, 'EnvBegin', name)
+        expr = begin_lbr + name + r'\}' + re_args
+        list_macs_envs.append((expr, mark_begin_env_sub + repl, ''))
 
-        r = ' '.join(lin[i+1:])
-        if re.search(r'(?<!\\)%', r):
-            fatal('please use escaped \\% for replacement in file "'
-                                + fname + '"', r)
-        r = re.sub('\\\\', '\\\\\\\\', r)       # \ ==> \\
-        text = mysub(t, r, text)
-    return text
+    #   return a text element that only contains the replacements,
+    #   separated by blank lines
+    #
+    def extract_repls(expr, repl, text):
+        tmp = Aux()
+        tmp.text = text_new()
+        def f(t, r):
+            r = text_add_frame('\n\n\n', '\n', r)
+            tmp.text = text_combine(tmp.text, r)
+        mysub(expr, repl, text, track_repl=f)
+        return tmp.text
+
+    flag = True
+    cnt = 1
+    match = None
+    while flag:
+        # loop until no more replacements performed
+        if cnt > 2 * parms.max_depth_br:
+            fatal('infinite recursion in macro definition?',
+                            match.group(0) if match else '')
+        cnt += 1
+        flag = False
+        for (expr, repl, extr) in list_macs_envs:
+            m = mysearch(expr, text)
+            if m:
+                match = m
+                flag = True
+                if extr:
+                    # append extracted text to the end of main text
+                    e = extract_repls(expr, mark_deleted + extr, text)
+                    text = mysub_check_nested(expr, repl, text)
+                    text = mysub_check_nested(r'\Z', lambda m: e, text)
+                else:
+                    text = mysub_check_nested(expr, repl, text)
 
 
-##################################################################
-#
-#   output of results
-#
-##################################################################
+    ##################################################################
+    #
+    #   other replacements: collected in list actions
+    #   list of 2-tuples:
+    #       [0]: search pattern as regular expression
+    #       [1]: replacement text
+    #
+    actions = list(parms.misc_replace())
 
-#   work to be done just before output
-#
-def before_output(text):
-    # if braces {...} did remain somewhere: delete them
-    while mysearch(braced, text):
-        text = mysub(braced, mark_deleted + r'\1' + mark_deleted, text)
+    def f(m):
+        ret = text_from_match(m, 2, text)
+        txt = text_get_txt(ret)
+        if txt and txt[-1] not in parms.heading_macros_punct:
+            ret = text_add_frame('', '.', ret)
+        return ret
+    for s in parms.heading_macros():
+        actions += [(
+            r'\\' + s + r'(?:' + sp_bracketed + r')?' + sp_braced,
+            f
+        )]
 
-    # remove mark_deleted:
-    # delete a line, if it only contains such marks
-    text = mysub(r'^([ \t]*' + mark_deleted + r'[ \t]*)+\n', '', text,
-                        flags=re.M)
-    text = mysub(mark_deleted, '', text)
+    #   replace $$...$$ by equation* environment
+    #
+    dollar_dollar_flag = Aux()
+    dollar_dollar_flag.flag = False
+    def f(m):
+        dollar_dollar_flag.flag = not dollar_dollar_flag.flag
+        if dollar_dollar_flag.flag:
+            return r'\begin{equation*}'
+        return r'\end{equation*}'
+    actions += [(r'(?<!\\)\$\$', f)]
 
-    # option --repl
-    if options.repl:
-        text = do_option_repl(text)
+    # replace $...$ and \(...\) by text from variable parms.inline_math
+    # BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
+    #
+    def f(m):
+        m2 = re.search(r'(?<!\\)\$|\\\(|\\\)', m.group(1))
+        if m2:
+            warning('"' + m2.group(0)
+                + '" in {} braces (macro argument?): not properly handled',
+                m.group(0))
+        parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
+        return parms.inline_math[0]
+    actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\[^()])+)\$', f)]
+    actions += [(r'\\\(((?:' + braced + r'|[^\\$]|\\[^()])*)\\\)', f)]
 
-    # resolve backslash escapes for {, }, $, %, _, &, #
-    # resolve verbatim characters
-    # - subsequent replacement runs would lead to mistakes
+    #   macros \textxxx
+    #
+    for (m, c) in (
+        ('textbackslash', '\\'),
+        ('textasciicircum', '^'),
+        ('textasciitilde', '~'),
+    ):
+        actions += [(r'\\' + m + end_mac + skip_space_macro,
+                            verbatim(c, mark_verbatim, ''))]
+
+    #   now perform the collected replacement actions
+    #
+    for (expr, repl) in actions:
+        text = mysub(expr, repl, text, flags=re.M)
+
+    #   fix-text replacements for environments:
+    #   check for inclusion of {} etc.
+    #
+    for (name, repl) in parms.environments():
+        env = re_nested_env(name, parms.max_depth_env, '')
+        re_code_args('', repl, 'EnvRepl', name, no_backslash=True)
+        text = mysub_check_nested(env,
+                        mark_begin_env_sub + repl + mark_end_env_sub, text)
+
+
+    ##################################################################
+    #
+    #   LAB:ACCENTS
+    #   translate text-mode accents to corresponding UTF-8 characters
+    #   - if not found: raise warning and keep accent macro in text
+    #
+    def replace_accent(mac, accent, text):
+        def f(m):
+            # find the UTF-8 character for the matched letter [a-zA-Z]
+            # with the accent given in argument of replace_accent()
+            c = m.group(2)
+            if c.islower():
+                t = 'SMALL'
+            else:
+                t = 'CAPITAL'
+            u = 'LATIN ' + t + ' LETTER ' + c.upper() + ' WITH ' + accent
+            try:
+                return unicodedata.lookup(u)
+            except:
+                warning('could not find UTF-8 character "' + u
+                        + '"\nfor accent macro "' + m.group(0) + '"')
+                return m.group(0)
+        if mac.isalpha():
+            # ensure space or brace after macro name
+            mac += end_mac
+        else:
+            mac = re.escape(mac)
+        # accept versions with and without {} braces
+        return mysub(r'\\' + mac + skip_space + r'(\{)?([a-zA-Z])(?(1)\})',
+                                    f, text)
+
+    for (mac, acc) in (
+        ("'", 'ACUTE'),
+        ('`', 'GRAVE'),
+        ('^', 'CIRCUMFLEX'),
+        ('v', 'CARON'),
+        ('~', 'TILDE'),
+        ('"', 'DIAERESIS'),
+        ('r', 'RING ABOVE'),
+        ('=', 'MACRON'),
+        ('b', 'LINE BELOW'),
+        ('u', 'BREVE'),
+        ('H', 'DOUBLE ACUTE'),
+        ('.', 'DOT ABOVE'),
+        ('d', 'DOT BELOW'),
+        ('c', 'CEDILLA'),
+        ('k', 'OGONEK'),
+    ):
+        text = replace_accent(mac, acc, text)
+
+
+    ##################################################################
+    #
+    #   LAB:EQUATIONS: replacement of equation environments
+    #
+    ##################################################################
+
+    #   example: see file Example.md
+    #
+    #   1. split equation environment into 'lines' delimited by \\
+    #      alias mark_linebreak
+    #   2. split each 'line' into 'sections' delimited by &
+    #   3. split each 'section' into maths and \text parts
+    #
+    #   - argument of \text{...} (variable parms.macro_text) is reproduced
+    #     without change
+    #   - maths parts are replaced by values from variable parms.display_math
+    #   - interpunction signs (see variable parms.mathpunct) at end of a
+    #     maths part, ignoring parms.mathspace, are appended to replacement
+    #   - relational operators at beginning of a maths part are prepended
+    #     as ' gleich ...', if maths part is not first on line ('&' is a part)
+    #   - other operators like +, -, *, / are prepended e.g. as ' minus ...'
+    #   - see variables parms.mathop & parms.mathoptext for text replacements
+    #   - the basic replacement steps to next value from parms.display_math,
+    #       - if the part includes a leading operator,
+    #       - after intermediate \text{...},
+    #       - and if last maths part ended with interpunction
+    #         (this only for parms.change_repl_after_punct == True)
+    #   - maths space (variable parms.mathspace) like \quad is replaced by ' '
+
+    #   Assumptions:
+    #   - \\ has been changed to mark_linebreak, & is still present
+    #   - macros from LAB:EQU_MACROS already have been deleted
+    #   - \text{...} has been resolved not yet
+    #   - mathematical space as \; and \quad (variable parms.mathspace)
+    #     is still present
+    #   - maths macros like \epsilon or \Omega that might constitute a
+    #     maths part: still present or replaced with non-space
+
+    parms.mathspace = (r'(?:\\[ ,;:\n\t]|(?<!\\)~'
+                            + r'|\\(?:q?quad|(?:thin|med|thick)space)'
+                            + end_mac + skip_space_macro + r')')
+    parms.mathop = (
+        r'\+|-|\*|/'
+        + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
+        + r'|\\[gl]eq?' + end_mac
+        + r'|\\su[bp]set(?:eq)?' + end_mac
+        + r'|\\Leftrightarrow' + end_mac
+        + r'|\\to' + end_mac
+        + r'|\\stackrel' + sp_braced + skip_space + r'\{=\}'
+        + r'|\\c[au]p' + end_mac
+    )
+    parms.mathpunct = r'(?:(?<!\\)[;,.])'
+    parms.change_repl_after_punct = True
+
+    def display_math_update():
+        parms.display_math = parms.display_math[1:] + parms.display_math[:1]
+    def display_math_get(update):
+        if update:
+            display_math_update()
+        return parms.display_math[0]
+
+    #   replace a maths part by suitable raw text
+    #
+    def math2txt(txt, first_on_line):
+        # check for leading operator, possibly after maths space;
+        # there also might be a '{}' or r'\mbox{}' for making e.g. '-' binary
+        m = re.search(r'\A(' + parms.mathspace
+                        + r'|(?:\\mbox' + skip_space + r')?\{\}|\s)*'
+                        + r'(' + parms.mathop + r')', txt)
+        if m and not first_on_line:
+            # starting with operator, not first on current line
+            pre = parms.mathoptext.get(m.group(2), parms.mathoptext[None])
+            txt = txt[m.end(0):]
+            update = True
+        else:
+            # check for leading maths space
+            m = re.search(r'\A(' + skip_space + parms.mathspace + r')+', txt)
+            if m:
+                pre = ' '
+                txt = txt[m.end(0):]
+            else:
+                pre = ''
+            update = False
+
+        # check for trailing maths space
+        m = re.search(r'(' + parms.mathspace + skip_space + r')+\Z', txt)
+        if m:
+            post = ' '
+            txt = txt[:m.start(0)]
+        else:
+            post = ''
+        txt = txt.strip()
+        if not txt:
+            return pre + post
+
+        # check for trailing interpunction
+        m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
+        if not m:
+            return pre + display_math_get(update) + post
+        if txt == m.group(1):
+            ret = pre + txt + post
+        else:
+            ret = pre + display_math_get(update) + m.group(1) + post
+        if parms.change_repl_after_punct:
+            # after interpunction: next part with different replacement
+            display_math_update()
+        return ret
+
+    #   split a section between & delimiters into \text{...} and maths parts
+    #
+    def split_sec(txt, first_on_line):
+        last = 0
+        res = ''
+        # iterate over \text parts
+        for m in re.finditer(r'\\' + parms.text_macro + sp_braced, txt):
+            # maths part between last and current \text
+            res += math2txt(txt[last:m.start(0)], first_on_line)
+            # content of \text{...}
+            res += mark_deleted + m.group(1) + mark_deleted
+                # avoid problem e.g. on ... \text{for\quad} x ...
+            last = m.end(0)
+            first_on_line = False
+            display_math_update()
+        # maths part after last \text
+        res += math2txt(txt[last:], first_on_line)
+        return res
+
+    #   parse the text of an equation environment
+    #
+    def parse_equ(equ):
+        # first resolve sub-environments (e.g. cases) and mark_deleted
+        # in order to see interpunction
+        d = (r'((' + re_begin_env + r')|(' + re_end_env
+                        + r')|(' + mark_deleted + r'))')
+        equ = mysub(d, '', equ)
+
+        # then split into lines delimited by \\ alias mark_linebreak
+        # BUG (with warning for braced macro arguments):
+        # repl_line() and later repl_sec() may fail if \\ alias mark_linebreak
+        # or later & are argument of a macro
+        #
+        for f in re.finditer(braced, text_get_txt(equ)):
+            if re.search(mark_linebreak + r'|(?<!\\)&', f.group(1)):
+                warning('"\\\\" or "&" in {} braces (macro argument?):'
+                        + ' not properly handled',
+                        re.sub(mark_linebreak, r'\\\\', text_get_txt(equ)))
+                break
+
+        # important: non-greedy *? repetition, and avoid zero-width matches
+        # - do not disrupt trailing maths space like r'\ ' in equation line
+        line = (skip_space + r'((.|\n)*?(?!\Z)|(.|\n)+?)(?<!\\)' + skip_space
+                    + r'(' + mark_linebreak + r'|\Z)')
+        # return replacement for RE line
+        def repl_line(m):
+            # finally, split line into sections delimited by '&'
+            # important: non-greedy *? repetition, avoid zero-width matches
+            sec = r'((.|\n)*?(?!\Z)|(.|\n)+?)((?<!\\)&|\Z)'
+            flag = Aux()
+            flag.first_on_line = True
+            def repl_sec(m):
+                # split this section into maths and text parts
+                # BUG (without warning):
+                # we assume that '&' always creates white space
+                ret = split_sec(m.group(1), flag.first_on_line) + ' '
+                flag.first_on_line = False
+                return ret
+            t = text_from_match(m, 1, equ)
+            t = mysub(sec, repl_sec, t)
+            return text_add_frame('  ', '\n', t)
+
+        ret = mysub(line, repl_line, equ)
+        if text_get_txt(equ).endswith(mark_linebreak):
+            # for example: last equation ends with \\%
+            ret = text_add_frame('', '\n', ret)
+        return ret
+
+    #   replace equation environments listed above
+    #
+    for (name, args, replacement) in parms.equation_environments():
+        if not replacement:
+            (re_args, _) = re_code_args(args, replacement, 'EquEnv', name)
+            expr = re_nested_env(name, parms.max_depth_env, re_args)
+            def f(m):
+                t = text_from_match(m, 'body', text)
+                t = parse_equ(t)
+                return text_add_frame(mark_begin_env, mark_end_env, t)
+            text = mysub(expr, f, text)
+            continue
+        # environment with fixed replacement and added interpunction
+        env = re_nested_env(name, parms.max_depth_env, '')
+        re_code_args('', replacement, 'EquEnv', name, no_backslash=True)
+        def f(m):
+            txt = parse_equ(text_from_match(m, 'body', text))
+            txt = text_get_txt(txt).strip()
+            s = replacement
+            m = re.search(r'(' + parms.mathpunct + r')\Z', txt)
+            if m:
+                s += m.group(1)
+            return mark_begin_env + s + mark_end_env
+        text = mysub_check_nested(env, f, text)
+
+    #   LAB:SPACE
+    #   replace space macros including ~, \, and &
+    #   replace \\ placeholder
+    #   - only after treatment of equation environments
+    #
+    text = mysub(r'\\,', mark_deleted + utf8_nnbsp, text)
+    text = mysub(r'(?<!\\)~', mark_deleted + utf8_nbsp, text)
+    text = mysub(r'(?<!\\)&', mark_deleted + ' ', text)
+    text = mysub(parms.mathspace, mark_deleted + ' ', text)
+    text = mysub(mark_linebreak, mark_deleted + ' ', text)
+
+
+    #######################################################################
+    #
+    #   final clean-up
+    #
+    #######################################################################
+
+    #   only print unknown macros and environments?
+    #
+    if options.unkn:
+        unknowns = ''
+        macsknown = (
+            'begin', 
+            'end',
+            'item',
+        )
+        envsknown = (
+            mark_internal_pre,      # compare mark_begin_env
+            'itemize',
+            'enumerate',
+        )
+        macs = []
+        for m in re.finditer(r'\\(' + macro_name + r')', text_get_txt(text)):
+            if m.group(1) not in macs:
+                macs += [m.group(1)]
+        macs.sort()
+        for m in macs:
+            if m not in macsknown:
+                unknowns += '\\' + m + '\n'
+        envs = []
+        for m in re.finditer(begin_lbr + r'(' + environ_name + r')\}',
+                                text_get_txt(text)):
+            if m.group(1) not in envs:
+                envs += [m.group(1)]
+        envs.sort()
+        for e in envs:
+            if e not in envsknown:
+                unknowns += r'\begin{' + e + '}' + '\n'
+        return (unknowns, [])
+
+    #   delete remaining \xxx macros unless given in --extr option;
+    #   if followed by braced argument: copy its content
+    #
+    excl = r'begin|end|item'
+    if options.extr:
+        excl += r'|' + options.extr_re
+    re_macro = r'\\(?!(?:' + excl + r')' + end_mac + r')' + macro_name
+                # 'x(?!y)' matches 'x' not followed by 'y'
+    re_macro_arg = re_macro + sp_braced
+    while mysearch(re_macro_arg, text):
+        # macros with braced argument might be nested
+        text = mysub(re_macro_arg, mark_deleted + r'\1' + mark_deleted, text)
+    text = mysub(re_macro + skip_space_macro, mark_deleted, text)
+
+    #   handle \item without [...] option,
+    #   or also with option, if not parms.keep_item_labels
+    #   - in itemize environment:
+    #     use values from parms.default_item_labs
+    #   - LAB:ENUMERATE in enumerate environment:
+    #     replace by values from parms.default_item_enum_labs
+    #
+    itemize_dict = {'itemize': parms.default_item_labs,
+                    'enumerate': parms.default_item_enum_labs}
+
+    # a stack to follow nested environments
+    # - if a lonely \item appears: pretend to be in itemize
+    itemize_stack = [itemize_dict['itemize']]
+
+    # this regular expression matches an \item
+    # (\item may skip arbitrary subsequent space) ...
+    if parms.keep_item_labels:
+        # do not match \item with [...] option (done below at LAB:ITEMS)
+        expr = r'(\\item' + end_mac + r'(?!' + sp_bracketed + r')\s*)'
+    else:
+        # \item option may be present
+        expr = r'(\\item' + end_mac + r'(?:' + sp_bracketed + r')?\s*)'
+    # ... and \begin / \end for environments listed in itemize_dict
+    expr += (r'|(?:\\(begin|end)' + skip_space
+                + r'\{(' + r'|'.join(itemize_dict.keys()) + r')\})')
+
     def f(m):
         if m.group(1):
-            return m.group(1)
-        c = chr(int(m.group(2)))
-        if c == '\n':
-            # for line number tracking, compare verbatim()
-            return ''
-        return c
-    text = mysub(r'\\([{}$%_&#])|' 
-            + mark_verbatim[0] + r'(\d+)' + mark_verbatim[1], f, text)
+            # an \item: return value from active label collection, rotate
+            lab = itemize_stack[-1][0]
+            itemize_stack[-1] = itemize_stack[-1][1:] + itemize_stack[-1][:1]
+            return ' ' + lab + ' '
+        if m.group(3) == 'begin':
+            # entering an environment (group 2 is in sp_bracketed)
+            itemize_stack.append(itemize_dict[m.group(4)])
+        elif len(itemize_stack) > 1:
+            # leaving an environment
+            itemize_stack.pop()
+        return mark_deleted
+    text = mysub(expr, f, text)
+
+    #   delete remaining environment frames outside of equations
+    #   - only after treatment of macros: protect line break before \begin;
+    #     here we also delete placeholders \begin{%} from above
+    #   - only after handling of itemize vs. enumerate
+    #
+    text = mysub(re_begin_env, mark_deleted, text)
+    text = mysub(re_end_env, mark_deleted, text)
+
+    #   LAB:ITEMS
+    #   \item(s) with [.] label may pose problems with interpunction checking
+    #   - one can simply remove the \item[...] label
+    #       - active, if parms.keep_item_labels == False
+    #   - one can look backwards in the text and repeat a present
+    #     interpunction sign after the item label
+    #       - active, if parms.item_label_repeat_punct == True
+    #       - works well with (German version of) LanguageTool
+    #       - this also checks text in the label
+    #       - this should be done after removal of all environment frames
+    #         between \item and a previous sentence
+    #   (\item[...] may skip arbitrary subsequent space)
+    #
+    if parms.keep_item_labels:
+        if parms.item_label_repeat_punct:
+            # try with preceding interpunction [.,;:!?] ...
+            def f(m):
+                # "manually" build replacement for r'\1 \3\2 ':
+                # otherwise, out-of-order inclusion r'\2' would deteriorate
+                # line number tracking
+                t1 = text_from_match(m, 1, text)
+                t3 = text_from_match(m, 3, text)
+                t3 = text_add_frame(' ', m.group(2) + ' ', t3)
+                return text_combine(t1, t3)
+            text = mysub(r'(((?<!\\)[.,;:!?])(?:\s|' + mark_deleted
+                            + r')*)\\item' + sp_bracketed + r'\s*', f, text)
+        # ... otherwise simply extract the text in \item[...]
+        text = mysub(r'\\item' + sp_bracketed + r'\s*', r' \1 ', text)
+
+
+    ##################################################################
+    #
+    #   LAB:SPELLING
+    #
+    ##################################################################
+
+    #   perform replacements in file of option --repl
+    #   line syntax:
+    #   - '#: comment till end of line
+    #   - the words (delimiter: white space) in front of first separated '&'
+    #     are replaced by the words following this '&'
+    #   - if no replacement given: just delete phrase
+    #   - space in phrase to be replaced is arbitrary (but within current
+    #     paragraph)
+    #
+    def do_option_repl(text):
+        (lines, fname) = options.repl
+        for lin in lines:
+            i = lin.find('#')
+            if i >= 0:
+                lin = lin[:i]
+            lin = lin.split()
+
+            t = s = ''
+            for i in range(len(lin)):
+                if lin[i] == '&':
+                    break
+                t += s + re.escape(lin[i])
+                        # protect e.g. '.' and '$'
+                s = r'(?:[ \t]*\n[ \t]*|[ \t]+)'
+                        # at least one space character, but stay in paragraph
+            if not t:
+                continue
+            if t[0].isalpha():
+                t = r'\b' + t       # require word boundary
+            if t[-1].isalpha():
+                t = t + r'\b'
+
+            r = ' '.join(lin[i+1:])
+            if re.search(r'(?<!\\)%', r):
+                fatal('please use escaped \\% for replacement in file "'
+                                    + fname + '"', r)
+            r = re.sub('\\\\', '\\\\\\\\', r)       # \ ==> \\
+            text = mysub(t, r, text)
+        return text
+
+
+    ##################################################################
+    #
+    #   output of results
+    #
+    ##################################################################
+
+    #   work to be done just before output
+    #
+    def before_output(text):
+        # if braces {...} did remain somewhere: delete them
+        while mysearch(braced, text):
+            text = mysub(braced, mark_deleted + r'\1' + mark_deleted, text)
+
+        # remove mark_deleted:
+        # delete a line, if it only contains such marks
+        text = mysub(r'^([ \t]*' + mark_deleted + r'[ \t]*)+\n', '', text,
+                            flags=re.M)
+        text = mysub(mark_deleted, '', text)
+
+        # option --repl
+        if options.repl:
+            text = do_option_repl(text)
+
+        # resolve backslash escapes for {, }, $, %, _, &, #
+        # resolve verbatim characters
+        # - subsequent replacement runs would lead to mistakes
+        def f(m):
+            if m.group(1):
+                return m.group(1)
+            c = chr(int(m.group(2)))
+            if c == '\n':
+                # for line number tracking, compare verbatim()
+                return ''
+            return c
+        text = mysub(r'\\([{}$%_&#])|' 
+                + mark_verbatim[0] + r'(\d+)' + mark_verbatim[1], f, text)
+        return text
+
+    if options.extr:
+        # on option --extr: only print arguments of these macros
+        expr = (r'\\(?:' + options.extr_re + r')(?:' + sp_bracketed
+                        + r')*' + sp_braced)
+        text = extract_repls(expr, r'\2', text)
+
+    text = before_output(text)
+    if warning_or_error.msg:
+        # there was a problem: include message, clear for next call
+        text = text_add_frame(warning_or_error.msg, '', text)
+        warning_or_error.msg = ''
     return text
-
-if options.extr:
-    # on option --extr: only print arguments of these macros
-    expr = (r'\\(?:' + options.extr_re + r')(?:' + sp_bracketed
-                    + r')*' + sp_braced)
-    text = extract_repls(expr, r'\2', text)
-
-text = before_output(text)
-if warning_or_error.msg:
-    # there was a problem: include message, clear for next call
-    text = text_add_frame(warning_or_error.msg, '', text)
-    warning_or_error.msg = ''
-return text
 
 ####################################################
 #
