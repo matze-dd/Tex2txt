@@ -1,10 +1,11 @@
 "Unreleased"
 ------------
-- in branch dev, we develop a version that also can be used as Python module
-- starting at the creation of the tuple (text, number array), all code has
-  been put into a large function tex2txt()
+- version that also can be used as Python module
+- starting at the creation of the 2-tuple (text string, number array),
+  all code has been put into a large function tex2txt()
 - shell2.py shows an application that is equivalent to Bash script shell2.sh;
   no auxiliary files are created
+- added section in README.md
 
 Release 1.6.2
 -------------
