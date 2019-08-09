@@ -1,16 +1,12 @@
 "Unreleased"
 ------------
-- version that also can be used as Python module
-- starting at the creation of the 2-tuple (text string, number array),
+- version that also can be used as Python module:
+  starting at the creation of the 2-tuple (text string, number array),
   all code has been put into a large function tex2txt()
-- shell2.py shows an application that is equivalent to Bash script shell2.sh;
-  no auxiliary files are created
-- added section in README.md
-  <br><br>
-- TODO: add "convenience functions" for translation of line and column numbers
-  to tex2txt.py
-    - make shell2.py simpler
-    - add docu to README.md
+- added functions for translation of line and column numbers
+- shell2.py: an example application that is equivalent to Bash script
+  shell2.sh; no auxiliary files are created
+- README.md: added corresponding section
 
 Release 1.6.2
 -------------
