@@ -490,7 +490,13 @@ EquEnv('align', repl='  relation'),
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
 ## Application as Python module
-The module exports the following central function.
+The script can be extended with Python's module mechanism.
+In order to use `import tex2txt`, this module has to reside in the same
+directory as the importing script, or environment variable PYTHONPATH
+has to be set accordingly.
+
+### Interface
+The module provides the following central function.
 ```
 (plain, nums) = tex2txt.tex2txt(tex, options)
 ```
@@ -509,12 +515,25 @@ The parameters 'defs' and 'repl' for this class can be set using
 tex2txt.Definitions(fn) and tex2txt.read\_replacements(fn), both expecting
 'None' or a file name as argument.
 
+### Examples
 The interface is demonstrated in function main(), which is activated when
 running the script directly.
 An example application is shown in Python script [shell2.py](shell2.py)
 which resembles the Bash script [shell2.sh](shell2.sh) from section
-[Tool integration](#tool-integration).
-It accepts multiple file names and does not create auxiliary files.
+[Simple scripts](#simple-scripts).
+For instance, the Bash command
+```
+python3 shell2.py Banach/*.tex
+```
+will extract plain text from all these LaTeX files and call
+[LanguageTool](https://www.languagetool.org) (LT).
+(The path to LT has to be customised in script variable 'ltjar', compare
+section [Simple scripts](#simple-scripts).)
+Line and column numbers in LT's messages will be corrected, preceding each
+message by the corresponding file name.
+The script does not create auxiliary files.
+In order to suppress purely diagnostic messages from LT, one can use
+`python3 shell2.py Banach/*.tex 2>/dev/null`.
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
