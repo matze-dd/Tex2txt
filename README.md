@@ -495,7 +495,7 @@ In order to use `import tex2txt`, this module has to reside in the same
 directory as the importing script, or environment variable PYTHONPATH
 has to be set accordingly.
 
-### Interface
+### Module interface
 The module provides the following central function.
 ```
 (plain, nums) = tex2txt.tex2txt(tex, options)
@@ -515,7 +515,26 @@ The parameters 'defs' and 'repl' for this class can be set using
 tex2txt.Definitions(fn) and tex2txt.read\_replacements(fn), both expecting
 'None' or a file name as argument.
 
-### Examples
+Two functions simplify translation of line and column numbers in case of
+character position tracking.
+Translation is performed by
+```
+ret = tex2txt.translate_numbers(tex, plain, nums, starts, lin, col)
+```
+with strings 'tex' and 'plain' containing LaTeX and derived plain texts.
+Argument 'nums' is the number array returned by function tex2txt(),
+'lin' and 'col' are the integers to be translated.
+Argument 'starts' has to be obtained beforehand by the call
+```
+starts = tex2txt.get_line_starts(plain)
+```
+and contains positions in string 'plain' that start a new line.
+The return object 'ret' above is 'None', if translation was not successful.
+On success, 'ret' is a 3-tuple.
+Integers 'ret\[0\]' and 'ret\[1\]' are line and column numbers, and boolean
+'r\[2\]' equals 'True', if the actual position may be larger.
+
+### Application examples
 The interface is demonstrated in function main(), which is activated when
 running the script directly.
 An example application is shown in Python script [shell2.py](shell2.py)
@@ -532,7 +551,7 @@ section [Simple scripts](#simple-scripts).)
 Line and column numbers in LT's messages will be corrected, preceding each
 message by the corresponding file name.
 The script does not create auxiliary files.
-In order to suppress purely diagnostic messages from LT, one can use
+In order to suppress purely diagnostic messages from LT, one can say
 `python3 shell2.py Banach/*.tex 2>/dev/null`.
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
