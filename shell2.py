@@ -14,12 +14,10 @@ import tex2txt
 # path of LT java archive and used options
 #
 ltjar = '../LT/LanguageTool-4.4/languagetool-commandline.jar'
-ltcmd = [
-    'java', '-jar', ltjar,
-    '--language', 'en-GB',
-    '--encoding', 'utf-8',
-    '--disable', 'WHITESPACE_RULE'
-]
+ltcmd = ('java -jar ' +  ltjar
+            + ' --language en-GB --encoding utf-8'
+            + ' --disable WHITESPACE_RULE')
+ltcmd = ltcmd.split()
 
 # prepare options for tex2txt()
 #
@@ -40,9 +38,7 @@ for file in sys.argv[1:]:
     #
     proc = subprocess.Popen(ltcmd, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
-    proc.stdin.write(plain.encode())
-    s_out = proc.communicate()[0]
-    proc.stdin.close()
+    s_out = proc.communicate(input=plain.encode())[0]
 
     msg = s_out.decode()
     # msg = s_out.decode(encoding='latin-1')    # for Cygwin
