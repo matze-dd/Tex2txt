@@ -9,6 +9,14 @@
 [Application as Python module](#application-as-python-module)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
 
+**ATTENTION**<br>
+In order to allow application as Python module, the script tex2txt.py
+underwent a major change.
+It is still under test.
+If in doubt, please use release 1.6.2 [from this page](../../releases).
+<br>
+<br>
+
 <a name="general-description"></a>
 This is a modest, self-contained [Python](https://www.python.org)
 script for the extraction of plain text from
@@ -28,8 +36,9 @@ Problems with interpunction and case sensitivity would arise, if
 equation environments were simply removed or replaced by fixed text.
 Altogether, the script can help to create a compact report from language
 examination of a single file or a complete document tree.
-A simple and a more complete application are addressed in section
-[Tool integration](#tool-integration) below.
+Simple and more complete applications are addressed in sections
+[Tool integration](#tool-integration) and
+[Application as Python module](#application-as-python-module) below.
 
 For ease of problem localisation, we implement a mechanism that tracks
 line number changes during the text manipulations.
@@ -492,7 +501,7 @@ counting from one.
 Negative values indicate that the actual position may be larger.
 Argument 'options' can be created with class
 ```
-options = tex2txt.Options(...)
+tex2txt.Options(...)
 ```
 which takes arguments similar to the command-line options of the script.
 They are documented at the definition of class 'Options'.
@@ -500,7 +509,8 @@ The parameters 'defs' and 'repl' for this class can be set using
 tex2txt.Definitions(fn) and tex2txt.read\_replacements(fn), both expecting
 'None' or a file name as argument.
 
-All this is demonstrated in script function main().
+The interface is demonstrated in function main(), which is activated when
+running the script directly.
 An example application is shown in Python script [shell2.py](shell2.py)
 which resembles the Bash script [shell2.sh](shell2.sh) from section
 [Tool integration](#tool-integration).
