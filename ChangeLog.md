@@ -6,6 +6,11 @@
 - shell2.py shows an application that is equivalent to Bash script shell2.sh;
   no auxiliary files are created
 - added section in README.md
+  <br><br>
+- TODO: add "convenience functions" for translation of line and column numbers
+  to tex2txt.py
+    - make shell2.py simpler
+    - add docu to README.md
 
 Release 1.6.2
 -------------
