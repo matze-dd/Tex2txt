@@ -1791,6 +1791,49 @@ def write_output(text, ft, fn):
                 s += '+'
             fn.write(s + '\n')
 
+#   function for translation of line and column numbers
+#
+def translate_numbers(tex, plain, charmap, starts, lin, col):
+
+    if lin < 1 or col < 1:
+        return None
+
+    # get start position of line number lin in plain
+    if lin > len(starts):
+        return None
+    n = starts[lin - 1]
+
+    # add column number col
+    s = plain[n:]
+    i = s.find('\n')
+    if i >= 0 and col > i or i < 0 and col > len(s):
+        # line is not that long
+        return None
+    n += col - 1
+
+    # map to character position in tex
+    if n >= len(charmap):
+        return None
+    n = charmap[n]
+    if n < 0:
+        flag = True
+        n = -n
+    else:
+        flag = False
+
+    # get line and column in tex
+    if n > len(tex):
+        return None
+    s = tex[:n]
+    lin = s.count('\n') + 1
+    col = len(s) - (s.rfind('\n') + 1)
+    return (lin, max(1, col), flag)
+
+#   auxiliary function for translation of line and column numbers
+#
+def get_line_starts(s):
+    return list(m.start(0) for m in re.finditer(r'\n', '\n' + s))
+
 #   function for reading replacement file
 #
 def read_replacements(fn):
@@ -1880,5 +1923,6 @@ def main():
     write_output(text, sys.stdout, cmdline.nums)
 
 if __name__ == '__main__':
+    # used as stand-alone script
     main()
 
