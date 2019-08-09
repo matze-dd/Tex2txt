@@ -16,14 +16,14 @@ import tex2txt
 ltjar = '../LT/LanguageTool-4.4/languagetool-commandline.jar'
 ltcmd = ('java -jar ' +  ltjar
             + ' --language en-GB --encoding utf-8'
-            + ' --disable WHITESPACE_RULE')
-ltcmd = ltcmd.split()
+            + ' --disable WHITESPACE_RULE'
+).split()
 
 # prepare options for tex2txt()
 #
 options = tex2txt.Options(
-                char=True,
-                lang='en'
+            char=True,
+            lang='en'
 )
 
 for file in sys.argv[1:]:
@@ -31,68 +31,39 @@ for file in sys.argv[1:]:
     # read file and call tex2txt()
     #
     tex = tex2txt.myopen(file).read()
-    (plain, map) = tex2txt.tex2txt(tex, options)
-    starts = list(m.start(0) for m in re.finditer(r"\n", "\n" + plain))
+    (plain, charmap) = tex2txt.tex2txt(tex, options)
+    starts = tex2txt.get_line_starts(plain)
 
     # call LanguageTool
     #
     proc = subprocess.Popen(ltcmd, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
-    s_out = proc.communicate(input=plain.encode())[0]
-
-    msg = s_out.decode()
-    # msg = s_out.decode(encoding='latin-1')    # for Cygwin
+    out = proc.communicate(input=plain.encode())[0]
+    msg = out.decode()
+    # msg = out.decode(encoding='latin-1')    # for Cygwin
 
     lines = msg.splitlines(keepends=True)
     if len(lines) > 0:
         # write final diagnostic line to stderr
         sys.stderr.write(lines.pop())
 
-    # correct line and column numbers in messages
+    # correct line and column numbers in messages, prepend file name
     #
     expr=r'^\d+\.\) Line (\d+), column (\d+), Rule ID: '
     def f(m):
         def ret(s1, s2):
             s = m.group(0)
-            return (file + "\n" + "=" * len(file) + "\n"
-                    + s[:m.start(1)] + "[" + s1 + "]" + s[m.end(1):m.start(2)]
-                    + "[" + s2 + "]" + s[m.end(2):])
-        def unkn():
-            return ret("?", "?")
+            return (file + '\n' + '=' * len(file) + '\n'
+                    + s[:m.start(1)] + '[' + s1 + ']' + s[m.end(1):m.start(2)]
+                    + '[' + s2 + ']' + s[m.end(2):])
 
         lin = int(m.group(1))
         col = int(m.group(2))
-        if lin < 1 or col < 1:
-            return unkn()
-
-        # find start of line number lin in plain file
-        if lin > len(starts):
-            return unkn()
-        n = starts[lin - 1]
-
-        # add column number col
-        s = plain[n:]
-        i = s.find("\n")
-        if i >= 0 and col > i or i < 0 and col > len(s):
-            return unkn()
-        n += col - 1
-
-        # map to character position in tex file
-        if n >= len(map):
-            return unkn()
-        n = map[n]
-        mark = ""
-        if n < 0:
-            mark = "+"
-            n = -n
-
-        # get line and column in tex file
-        if n > len(tex):
-            return unkn()
-        s = tex[:n]
-        lin = s.count("\n") + 1
-        col = len(s) - (s.rfind("\n") + 1)
-        return ret(str(lin) + mark, str(col) + mark)
+        r = tex2txt.translate_numbers(tex, plain, charmap, starts, lin, col)
+        if not r:
+            return ret('?', '?')
+        mark = '+' if r[2] else ''
+        return ret(str(r[0]) + mark, str(r[1]) + mark)
 
     for s in lines:
         sys.stdout.write(re.sub(expr, f, s))
