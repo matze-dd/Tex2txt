@@ -532,7 +532,7 @@ and contains positions in string 'plain' that start a new line.
 The return object 'ret' above is 'None', if translation was not successful.
 On success, 'ret' is a 3-tuple.
 Integers 'ret\[0\]' and 'ret\[1\]' are line and column numbers, and boolean
-'r\[2\]' equals 'True', if the actual position may be larger.
+'ret\[2\]' equals 'True', if the actual position may be larger.
 
 ### Application examples
 The interface is demonstrated in function main(), which is activated when
