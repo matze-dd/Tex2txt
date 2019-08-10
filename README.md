@@ -544,6 +544,7 @@ exception into an error message.
 ### Application examples
 The interface is demonstrated in function main(), which is activated when
 running the script directly.
+
 An example application is shown in Python script [shell2.py](shell2.py)
 which resembles the Bash script [shell2.sh](shell2.sh) from section
 [Simple scripts](#simple-scripts).
@@ -560,6 +561,18 @@ message by the corresponding file name.
 The script does not create auxiliary files.
 In order to suppress purely diagnostic messages from LT, one can say
 `python3 shell2.py Banach/*.tex 2>/dev/null`.
+
+With example [shell2-html.py](shell2-html.py), the command
+```
+python3 shell2-html.py t.tex > t.html
+```
+will create an HTML file 't.html' from LaTeX file 't.tex'.
+Opened in a browser, it displays the original LaTeX text, highlighting the
+problems indicated by LT.
+The content of corresponding LT messages can be seen when hovering the mouse
+over these marked places.
+This nice idea is due to Sylvain Hallé, who developed
+[TeXtidote](https://github.com/sylvainhalle/textidote).
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
