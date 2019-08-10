@@ -1827,7 +1827,12 @@ def translate_numbers(tex, plain, charmap, starts, lin, col):
     s = tex[:n]
     lin = s.count('\n') + 1
     col = len(s) - (s.rfind('\n') + 1)
-    return (lin, max(1, col), flag)
+
+    r = Aux()
+    r.lin = lin
+    r.col = max(1, col)
+    r.flag = flag
+    return r
 
 #   auxiliary function for translation of line and column numbers
 #
@@ -1841,10 +1846,17 @@ def read_replacements(fn):
         return None
     return (myopen(fn).readlines(), fn)
 
+#   function for reading definition file
+#
+def read_definitions(fn):
+    if not fn:
+        return Definitions(None, '?')
+    return Definitions(myopen(fn).read(), fn)
+
 #   class for parsing of file from option --defs
 #
 class Definitions:
-    def __init__(self, fn):
+    def __init__(self, code, name):
         self.project_macros = ()
         self.system_macros = ()
         self.heading_macros = ()
@@ -1854,36 +1866,35 @@ class Definitions:
         self.environment_begins = ()
         self.theorem_environments = ()
         self.misc_replace = ()
-        if fn:
+        if code:
             defs = self
-            s = myopen(fn).read()
             try:
-                exec(s)
+                exec(code)
             except BaseException as e:
                 import traceback
                 i = 0 if isinstance(e, SyntaxError) else -1
                 s = traceback.format_exc(limit=i)
                 s = re.sub(r'\ATraceback \(most recent call last\):\n'
                                 + r'  File "<string>"(, line \d+).*\n',
-                                r'File "' + fn + r'"\1\n', s)
-                fatal('problem in file "' + fn + '"\n' + s)
+                                r'File "' + name + r'"\1\n', s)
+                fatal('problem in file "' + name + '"\n' + s)
 
 #   class for passing options to tex2txt()
+#   LAB:OPTIONS
 #
 class Options:
     def __init__(self,
             repl=None,      # or set by read_replacements()
             char=False,     # True: character position tracking
-            defs=None,      # or set by Definitions()
-            extr=None,      # or set to comma-separated macro list
+            defs=None,      # or set by read_definitions()
+            extr=None,      # or string: comma-separated macro list
             lang=None,      # or set to language code
             unkn=False):    # True: print unknowns
         self.repl = repl
         self.char = char
-        if not defs:
-            self.defs = Definitions(None)
-        else:
-            self.defs = defs
+        self.defs = defs
+        if not self.defs:
+            self.defs = read_definitions(None)
         self.extr = extr
         self.lang = lang
         self.unkn = unkn
@@ -1905,7 +1916,7 @@ def main():
     options = Options(
                 repl=read_replacements(cmdline.repl),
                 char=cmdline.char,
-                defs=Definitions(cmdline.defs),
+                defs=read_definitions(cmdline.defs),
                 extr=cmdline.extr,
                 lang=cmdline.lang,
                 unkn=cmdline.unkn)
