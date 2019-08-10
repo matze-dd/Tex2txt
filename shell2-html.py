@@ -5,6 +5,9 @@
 #   - generation of html output with problems highlighted,
 #     LT messages displayed on mouse hover
 #
+#   CREDITS:
+#   This idea goes back to Sylvain Hallé who developed TeXtidote.
+#
 #   Usage:
 #   python3 this_script a_LaTeX_file > out.html
 #
