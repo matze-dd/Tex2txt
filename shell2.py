@@ -62,8 +62,8 @@ for file in sys.argv[1:]:
         r = tex2txt.translate_numbers(tex, plain, charmap, starts, lin, col)
         if not r:
             return ret('?', '?')
-        mark = '+' if r[2] else ''
-        return ret(str(r[0]) + mark, str(r[1]) + mark)
+        mark = '+' if r.flag else ''
+        return ret(str(r.lin) + mark, str(r.col) + mark)
 
     for s in lines:
         sys.stdout.write(re.sub(expr, f, s))
