@@ -83,6 +83,9 @@ Further details are given in section
 An example is shown in file [Example.md](Example.md), operation is summarised
 in the script at label LAB:EQUATIONS.
 
+Application as Python module is shortly described in section
+[Application as Python module](#application-as-python-module) below.
+
 The Python script may be seen as an exercise in application of regular
 expressions.
 Its internal design could be more orderly.
@@ -91,9 +94,6 @@ variables and functions with statements that actually perform text replacement
 operations.
 In section [Remarks on implementation](#remarks-on-implementation),
 some general techniques and problems are addressed.
-
-Application as Python module is shortly described in section
-[Application as Python module](#application-as-python-module) below.
 
 If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues),
@@ -510,13 +510,13 @@ Argument 'options' can be created with class
 tex2txt.Options(...)
 ```
 which takes arguments similar to the command-line options of the script.
-They are documented at the definition of class 'Options'.
-The parameters 'defs' and 'repl' for this class can be set using
-tex2txt.Definitions(fn) and tex2txt.read\_replacements(fn), both expecting
-'None' or a file name as argument.
+They are documented at the definition of class 'Options', see LAB:OPTIONS.
+The parameters 'defs' and 'repl' for this class can be set using functions
+tex2txt.read\_definitions(fn) and tex2txt.read\_replacements(fn), both
+expecting 'None' or a file name as argument.
 
-Two functions simplify translation of line and column numbers in case of
-character position tracking.
+Two additional functions support translation of line and column numbers
+in case of character position tracking.
 Translation is performed by
 ```
 ret = tex2txt.translate_numbers(tex, plain, nums, starts, lin, col)
@@ -529,10 +529,17 @@ Argument 'starts' has to be obtained beforehand by the call
 starts = tex2txt.get_line_starts(plain)
 ```
 and contains positions in string 'plain' that start a new line.
-The return object 'ret' above is 'None', if translation was not successful.
-On success, 'ret' is a 3-tuple.
-Integers 'ret\[0\]' and 'ret\[1\]' are line and column numbers, and boolean
-'ret\[2\]' equals 'True', if the actual position may be larger.
+The return value 'ret' above is 'None', if translation was not successful.
+On success, 'ret' is a small object.
+Integers 'ret.lin' and 'ret.col' indicate line and column numbers, and
+boolean 'ret.flag' equals 'True', if the actual position may be larger.
+
+Finally, function
+```
+tex2txt.myopen(filename, mode='r')
+```
+is equivalent to standard function open(), but it converts a possible
+exception into an error message.
 
 ### Application examples
 The interface is demonstrated in function main(), which is activated when
