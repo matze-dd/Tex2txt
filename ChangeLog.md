@@ -7,6 +7,7 @@
 - shell2.py: an example application that is equivalent to Bash script
   shell2.sh; no auxiliary files are created
 - README.md: added corresponding section
+- shell2-html.py: generation of HTML report similar to TeXtidote
 
 Release 1.6.2
 -------------
