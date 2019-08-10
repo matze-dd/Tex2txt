@@ -59,12 +59,12 @@ def begin_match(m):
 
     msg = protect_html(m['message']) + '\n'
 
-    msg += protect_html(txt[beg:end]) + '\n'
+    msg += protect_html('>>>' + txt[beg:end] + '<<<') + '\n'
 
     repls = ' '.join("'" + r['value'] + "'" for r in m['replacements'])
     msg += 'Suggestions: ' + protect_html(repls) + '\n'
 
-    txt = txt[:beg] + '***' + txt[beg:end] + '***' + txt[end:]
+    txt = txt[:beg] + '>>>' + txt[beg:end] + '<<<' + txt[end:]
     msg += 'Context: ' + protect_html(txt)
 
     return '<span style="background: orange" title="' + msg + '">'
@@ -136,7 +136,6 @@ for file in sys.argv[1:2]:
                                     stdout=subprocess.PIPE)
     out = proc.communicate(input=plain.encode())[0]
     msg = out.decode()
-    # msg = out.decode(encoding='latin-1')    # for Cygwin
 
     sys.stdout.write(generate_html(tex, charmap, msg, file))
 
