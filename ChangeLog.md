@@ -4,10 +4,14 @@
   starting at the creation of the 2-tuple (text string, number array),
   all code has been put into a large function tex2txt()
 - added functions for translation of line and column numbers
+- enforce UTF-8 encoding in myopen(): otherwise, native Windows Python may
+  cause problems
+  <br><br>
 - shell2.py: an example application that is equivalent to Bash script
   shell2.sh; no auxiliary files are created
-- README.md: added corresponding section
 - shell2-html.py: generation of HTML report similar to TeXtidote
+- README.md: added sections on usage as module, and on working directly
+  under Windows
 
 Release 1.6.2
 -------------
