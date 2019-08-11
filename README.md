@@ -194,12 +194,17 @@ If Python and Java are installed under Windows, then at least the two
 Python scripts [shell2.py](shell2.py) and [shell2-html.py](shell2-html.py)
 from section [Application as Python module](#application-as-python-module)
 can be run directly in a Windows console.
-For example, this would look like
+For example, this could look like
 ```
 "c:\Program Files\Python\Python37\python.exe" shell2-html.py t.tex > t.html
 ```
 The script tex2txt.py has to be placed in the current directory, and
 variable 'ltjar' in script shell2-html.py is to be customised.
+
+For application of script shell2.py under Windows, the line with trailing
+comment '# for Cygwin' has to be uncommented, while the line above has 
+to be commented.
+(LanguageTool produces Latin-1 output under Windows if in normal-text mode.)
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
