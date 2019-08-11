@@ -54,15 +54,16 @@ def protect_html(s):
 
 #   generate HTML tag from LT message
 #
-def begin_match(m):
+def begin_match(m, lin):
     cont = m['context']
     txt = cont['text']
     beg = cont['offset']
     end = beg + cont['length']
 
-    msg = protect_html(m['message']) + '\n'
+    msg = protect_html(m['message'] + '; ' + m['rule']['id']) + '\n'
 
-    msg += protect_html('>>>' + txt[beg:end] + '<<<') + '\n'
+    msg += protect_html('Line ' + str(lin)
+                        + ': >>>' + txt[beg:end] + '<<<') + '\n'
 
     repls = ' '.join("'" + r['value'] + "'" for r in m['replacements'])
     msg += 'Suggestions: ' + protect_html(repls) + '\n'
@@ -72,7 +73,7 @@ def begin_match(m):
 
     return '<span style="background: orange" title="' + msg + '">'
 
-def end_match(m):
+def end_match():
     return '</span>'
 
 #   generate HTML output
@@ -80,50 +81,63 @@ def end_match(m):
 def generate_html(tex, charmap, msg, file):
 
     prefix = '<html>\n<body>\n'
-    postfix = '\n</body>\n</html>'
+    postfix = '\n</body>\n</html>\n'
 
     js = dec.decode(msg)
 
     # sort matches according to offset in tex
     # - for footnotes etc.
     matches = list(m for m in js['matches'])
-    matches.sort(key=lambda m: abs(charmap[m['offset']]))
+    def f(m):
+        beg = m['offset']
+        end = beg + max(1, m['length'])
+        if beg < 0 or end < 0 or beg >= len(charmap) or end >= len(charmap):
+            tex2txt.fatal('generate_html():'
+                            + ' bad message read from LanguageTool')
+        return abs(charmap[beg])
+    matches.sort(key=f)
 
-    h = 'File ' + file + ': ' + str(len(matches)) + ' problem(s)'
+    h = 'File "' + file + '" with ' + str(len(matches)) + ' problem(s)'
     prefix += '<H3>' + protect_html(h) + '</H3>\n'
 
     res = ''
     last = 0
-    skipped = 0
+    overlaps = []
 
     for m in matches:
 
-        offs = m['offset']
-        length = max(1, m['length'])
-        beg = abs(charmap[offs]) - 1
-        end = abs(charmap[offs + length]) - 1
+        beg = m['offset']
+        end = beg + max(1, m['length'])
+        beg = abs(charmap[beg]) - 1
+        end = abs(charmap[end]) - 1
         if end <= beg:
             end = beg + 1
+        lin = tex.count('\n', 0, beg) + 1
 
         if beg < last:
             # overlapping with last message
-            if end <= last:
-                # cannot shift beginning: skip
-                skipped += 1
-                continue
-            beg = last
+            overlaps.append((m, tex[beg:end], lin))
+            continue
 
         res += protect_html(tex[last:beg])
-        res += begin_match(m)
+        res += begin_match(m, lin)
         res += protect_html(tex[beg:end])
-        res += end_match(m)
+        res += end_match()
         last = end
 
-    warn = ''
-    if skipped:
-        warn = ('<H3>[[skipped display of problem(s)'
-                                + ' due to overlap' + ']]</H3>')
-    return prefix + warn + res + protect_html(tex[last:]) + postfix
+    res += protect_html(tex[last:])
+
+    if overlaps:
+        prefix += ('<H3>Overlapping message(s) found:'
+                        + ' see end of page</H3>\n')
+        post = '<H3>Overlapping message(s)</H3>\n'
+        for (m, s, lin) in overlaps:
+            post += begin_match(m ,lin)
+            post += protect_html(s)
+            post += end_match() + '<br>\n'
+        postfix = post + postfix
+
+    return prefix + res + postfix
 
 for file in sys.argv[1:2]:
 
