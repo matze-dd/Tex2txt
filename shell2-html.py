@@ -119,6 +119,15 @@ def generate_html(tex, charmap, msg, file):
             overlaps.append((m, tex[beg:end], lin))
             continue
 
+        if (end == beg + 1 and tex[beg] == '\\'
+                and re.search(r'(?<!\\)(\\\\)*\Z', tex[:beg])):
+            # HACK:
+            # if matched a single \ that is actually followed by macro name:
+            # also highlight the macro name
+            s = re.search(r'\A\\[a-zA-Z]+', tex[beg:])
+            if s:
+                end = beg + len(s.group(0))
+
         res += protect_html(tex[last:beg])
         res += begin_match(m, lin)
         res += protect_html(tex[beg:end])
