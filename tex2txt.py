@@ -482,7 +482,7 @@ def warning(msg, detail=None):
     raise_error('warning', msg, detail)
 def myopen(f, mode='r'):
     try:
-        return open(f, mode=mode)
+        return open(f, mode=mode, encoding='utf-8')
     except:
         raise_error('problem', 'could not open file "' + f + '"', xit=1)
 warning_or_error = Aux()
