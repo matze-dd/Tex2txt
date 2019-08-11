@@ -201,6 +201,8 @@ For example, this would look like
 The script tex2txt.py has to be placed in the current directory, and
 variable 'ltjar' in script shell2-html.py is to be customised.
 
+[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
 with good quality.
