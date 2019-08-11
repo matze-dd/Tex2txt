@@ -9,14 +9,6 @@
 [Application as Python module](#application-as-python-module)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
 
-**ATTENTION**<br>
-In order to allow application as Python module, the script tex2txt.py
-underwent a major change.
-It is still under test.
-If in doubt, please use release 1.6.2 [from this page](../../releases).
-<br>
-<br>
-
 <a name="general-description"></a>
 This is a modest, self-contained [Python](https://www.python.org)
 script for the extraction of plain text from
@@ -308,6 +300,11 @@ produce Latin-1 output, even if option '--encoding utf-8' is specified.
 Therefore, a translator to UTF-8 has to be placed in front of a Python filter
 for line or column numbers.
 This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
+
+With option --json, LanguageTool always delivers UTF-8 output.
+This is used in example Python script [shell2-html.py](shell2-html.py)
+from section
+[Application as Python module](#application-as-python-module).
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
