@@ -2,6 +2,7 @@
 [General description](#general-description)&nbsp;\|
 [Selected actions](#selected-actions)&nbsp;\|
 [Command line](#command-line)&nbsp;\|
+[Usage under Windows](#usage-under-windows)&nbsp;\|
 [Tool integration](#tool-integration)&nbsp;\|
 [Encoding problems](#encoding-problems)&nbsp;\|
 [Declaration of LaTeX macros](#declaration-of-latex-macros)&nbsp;\|
@@ -182,6 +183,23 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
   in input text
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+
+## Usage under Windows
+The software has been developed under Linux and tested additionally under
+Cygwin on Windows&nbsp;7.
+Some encoding problems for the latter case are addressed in section
+[Encoding problems](#encoding-problems).
+
+If Python and Java are installed under Windows, then at least the two
+Python scripts [shell2.py](shell2.py) and [shell2-html.py](shell2-html.py)
+from section [Application as Python module](#application-as-python-module)
+can be run directly in a Windows console.
+For example, this would look like
+```
+"c:\Program Files\Python\Python37\python.exe" shell2-html.py t.tex > t.html
+```
+The script tex2txt.py has to be placed in the current directory, and
+variable 'ltjar' in script shell2-html.py is to be customised.
 
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
@@ -535,8 +553,8 @@ Finally, function
 ```
 tex2txt.myopen(filename, mode='r')
 ```
-is equivalent to standard function open(), but it converts a possible
-exception into an error message.
+is similar to standard function open(), but it enforces UTF-8 decoding
+and converts a possible exception into an error message.
 
 ### Application examples
 The interface is demonstrated in function main(), which is activated when
