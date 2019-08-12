@@ -1894,6 +1894,7 @@ class Options:
         self.char = char
         self.defs = defs
         if not self.defs:
+            # need default defs object
             self.defs = read_definitions(None)
         self.extr = extr
         self.lang = lang
