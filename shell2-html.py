@@ -32,6 +32,8 @@ ltcmd = ('java -jar ' +  ltjar
 #
 options = tex2txt.Options(
             char=True,
+#           repl=tex2txt.read_replacements('Tools/LT/repls.txt'),
+#           defs=tex2txt.read_definitions('Tools/LT/defs.py'),
             lang='en'
 )
 
