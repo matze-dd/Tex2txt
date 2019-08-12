@@ -1,11 +1,12 @@
-"Unreleased"
-------------
+Release 1.6.3
+-------------
 - version that also can be used as Python module:
   starting at the creation of the 2-tuple (text string, number array),
   all code has been put into a large function tex2txt()
 - added functions for translation of line and column numbers
 - enforce UTF-8 encoding in myopen(): otherwise, native Windows Python may
   cause problems
+- stored Python scripts in Windows CRLF format
   <br><br>
 - shell2.py: an example application that is equivalent to Bash script
   shell2.sh; no auxiliary files are created
