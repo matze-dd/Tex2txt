@@ -190,10 +190,13 @@ Cygwin on Windows&nbsp;7.
 Some encoding problems for the latter case are addressed in section
 [Encoding problems](#encoding-problems).
 
-If Python and Java are installed under Windows, then at least the two
-Python scripts [shell2.py](shell2.py) and [shell2-html.py](shell2-html.py)
-from section [Application as Python module](#application-as-python-module)
-can be run directly in a Windows console.
+If Python and Java are installed under Windows, then the main Python
+program [tex2txt.py](tex2txt.py) may be directly used in a Windows command
+console or script.
+Furthermore, at least the two application scripts [shell2.py](shell2.py)
+and [shell2-html.py](shell2-html.py) from section
+[Application as Python module](#application-as-python-module) can be run,
+if the LanguageTool software is present.
 For example, this could look like
 ```
 "c:\Program Files\Python\Python37\python.exe" shell2-html.py t.tex > t.html
