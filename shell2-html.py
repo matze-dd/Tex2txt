@@ -50,7 +50,7 @@ def protect_html(s):
     s = re.sub(r'<', r'&lt;', s)
     s = re.sub(r'>', r'&gt;', s)
     s = re.sub(r'\t', ' ' * 8, s)
-    s = re.sub(' ', '&nbsp;', s)
+    s = re.sub(' ', '&ensp;', s)
     s = re.sub(r'\n', r'<br>\n', s)
     return s
 
