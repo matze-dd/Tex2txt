@@ -1,3 +1,9 @@
+"Unreleased"
+------------
+- shell2-html.py: use \&ensp; instead of \&nbsp; as space character:
+  long lines will be broken in browser
+- README.md: minor additions
+
 Release 1.6.3
 -------------
 - version that also can be used as Python module:
