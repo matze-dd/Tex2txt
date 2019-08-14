@@ -1,6 +1,6 @@
 "Unreleased"
 ------------
-- added macro \\par to collection in defs.system\_macros
+- added macro \\par to collection in parms.system\_macros
 - better Python practice: explicitly close used files
 - shell2-html.py:
     - use \&ensp; instead of \&nbsp; as space character:
