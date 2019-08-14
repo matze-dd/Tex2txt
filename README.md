@@ -60,7 +60,7 @@ paragraph.
 
 Extra text flows like footnotes are normally appended to the output
 of the main text flow, each separated by blank lines.
-For example, the LaTeX input
+For instance, the LaTeX input
 ```
 This is\footnote{A footnote may be set
 in \textcolor{red}{red colour.}}
@@ -207,13 +207,8 @@ For example, this could look like
 ```
 "c:\Program Files\Python\Python37\python.exe" shell2-html.py t.tex > t.html
 ```
-The script tex2txt.py has to be placed in the current directory, and
-variable 'ltjar' in script shell2-html.py is to be customised.
-
-For application of script shell2.py under Windows, the line with trailing
-comment '# for Cygwin' has to be uncommented, while the line above has 
-to be commented.
-(LanguageTool produces Latin-1 output under Windows if in normal-text mode.)
+The file tex2txt.py must reside in the current directory, and variable
+'ltjar' in script shell2-html.py has to be customised.
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
@@ -323,7 +318,7 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
 ## Encoding problems
 The LaTeX files have to be encoded as plain ASCII or UTF-8.
 
-Files with Windows style line endings (CR LF) are accepted, but the text
+Files with Windows style line endings (CRLF) are accepted, but the text
 output will be Unix style (LF only), unless a Windows Python interpreter
 is used.
 The output filters as in Bash script [shell2.sh](shell2.sh) will work
@@ -334,6 +329,7 @@ produce Latin-1 output, even if option '--encoding utf-8' is specified.
 Therefore, a translator to UTF-8 has to be placed in front of a Python filter
 for line or column numbers.
 This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
+A similar approach is taken in Python script [shell2.py](shell2.py).
 
 With option --json, LanguageTool always delivers UTF-8 output.
 This is used in example Python script [shell2-html.py](shell2-html.py)
@@ -592,6 +588,8 @@ message by the corresponding file name.
 The script does not create auxiliary files.
 In order to suppress purely diagnostic messages from LT, one can say
 `python3 shell2.py Banach/*.tex 2>/dev/null`.
+Files for additional macro definitions and phrase replacements may be read,
+if the corresponding lines at 'options = ...' are uncommented and tailored. 
 
 With example [shell2-html.py](shell2-html.py), the command
 ```
