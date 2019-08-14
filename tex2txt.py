@@ -137,6 +137,7 @@ parms.system_macros = lambda: (
     Macro('newcommand', 'AOA'),
     Simple('newline', ' '),
     Macro('pageref', 'A', '99'),
+    Simple('par', r'\n\n'),
     # \qquad: treated at LAB:SPACE, parms.mathspace
     # \quad: treated at LAB:SPACE, parms.mathspace
     Macro('ref', 'A', '13'),
@@ -1844,14 +1845,20 @@ def get_line_starts(s):
 def read_replacements(fn):
     if not fn:
         return None
-    return (myopen(fn).readlines(), fn)
+    f = myopen(fn)
+    lines = f.readlines()
+    f.close()
+    return (lines, fn)
 
 #   function for reading definition file
 #
 def read_definitions(fn):
     if not fn:
         return Definitions(None, '?')
-    return Definitions(myopen(fn).read(), fn)
+    f = myopen(fn)
+    s = f.read()
+    f.close()
+    return Definitions(s, fn)
 
 #   class for parsing of file from option --defs
 #
@@ -1923,16 +1930,20 @@ def main():
                 unkn=cmdline.unkn)
 
     if cmdline.file:
-        txt = myopen(cmdline.file).read()
+        f = myopen(cmdline.file)
+        txt = f.read()
+        f.close()
     else:
         # reopen stdin in text mode: handling of '\r'
-        txt = open(sys.stdin.fileno()).read()
+        txt = open(sys.stdin.fileno(), encoding='utf-8').read()
 
     if cmdline.nums:
         cmdline.nums = myopen(cmdline.nums, mode='w')
 
     text = tex2txt(txt, options)
     write_output(text, sys.stdout, cmdline.nums)
+    if cmdline.nums:
+        cmdline.nums.close()
 
 if __name__ == '__main__':
     # used as stand-alone script
