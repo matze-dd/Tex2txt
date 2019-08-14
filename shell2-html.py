@@ -116,7 +116,7 @@ def generate_html(tex, charmap, msg, file):
             end = beg + 1
         lin = tex.count('\n', 0, beg) + 1
 
-        if beg <= last:
+        if beg < last:
             # overlapping with last message
             overlaps.append((m, tex[beg:end], lin))
             continue
