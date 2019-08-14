@@ -73,10 +73,11 @@ def begin_match(m, lin):
     txt = txt[:beg] + '>>>' + txt[beg:end] + '<<<' + txt[end:]
     msg += 'Context: ' + protect_html(txt)
 
-    return '<span style="background: orange" title="' + msg + '">'
+    return ('<span style="background: orange" title="' + msg + '">'
+                + '<span style="border:solid 1px black">')
 
 def end_match():
-    return '</span>'
+    return '</span></span>'
 
 #   generate HTML output
 #
