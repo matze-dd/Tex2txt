@@ -6,6 +6,7 @@
 #   python3 this_script file1 file2 ...
 #
 
+import os
 import re
 import sys
 import subprocess
@@ -32,7 +33,9 @@ for file in sys.argv[1:]:
 
     # read file and call tex2txt()
     #
-    tex = tex2txt.myopen(file).read()
+    f = tex2txt.myopen(file)
+    tex = f.read()
+    f.close()
     (plain, charmap) = tex2txt.tex2txt(tex, options)
     starts = tex2txt.get_line_starts(plain)
 
@@ -41,8 +44,12 @@ for file in sys.argv[1:]:
     proc = subprocess.Popen(ltcmd, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
     out = proc.communicate(input=plain.encode())[0]
-    msg = out.decode()
-    # msg = out.decode(encoding='latin-1')    # for Cygwin
+    s = os.getenv('OS')
+    if s and s.count('Windows'):
+        # under Windows, LanguageTool produces Latin-1 output
+        msg = out.decode(encoding='latin-1')
+    else:
+        msg = out.decode()
 
     lines = msg.splitlines(keepends=True)
     if len(lines) > 0:
