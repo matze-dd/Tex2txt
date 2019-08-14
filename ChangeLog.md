@@ -2,10 +2,8 @@
 ------------
 - added macro \\par to collection in parms.system\_macros
 - better Python practice: explicitly close used files
-- shell2-html.py:
-    - use \&ensp; instead of \&nbsp; as space character:
-      long lines will be broken in browser
-    - fixed bug: could "swallow" overlapping messages
+- shell2-html.py: use \&ensp; instead of \&nbsp; as space character:
+  long lines will be broken in browser
 - shell2.py: detect usage under Windows from environment variable OS
 - README.md: minor additions
 
