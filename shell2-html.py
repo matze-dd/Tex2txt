@@ -116,7 +116,7 @@ def generate_html(tex, charmap, msg, file):
             end = beg + 1
         lin = tex.count('\n', 0, beg) + 1
 
-        if beg < last:
+        if beg <= last:
             # overlapping with last message
             overlaps.append((m, tex[beg:end], lin))
             continue
@@ -154,7 +154,9 @@ for file in sys.argv[1:2]:
 
     # read file and call tex2txt()
     #
-    tex = tex2txt.myopen(file).read()
+    f = tex2txt.myopen(file)
+    tex = f.read()
+    f.close()
     (plain, charmap) = tex2txt.tex2txt(tex, options)
     starts = tex2txt.get_line_starts(plain)
 
