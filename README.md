@@ -10,7 +10,44 @@
 [Application as Python module](#application-as-python-module)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
 
-<a name="general-description"></a>
+**Summary and example.**
+This Python software extracts plain text from LaTeX documents.
+Due to the following characteristics, it is suitable for integration with
+a proofreading software:
+- tracking of line or character positions during text manipulations,
+- simple extension for own LaTeX macros and environments with tailored
+  treatment,
+- careful conservation of text flows,
+- detection of interpunction in displayed equations.
+
+For instance, the LaTeX input
+```
+This is\footnote{A footnote may be set
+in \textcolor{red}{redx colour.}}
+is the main text.
+```
+will lead to the subsequent output from example application script
+[shell2.py](shell2.py) described in section
+[Application as Python module](#application-as-python-module).
+```
+test.tex
+========
+1.) Line [1], column [6], Rule ID: ENGLISH_WORD_REPEAT_RULE
+Message: Possible typo: you repeated a word
+Suggestion: is
+This is is the main text.    A footnote may be set in r...
+     ^^^^^                                             
+
+test.tex
+========
+2.) Line [2], column [20], Rule ID: MORFOLOGIK_RULE_EN_GB
+Message: Possible spelling mistake found
+Suggestion: red; Rex; reds; redo; Red; Rede; redox; red x
+...s the main text.    A footnote may be set in redx colour. 
+                                                ^^^^        
+```
+
+## General description
 This is a modest, self-contained [Python](https://www.python.org)
 script for the extraction of plain text from
 [LaTeX](https://www.latex-project.org) documents.
@@ -58,16 +95,10 @@ As in TeX, macro expansion consumes white space (possibly including a line
 break) between macro name and next non-space character within the current
 paragraph.
 
-Extra text flows like footnotes are normally appended to the output
-of the main text flow, each separated by blank lines.
-For instance, the LaTeX input
-```
-This is\footnote{A footnote may be set
-in \textcolor{red}{red colour.}}
-the main text.
-```
-is divided into two sentences.
-Activation of this behaviour is shown in the example for macro \\caption{...}
+Extra text flows like footnotes are normally appended to the end of the
+main text flow, each separated by blank lines.
+The introductory summary above shows an example.
+Activation of this behaviour is demonstrated for macro \\caption{...}
 in section [Declaration of LaTeX macros](#declaration-of-latex-macros).
 Script option --extr provides another possibility, which is also useful for
 the extraction of foreign-language text.
@@ -156,8 +187,8 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
 - without positional argument `texfile`: read standard input
 - option `--nums file`<br>
   file for storing original position numbers;
-  option --char not given: for each line of output text, the file contains a
-  line with the estimated original line number;
+  if option --char not given: for each line of output text, the file contains
+  a line with the estimated original line number;
   can be used later to correct line numbers in messages
 - option `--char`<br>
   activates character position tracking; if option --nums is given, then
@@ -329,12 +360,12 @@ produce Latin-1 output, even if option '--encoding utf-8' is specified.
 Therefore, a translator to UTF-8 has to be placed in front of a Python filter
 for line or column numbers.
 This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
-A similar approach is taken in Python script [shell2.py](shell2.py).
-
-With option --json, LanguageTool always delivers UTF-8 output.
-This is used in example Python script [shell2-html.py](shell2-html.py)
+A similar approach is taken in example Python script [shell2.py](shell2.py)
 from section
 [Application as Python module](#application-as-python-module).
+
+With option --json, LanguageTool always delivers UTF-8 encoded text.
+JSON output is used in application script [shell2-html.py](shell2-html.py).
 
 [Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
 
@@ -569,8 +600,8 @@ is similar to standard function open(), but it enforces UTF-8 decoding
 and converts a possible exception into an error message.
 
 ### Application examples
-The interface is demonstrated in function main(), which is activated when
-running the script directly.
+The module interface is demonstrated in function main(), which is activated
+when running the script directly.
 
 An example application is shown in Python script [shell2.py](shell2.py)
 which resembles the Bash script [shell2.sh](shell2.sh) from section
