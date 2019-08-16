@@ -18,7 +18,7 @@ a proofreading software:
 - simple inclusion of own LaTeX macros and environments with tailored
   treatment,
 - careful conservation of text flows,
-- detection of interpunction in displayed equations.
+- detection of trailing interpunction in equations.
 
 For instance, the LaTeX input
 ```
@@ -126,6 +126,7 @@ Its internal design could be more orderly.
 Currently, it is mainly structured by comments, and it mixes definitions of
 variables and functions with statements that actually perform text replacement
 operations.
+Moreover, it uses many global variables without clear naming convention.
 In section [Remarks on implementation](#remarks-on-implementation),
 some general techniques and problems are addressed.
 
@@ -155,7 +156,8 @@ Here is a list of the most important script operations.
   added interpunction (suppresses false positives from LanguageTool)
 - suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
 - inline maths $...$ and \\(...\\) is replaced with text from rotating
-  collection in variable parms.inline\_math in script
+  collection in variable parms.inline\_math in script, appending trailing
+  interpunction from variable parms.mathpunct
 - equation environments are resolved in a way suitable for check of
   interpunction and spacing, argument of \\text\{...\} is included into output
   text; \\\[...\\\] and $$...$$ are same as environment equation\*;
