@@ -15,7 +15,7 @@ This Python software extracts plain text from LaTeX documents.
 Due to the following characteristics, it is suitable for integration with
 a proofreading software:
 - tracking of line or character positions during text manipulations,
-- simple extension for own LaTeX macros and environments with tailored
+- simple inclusion of own LaTeX macros and environments with tailored
   treatment,
 - careful conservation of text flows,
 - detection of interpunction in displayed equations.
