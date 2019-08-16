@@ -1,4 +1,7 @@
 #
+#   Tex2txt, a flexible LaTeX filter
+#   Copyright (C) 2018-2019 Matthias Baumann
+#
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation, either version 3 of the License, or
@@ -30,20 +33,6 @@
 #     maximum recognised nesting depth (and thus length of these expressions)
 #     is controlled by the variables parms.max_depth_br and
 #     parms.max_depth_env
-#
-#   Bugs:
-#   - parsing with regular expressions is fun, but limited; as the
-#     replacement argument of re.sub() may be a callable, one can plug in
-#     some programming, however
-#   - several related shortcomings are marked with BUG (for some
-#     of them, warnings are generated)
-#   - severe general problem: resolution of macros not in the order of
-#     TeX (strictly left to right in the text);
-#     workarounds with hacks mark_begin_env and mark_deleted are used to
-#     avoid consumption of too much space by macros without argument
-#
-#
-#                                   Matthias Baumann, 2018-2019
 #
 
 class Aux:
@@ -103,11 +92,11 @@ parms.project_macros = lambda: (
 
     # macros to suppress rare LT warnings by altering the LaTeX text
     Macro('LTadd', 'A', r'\1'),
-                    # for LaTeX, argument is ignored
+            # for LaTeX, argument is ignored: \newcommand{\LTadd}[1]{}
     Macro('LTalter', 'AA', r'\2'),
-                    # for LaTeX, first argument is used
+            # for LaTeX, first argument is used: \newcommand{\LTalter}[2]{#1}
     Macro('LTskip', 'A'),
-                    # for LaTeX, first argument is used
+            # for LaTeX, first argument is used: \newcommand{\LTskip}[1]{#1}
 
 ) + defs.project_macros
 
@@ -133,11 +122,16 @@ parms.system_macros = lambda: (
     Macro('include', 'A'),
     Macro('includegraphics', 'OA'),
     Macro('input', 'A'),
+    # \label: see LAB:EQU_MACROS
+    # \mathrlap: see LAB:EQU_MACROS
     # \medspace: treated at LAB:SPACE, parms.mathspace
     Macro('newcommand', 'AOA'),
     Simple('newline', ' '),
+    # \nonumber: see LAB:EQU_MACROS
+    # \notag: see LAB:EQU_MACROS
     Macro('pageref', 'A', '99'),
     Simple('par', r'\n\n'),
+    # \qedhere: see LAB:EQU_MACROS
     # \qquad: treated at LAB:SPACE, parms.mathspace
     # \quad: treated at LAB:SPACE, parms.mathspace
     Macro('ref', 'A', '13'),
@@ -449,6 +443,27 @@ def set_language_en():
     parms.misc_replace_lang = parms.misc_replace_en
 
 
+#   parameters used for parsing of equations
+#   see LAB:EQUATIONS
+#
+def set_math_parms():
+    parms.mathspace = (r'(?:\\[ ,;:\n\t]|(?<!\\)~'
+                            + r'|\\(?:q?quad|(?:thin|med|thick)space)'
+                            + end_mac + skip_space_macro + r')')
+    parms.mathop = (
+        r'\+|-|\*|/'
+        + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
+        + r'|\\[gl]eq?' + end_mac
+        + r'|\\su[bp]set(?:eq)?' + end_mac
+        + r'|\\Leftrightarrow' + end_mac
+        + r'|\\to' + end_mac
+        + r'|\\stackrel' + sp_braced + skip_space + r'\{=\}'
+        + r'|\\c[au]p' + end_mac
+    )
+    parms.mathpunct = r'(?:(?<!\\)[;,.])'
+    parms.change_repl_after_punct = True
+
+
 #   further replacements performed below:
 #
 #   - translation of $$...$$ to equation* environment
@@ -661,6 +676,10 @@ end_mac = r'(?![a-zA-Z])'
 #
 skip_space_macro = (r'(?:[ \t]*(?:\n(?=[ \t]*\S)(?![ \t]*\\(?:begin|end)'
                             + end_mac + r'))?[ \t]*)')
+
+#   now all is defined to call ...
+#
+set_math_parms()
 
 #   these RE match beginning and end of arbitrary "standard" environments
 #
@@ -1250,8 +1269,12 @@ def tex2txt(txt, options):
             warning('"' + m2.group(0)
                 + '" in {} braces (macro argument?): not properly handled',
                 m.group(0))
+        # check for trailing interpunction
+        m2 = re.search(parms.mathpunct + r'\Z', m.group(1))
+        punct = m2.group(0) if m2 else ''
+        # rotate placeholder
         parms.inline_math = parms.inline_math[1:] + parms.inline_math[:1]
-        return parms.inline_math[0]
+        return parms.inline_math[0] + punct
     actions += [(r'(?<!\\)\$((?:' + braced + r'|[^\\$]|\\[^()])+)\$', f)]
     actions += [(r'\\\(((?:' + braced + r'|[^\\$]|\\[^()])*)\\\)', f)]
 
@@ -1368,22 +1391,6 @@ def tex2txt(txt, options):
     #     is still present
     #   - maths macros like \epsilon or \Omega that might constitute a
     #     maths part: still present or replaced with non-space
-
-    parms.mathspace = (r'(?:\\[ ,;:\n\t]|(?<!\\)~'
-                            + r'|\\(?:q?quad|(?:thin|med|thick)space)'
-                            + end_mac + skip_space_macro + r')')
-    parms.mathop = (
-        r'\+|-|\*|/'
-        + r'|=|<|>|(?<!\\):=?'          # accept ':=' and ':'
-        + r'|\\[gl]eq?' + end_mac
-        + r'|\\su[bp]set(?:eq)?' + end_mac
-        + r'|\\Leftrightarrow' + end_mac
-        + r'|\\to' + end_mac
-        + r'|\\stackrel' + sp_braced + skip_space + r'\{=\}'
-        + r'|\\c[au]p' + end_mac
-    )
-    parms.mathpunct = r'(?:(?<!\\)[;,.])'
-    parms.change_repl_after_punct = True
 
     def display_math_update():
         parms.display_math = parms.display_math[1:] + parms.display_math[:1]
