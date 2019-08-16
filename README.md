@@ -1,4 +1,4 @@
-# Tex2txt: a flexible LaTeX filter with tracking of line numbers or character positions
+# Tex2txt: a flexible LaTeX filter
 [General description](#general-description)&nbsp;\|
 [Selected actions](#selected-actions)&nbsp;\|
 [Command line](#command-line)&nbsp;\|
@@ -14,7 +14,7 @@
 This Python software extracts plain text from LaTeX documents.
 Due to the following characteristics, it is suitable for integration with
 a proofreading software:
-- tracking of line or character positions during text manipulations,
+- tracking of line numbers or character positions during text manipulations,
 - simple inclusion of own LaTeX macros and environments with tailored
   treatment,
 - careful conservation of text flows,
@@ -48,6 +48,8 @@ Suggestion: red; Rex; reds; redo; Red; Rede; redox; red x
 ...s the main text.    A footnote may be set in redx colour. 
                                                 ^^^^        
 ```
+
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## General description
 This is a modest, self-contained [Python](https://www.python.org)
@@ -137,7 +139,7 @@ below.)
 
 Happy TeXing!
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Selected actions
 Here is a list of the most important script operations.
@@ -178,7 +180,7 @@ Here is a list of the most important script operations.
   there; e.g., adding something that only the proofreader should see:
   \newcommand{\\LTadd}\[1\]{}
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Command line
 The script expects the following parameters.
@@ -221,7 +223,7 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
   declared macros do appear here, if a mandatory argument is missing
   in input text
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Usage under Windows
 The software has been developed under Linux and tested additionally under
@@ -243,7 +245,7 @@ For example, this could look like
 The file tex2txt.py must reside in the current directory, and variable
 'ltjar' in script shell2-html.py has to be customised.
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Tool integration
 The Python script is meant as small utility that performs a limited task
@@ -346,7 +348,7 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
 - option `--delete`<br>
   only remove auxiliary directory in script variable $txtdir, and exit
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Encoding problems
 The LaTeX files have to be encoded as plain ASCII or UTF-8.
@@ -369,7 +371,7 @@ from section
 With option --json, LanguageTool always delivers UTF-8 encoded text.
 JSON output is used in application script [shell2-html.py](shell2-html.py).
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Declaration of LaTeX macros
 The first section of the Python script consists of collections for
@@ -423,7 +425,7 @@ Synopsis of `Macro(name, args, repl='', extr='')`:
     - append this replacement (specified as in argument repl) to the end
       of the main text, separated by blank lines
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
@@ -547,7 +549,7 @@ only variant “Simple version” above, e.g.:
 EquEnv('align', repl='  relation'),
 ```
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Application as Python module
 The script can be extended with Python's module mechanism.
@@ -636,7 +638,7 @@ over these marked places.
 This nice idea is due to Sylvain Hallé, who developed
 [TeXtidote](https://github.com/sylvainhalle/textidote).
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Remarks on implementation
 Parsing with regular expressions is fun, but it remains a rather coarse
@@ -695,4 +697,4 @@ those only containing a % comment).
 Under category [Issues](../../issues), some known shortcomings are listed.
 Additionally, we have marked several problems as BUG in the script.
 
-[Back to top](#tex2txt-a-flexible-latex-filter-with-tracking-of-line-numbers-or-character-positions)
+[Back to top](#tex2txt-a-flexible-latex-filter)
