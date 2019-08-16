@@ -1,13 +1,16 @@
 "Unreleased"
 ------------
 - added macro \\par to collection in parms.system\_macros
+- inline equations: trailing interpunction from parms.mathpunct is appended
+  to placeholder
 - better Python practice: explicitly close used files
+  <br><br>
 - shell2-html.py:
-    - use \&ensp; instead of \&nbsp; as space character:
+    - use '\&ensp;' instead of '\&nbsp;' as space character:
       long lines will be broken in browser
-    - add frame to marked places: delimits subsequent ones
+    - add border to highlighted places: delimits subsequent ones
 - shell2.py: detect usage under Windows from environment variable OS
-- README.md: minor additions
+- README.md: introductory summary, other minor additions
 
 Release 1.6.3
 -------------
