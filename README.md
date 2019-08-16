@@ -29,6 +29,8 @@ is the main text.
 will lead to the subsequent output from example application script
 [shell2.py](shell2.py) described in section
 [Application as Python module](#application-as-python-module).
+As proofreading software, the script uses
+[LanguageTool](https://www.languagetool.org).
 ```
 test.tex
 ========
