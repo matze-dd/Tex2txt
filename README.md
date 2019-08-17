@@ -1,5 +1,6 @@
 # Tex2txt: a flexible LaTeX filter
 [General description](#general-description)&nbsp;\|
+[Principal limitations](#principal-limitations)&nbsp;\|
 [Selected actions](#selected-actions)&nbsp;\|
 [Command line](#command-line)&nbsp;\|
 [Usage under Windows](#usage-under-windows)&nbsp;\|
@@ -139,6 +140,26 @@ Many thanks in advance.
 below.)
 
 Happy TeXing!
+
+[Back to top](#tex2txt-a-flexible-latex-filter)
+
+## Principal limitations
+The implemented parsing mechanism can only roughly approximate the behaviour
+of a real LaTeX system.
+Apart from many minor shortcomings, a list of major incompatibilities
+must contain at least the following points.
+
+- Macro arguments have to be delimited by {} braces or \[\] brackets.
+  This is perhaps the most severe issue.
+- Mathematical material is represented by simple replacements.
+- Macros depending on (spacing) lengths may be treated incorrectly.
+- Parsing does not cross file boundaries.
+- Macro definitions in the text are ignored.
+- Macros are not expanded in the order they appear in the text.
+  We have tried to compensate this by several hacks.
+
+Please compare section
+[Remarks on implementation](#remarks-on-implementation), too.
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
