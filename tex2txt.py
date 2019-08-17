@@ -1261,7 +1261,7 @@ def tex2txt(txt, options):
     actions += [(r'(?<!\\)\$\$', f)]
 
     # replace $...$ and \(...\) by text from variable parms.inline_math
-    # BUG (with warning): fails e.g. on $x \text{ for $x>0$}$
+    # BUG: raises unnecessary warning e.g. on $x \text{ for $x>0$}$
     #
     def f(m):
         m2 = re.search(r'(?<!\\)\$|\\\(|\\\)', m.group(1))
