@@ -2,7 +2,7 @@
 #
 #   Python3:
 #   - application of tex2txt as module
-#   - generation of html output with problems highlighted,
+#   - generation of HTML output with problems highlighted,
 #     LT messages displayed on mouse hover
 #
 #   CREDITS:
@@ -17,6 +17,10 @@ import sys
 import subprocess
 import tex2txt
 import json
+
+# properties of <span> tag for highlighting
+#
+highlight_style = 'background: orange; border: solid 1px black'
 
 # path of LT java archive and used options
 # - we need JSON output
@@ -73,11 +77,10 @@ def begin_match(m, lin):
     txt = txt[:beg] + '>>>' + txt[beg:end] + '<<<' + txt[end:]
     msg += 'Context: ' + protect_html(txt)
 
-    return ('<span style="background: orange" title="' + msg + '">'
-                + '<span style="border:solid 1px black">')
+    return '<span style="' + highlight_style + '" title="' + msg + '">'
 
 def end_match():
-    return '</span></span>'
+    return '</span>'
 
 #   generate HTML output
 #
