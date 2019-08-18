@@ -4,13 +4,16 @@
 - inline equations: trailing interpunction from parms.mathpunct is appended
   to placeholder
 - better Python practice: explicitly close used files
+- fixed bug: tex2txt() changed globals and didn't restore them;
+  would pose problems, if one reimplemented Bash script checks.sh in Python
   <br><br>
 - shell2-html.py:
     - use '\&ensp;' instead of '\&nbsp;' as space character:
       long lines will be broken in browser
     - add border to highlighted places: delimits subsequent ones
 - shell2.py: detect usage under Windows from environment variable OS
-- README.md: introductory summary, other minor additions
+- README.md: introductory summary and section on principal limitations,
+  other minor additions
 
 Release 1.6.3
 -------------
