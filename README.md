@@ -127,7 +127,8 @@ Its internal design could be more orderly.
 Currently, it is mainly structured by comments, and it mixes definitions of
 variables and functions with statements that actually perform text replacement
 operations.
-Moreover, it uses many global variables without clear naming convention.
+Moreover, it uses many global variables without clear naming convention,
+and some of them are even manipulated by the central module function.
 In section [Remarks on implementation](#remarks-on-implementation),
 some general techniques and problems are addressed.
 
