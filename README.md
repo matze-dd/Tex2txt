@@ -33,16 +33,11 @@ will lead to the subsequent output from example application script
 As proofreading software, the script uses
 [LanguageTool](https://www.languagetool.org).
 ```
-test.tex
-========
 1.) Line [1], column [6], Rule ID: ENGLISH_WORD_REPEAT_RULE
 Message: Possible typo: you repeated a word
 Suggestion: is
 This is is the main text.    A footnote may be set in r...
      ^^^^^                                             
-
-test.tex
-========
 2.) Line [2], column [20], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: red; Rex; reds; redo; Red; Rede; redox; red x
@@ -118,8 +113,8 @@ Further details are given in section
 An example is shown in file [Example.md](Example.md), operation is summarised
 in the script at label LAB:EQUATIONS.
 
-Application as Python module is shortly described in section
-[Application as Python module](#application-as-python-module) below.
+Interface and examples for application as Python module are described in
+section [Application as Python module](#application-as-python-module) below.
 
 The Python script may be seen as an exercise in application of regular
 expressions.
@@ -150,7 +145,8 @@ of a real LaTeX system.
 Apart from many minor shortcomings, a list of major incompatibilities
 must contain at least the following points.
 
-- Macro arguments have to be delimited by {} braces or \[\] brackets.
+- In text mode, macro arguments have to be delimited by {} braces or
+  \[\] brackets.
   This is perhaps the most severe issue.
 - Mathematical material is represented by simple replacements.
 - Macros depending on (spacing) lengths may be treated incorrectly.
@@ -600,6 +596,10 @@ They are documented at the definition of class 'Options', see LAB:OPTIONS.
 The parameters 'defs' and 'repl' for this class can be set using functions
 tex2txt.read\_definitions(fn) and tex2txt.read\_replacements(fn), both
 expecting 'None' or a file name as argument.
+
+**Remark.**
+Since the function tex2txt() modifies globals in its module, an application
+must only run it once at each point in time.
 
 Two additional functions support translation of line and column numbers
 in case of character position tracking.
