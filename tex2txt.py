@@ -769,12 +769,12 @@ def mysub(expr, repl, text, flags=0, track_repl=None, only_one=False):
 
 #   will be changed for tracking of character positions
 #
-def mysub_offsets(res, t, r):
+def mysub_offsets_lins(res, t, r):
     return (res.count('\n'), t.count('\n'), r.count('\n'))
 
 #   will be changed for tracking of character positions
 #
-def mysub_combine(lin, res, r, nt, nr, numbers, nums2, text):
+def mysub_combine_lins(lin, res, r, nt, nr, numbers, nums2, text):
     tmp = text_combine((res, numbers[:lin+1]), (r, nums2))
     return text_combine(tmp, ('', numbers[lin+nt:]))
 
@@ -783,7 +783,7 @@ def mysub_combine(lin, res, r, nt, nr, numbers, nums2, text):
 #   mysub() depends on the fact that we only look backwards in text1,
 #   but not forwards in text2
 #
-def text_combine(text1, text2):
+def text_combine_lins(text1, text2):
     (t1, n1) = text1
     (t2, n2) = text2
     if n1[-1] == n2[0] or not t1[t1.rfind('\n')+1:].strip():
@@ -800,7 +800,7 @@ def text_combine(text1, text2):
 
 #   prepend and append plain strings to a text with line number information
 #
-def text_add_frame(pre, post, text):
+def text_add_frame_lins(pre, post, text):
     return (
         pre + text[0] + post,
         [text[1][0],] * pre.count('\n') + text[1]
@@ -809,7 +809,7 @@ def text_add_frame(pre, post, text):
 
 #   extract text with line number information from a group of a match
 #
-def text_from_match(m ,grp, text):
+def text_from_match_lins(m ,grp, text):
     if m.string is not text[0]:
         fatal('text_from_match(): bad match object')
     beg = m.string[:m.start(grp)].count('\n')
@@ -887,7 +887,7 @@ def text_get_txt(text):
     return text[0]
 def text_get_num(text):
     return text[1]
-def text_new(s=None):
+def text_new_lins(s=None):
     if s is None:
         return ('', [-1,])
     return (s, list(range(1, s.count('\n') + 2)))
@@ -946,16 +946,23 @@ def text_new_char(s=None):
 
 def tex2txt(txt, options):
 
+    global mysub_offsets, mysub_combine, text_combine
+    global text_add_frame, text_from_match, text_new
     if options.char:
         # track character offsets instead of line numbers
-        global mysub_offsets, mysub_combine, text_combine
-        global text_add_frame, text_from_match, text_new
         mysub_offsets = mysub_offsets_char
         mysub_combine = mysub_combine_char
         text_combine = text_combine_char
         text_add_frame = text_add_frame_char
         text_from_match = text_from_match_char
         text_new = text_new_char
+    else:
+        mysub_offsets = mysub_offsets_lins
+        mysub_combine = mysub_combine_lins
+        text_combine = text_combine_lins
+        text_add_frame = text_add_frame_lins
+        text_from_match = text_from_match_lins
+        text_new = text_new_lins
 
     if not options.lang or options.lang == 'de':
         set_language_de()
