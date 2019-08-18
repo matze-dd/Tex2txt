@@ -20,7 +20,7 @@ import json
 
 # properties of <span> tag for highlighting
 #
-highlight_style = 'background: orange; border: solid 1px black'
+highlight_style = 'background: orange; border: solid thin black'
 
 # path of LT java archive and used options
 # - we need JSON output
