@@ -21,6 +21,7 @@ import json
 # properties of <span> tag for highlighting
 #
 highlight_style = 'background: orange; border: solid thin black'
+highlight_style_unsure = 'background: yellow; border: solid thin black'
 
 # path of LT java archive and used options
 # - we need JSON output
@@ -60,7 +61,7 @@ def protect_html(s):
 
 #   generate HTML tag from LT message
 #
-def begin_match(m, lin):
+def begin_match(m, lin, unsure):
     cont = m['context']
     txt = cont['text']
     beg = cont['offset']
@@ -68,7 +69,7 @@ def begin_match(m, lin):
 
     msg = protect_html(m['message'] + '; ' + m['rule']['id']) + '\n'
 
-    msg += protect_html('Line ' + str(lin)
+    msg += protect_html('Line ' + str(lin) + ('+' if unsure else '')
                         + ': >>>' + txt[beg:end] + '<<<') + '\n'
 
     repls = ' '.join("'" + r['value'] + "'" for r in m['replacements'])
@@ -77,7 +78,8 @@ def begin_match(m, lin):
     txt = txt[:beg] + '>>>' + txt[beg:end] + '<<<' + txt[end:]
     msg += 'Context: ' + protect_html(txt)
 
-    return '<span style="' + highlight_style + '" title="' + msg + '">'
+    style = highlight_style_unsure if unsure else highlight_style
+    return '<span style="' + style + '" title="' + msg + '">'
 
 def end_match():
     return '</span>'
@@ -114,15 +116,16 @@ def generate_html(tex, charmap, msg, file):
 
         beg = m['offset']
         end = beg + max(1, m['length'])
+        unsure = (charmap[beg] < 0 or charmap[end] < 0)
         beg = abs(charmap[beg]) - 1
         end = abs(charmap[end]) - 1
-        if end <= beg:
+        if unsure or end <= beg:
             end = beg + 1
         lin = tex.count('\n', 0, beg) + 1
 
         if beg < last:
             # overlapping with last message
-            overlaps.append((m, tex[beg:end], lin))
+            overlaps.append((m, tex[beg:end], lin, unsure))
             continue
 
         if (end == beg + 1 and tex[beg] == '\\'
@@ -135,7 +138,7 @@ def generate_html(tex, charmap, msg, file):
                 end = beg + len(s.group(0))
 
         res += protect_html(tex[last:beg])
-        res += begin_match(m, lin)
+        res += begin_match(m, lin, unsure)
         res += protect_html(tex[beg:end])
         res += end_match()
         last = end
@@ -146,8 +149,8 @@ def generate_html(tex, charmap, msg, file):
         prefix += ('<H3>Overlapping message(s) found:'
                         + ' see end of page</H3>\n')
         post = '<H3>Overlapping message(s)</H3>\n'
-        for (m, s, lin) in overlaps:
-            post += begin_match(m ,lin)
+        for (m, s, lin, unsure) in overlaps:
+            post += begin_match(m ,lin, unsure)
             post += protect_html(s)
             post += end_match() + '<br>\n'
         postfix = post + postfix
