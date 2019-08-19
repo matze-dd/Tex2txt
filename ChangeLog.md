@@ -1,5 +1,5 @@
-"Unreleased"
-------------
+Release 1.6.4
+-------------
 - added macro \\par to collection in parms.system\_macros
 - inline equations: trailing interpunction from parms.mathpunct is appended
   to placeholder
@@ -11,6 +11,7 @@
     - use '\&ensp;' instead of '\&nbsp;' as space character:
       long lines will be broken in browser
     - add border to highlighted places: delimits subsequent ones
+    - use different highlighting colour in case of unsure problem localisation
 - shell2.py: detect usage under Windows from environment variable OS
 - README.md: introductory summary and section on principal limitations,
   other minor additions
