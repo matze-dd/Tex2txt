@@ -13,8 +13,8 @@
 
 **Summary and example.**
 This Python software extracts plain text from LaTeX documents.
-Due to the following characteristics, it is suitable for integration with
-a proofreading software:
+Due to the following characteristics, it may be integrated with a
+proofreading software:
 - tracking of line numbers or character positions during text manipulations,
 - simple inclusion of own LaTeX macros and environments with tailored
   treatment,
