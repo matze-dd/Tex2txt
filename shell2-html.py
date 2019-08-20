@@ -123,11 +123,6 @@ def generate_html(tex, charmap, msg, file):
             end = beg + 1
         lin = tex.count('\n', 0, beg) + 1
 
-        if beg < last:
-            # overlapping with last message
-            overlaps.append((m, tex[beg:end], lin, unsure))
-            continue
-
         if (end == beg + 1 and tex[beg] == '\\'
                 and re.search(r'(?<!\\)(\\\\)*\Z', tex[:beg])):
             # HACK:
@@ -136,6 +131,11 @@ def generate_html(tex, charmap, msg, file):
             s = re.search(r'\A\\[a-zA-Z]+', tex[beg:])
             if s:
                 end = beg + len(s.group(0))
+
+        if beg < last:
+            # overlapping with last message
+            overlaps.append((m, tex[beg:end], lin, unsure))
+            continue
 
         res += protect_html(tex[last:beg])
         res += begin_match(m, lin, unsure)
@@ -165,7 +165,6 @@ for file in sys.argv[1:2]:
     tex = f.read()
     f.close()
     (plain, charmap) = tex2txt.tex2txt(tex, options)
-    starts = tex2txt.get_line_starts(plain)
 
     # call LanguageTool
     #
