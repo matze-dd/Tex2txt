@@ -19,7 +19,8 @@ proofreading software:
 - simple inclusion of own LaTeX macros and environments with tailored
   treatment,
 - careful conservation of text flows,
-- detection of trailing interpunction in equations.
+- detection of trailing interpunction in equations,
+- proper treatment of nested LaTeX elements like {} braces.
 
 For instance, the LaTeX input
 ```
@@ -147,7 +148,8 @@ must contain at least the following points.
 
 - In text mode, macro arguments have to be delimited by {} braces or
   \[\] brackets.
-  This is perhaps the most severe issue.
+  This is perhaps the most severe restriction.
+  (Currently, only macros for text-mode accents form an exception.)
 - Mathematical material is represented by simple replacements.
 - Macros depending on (spacing) lengths may be treated incorrectly.
 - Parsing does not cross file boundaries.
