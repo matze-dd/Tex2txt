@@ -1,3 +1,8 @@
+"Unreleased"
+------------
+- shell2-html.py: slightly improved display for overlapping messages,
+  removed unnecessary code
+
 Release 1.6.4
 -------------
 - added macro \\par to collection in parms.system\_macros
