@@ -20,7 +20,7 @@ proofreading software:
   treatment,
 - careful conservation of text flows,
 - detection of trailing interpunction in equations,
-- proper treatment of nestable LaTeX elements like {} braces.
+- proper handling of nestable elements like {} braces.
 
 For instance, the LaTeX input
 ```
