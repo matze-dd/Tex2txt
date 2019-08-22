@@ -657,12 +657,18 @@ With example [shell2-html.py](shell2-html.py), the command
 python3 shell2-html.py t.tex > t.html
 ```
 will create an HTML file 't.html' from LaTeX file 't.tex'.
-Opened in a browser, it displays the original LaTeX text, highlighting the
-problems indicated by LT.
+Opened in a browser, it displays excerpts from the original LaTeX text,
+highlighting the problems indicated by LT.
 The content of corresponding LT messages can be seen when hovering the mouse
 over these marked places.
-This nice idea is due to Sylvain Hallé, who developed
+This idea basically goes back to Sylvain Hallé, who developed
 [TeXtidote](https://github.com/sylvainhalle/textidote).
+Script variable 'context\_lines' controls the amount of context displayed
+around each tagged region; a very large value will show the complete input.
+If the localisation of a problem is unsure, highlighting will use yellow
+instead of orange colour.
+For simplicity, marked text regions that intertwine with other ones
+are separately repeated at the page end.
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
