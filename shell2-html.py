@@ -222,7 +222,7 @@ def add_line_numbers(s, line_numbers):
         aux.lineno += 1
         return (
             '<tr>\n<td style="' + number_style + '" valign="top">'
-            + s + '&emsp;</td>\n<td>'
+            + s + '&nbsp;&nbsp;</td>\n<td>'
             + m.group(1) + '</td>\n</tr>\n'
         )
     s = re.sub(r'((?:.|\n)*?)(<br>\n|\Z)', f, s)
