@@ -1,7 +1,6 @@
 "Unreleased"
 ------------
 - shell2-html.py:
-    - WITHDRAWN, several problems
     - only display excerpts from input text together with line numbers,
       controlled by variable context\_lines
     - slightly improved display for overlapping messages, removed unnecessary
