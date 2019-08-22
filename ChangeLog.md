@@ -1,7 +1,12 @@
 "Unreleased"
 ------------
-- shell2-html.py: slightly improved display for overlapping messages,
-  removed unnecessary code
+- shell2-html.py:
+    - only display excerpts from input text together with line numbers,
+      controlled by variable context\_lines
+    - slightly improved display for overlapping messages, removed unnecessary
+      code
+    - added \<meta\> tag for UTF-8 encoding
+- README.md: added details for shell2-html.py
 
 Release 1.6.4
 -------------
