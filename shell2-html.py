@@ -1,3 +1,6 @@
+#
+#   BUG: encoding problems under Windows, does not work with last Python version
+#
 
 #
 #   Python3:
