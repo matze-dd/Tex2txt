@@ -18,10 +18,18 @@ import subprocess
 import tex2txt
 import json
 
+# number of context lines (before and after a highlighted place)
+#
+context_lines = 2
+
 # properties of <span> tag for highlighting
 #
 highlight_style = 'background: orange; border: solid thin black'
 highlight_style_unsure = 'background: yellow; border: solid thin black'
+
+# style for display of line numbers
+#
+number_style = 'color: grey'
 
 # path of LT java archive and used options
 # - we need JSON output
@@ -44,10 +52,11 @@ options = tex2txt.Options(
 
 #   the JSON decoder
 #
-dec = json.JSONDecoder()
+decoder = json.JSONDecoder()
 
 #   protect text between HTML tags from being seen as HTML code,
 #   preserve text formatting
+#   - '<br>\n' is used by generate_highlight() and add_line_numbers()
 #
 def protect_html(s):
     s = re.sub(r'&', r'&amp;', s)
@@ -84,78 +93,140 @@ def begin_match(m, lin, unsure):
 def end_match():
     return '</span>'
 
+#   hightlight a text region
+#   - avoid that span tags cross line breaks (otherwise problems in <table>)
+#
+def generate_highlight(m, s, lin, unsure):
+    pre = begin_match(m, lin, unsure)
+    s = protect_html(s)
+    post = end_match()
+    def f(m):
+        return pre + m.group(1) + post + m.group(2)
+    return re.sub(r'((?:.|\n)*?)(<br>\n|\Z)', f, s)
+
 #   generate HTML output
 #
 def generate_html(tex, charmap, msg, file):
 
-    prefix = '<html>\n<body>\n'
+    prefix = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     postfix = '\n</body>\n</html>\n'
 
-    js = dec.decode(msg)
+    matches = decoder.decode(msg)['matches']
+    s = 'File "' + file + '" with ' + str(len(matches)) + ' problem(s)'
+    prefix += '<H3>' + protect_html(s) + '</H3>\n'
 
-    # sort matches according to offset in tex
-    # - for footnotes etc.
-    matches = list(m for m in js['matches'])
-    def f(m):
+    # collect data for highlighted places
+    #
+    hdata = []
+    for m in matches:
         beg = m['offset']
         end = beg + max(1, m['length'])
         if beg < 0 or end < 0 or beg >= len(charmap) or end >= len(charmap):
             tex2txt.fatal('generate_html():'
                             + ' bad message read from LanguageTool')
-        return abs(charmap[beg])
-    matches.sort(key=f)
+        h = tex2txt.Aux()
+        h.unsure = (charmap[beg] < 0 or charmap[end] < 0)
+        h.beg = abs(charmap[beg]) - 1
+        h.end = abs(charmap[end]) - 1
+        if h.unsure or h.end <= h.beg:
+            h.end = h.beg + 1
 
-    h = 'File "' + file + '" with ' + str(len(matches)) + ' problem(s)'
-    prefix += '<H3>' + protect_html(h) + '</H3>\n'
-
-    res = ''
-    last = 0
-    overlaps = []
-
-    for m in matches:
-
-        beg = m['offset']
-        end = beg + max(1, m['length'])
-        unsure = (charmap[beg] < 0 or charmap[end] < 0)
-        beg = abs(charmap[beg]) - 1
-        end = abs(charmap[end]) - 1
-        if unsure or end <= beg:
-            end = beg + 1
-        lin = tex.count('\n', 0, beg) + 1
-
-        if (end == beg + 1 and tex[beg] == '\\'
-                and re.search(r'(?<!\\)(\\\\)*\Z', tex[:beg])):
+        if (h.end == h.beg + 1 and tex[h.beg] == '\\'
+                and re.search(r'(?<!\\)(\\\\)*\Z', tex[:h.beg])):
             # HACK:
             # if matched a single \ that is actually followed by macro name:
             # also highlight the macro name
-            s = re.search(r'\A\\[a-zA-Z]+', tex[beg:])
+            s = re.search(r'\A\\[a-zA-Z]+', tex[h.beg:])
             if s:
-                end = beg + len(s.group(0))
+                h.end = h.beg + len(s.group(0))
 
-        if beg < last:
-            # overlapping with last message
-            overlaps.append((m, tex[beg:end], lin, unsure))
-            continue
+        h.beglin = tex.count('\n', 0, h.beg)
+        h.endlin = tex.count('\n', 0, h.end) + 1
+        h.lin = h.beglin
+        h.m = m
+        hdata.append(h)
 
-        res += protect_html(tex[last:beg])
-        res += begin_match(m, lin, unsure)
-        res += protect_html(tex[beg:end])
-        res += end_match()
-        last = end
+    # sort matches according to offset in tex
+    # - necessary for separated footnotes etc.
+    #
+    hdata.sort(key=lambda h: h.beg)
 
-    res += protect_html(tex[last:])
+    # group adjacent matches into regions
+    #
+    regions = []
+    starts = tex2txt.get_line_starts(tex)
+    for h in hdata:
+        h.beglin = max(h.beglin - context_lines, 0)
+        h.endlin = min(h.endlin + context_lines, len(starts) - 1)
+        if not regions or h.beglin >= max(h.endlin for h in regions[-1]):
+            # start a new region
+            regions.append([h])
+        else:
+            # match is part of last region
+            regions[-1].append(h)
+
+    # produce output
+    #
+    res_tot = ''
+    overlaps = []
+    line_numbers = []
+    for reg in regions:
+        #
+        # generate output for one region:
+        # collect all matches in that region
+        #
+        beglin = reg[0].beglin
+        endlin = max(h.endlin for h in reg)
+        res = ''
+        last = starts[beglin]
+        for h in reg:
+            s = generate_highlight(h.m, tex[h.beg:h.end], h.lin + 1, h.unsure)
+            if h.beg < last:
+                # overlapping with last message
+                overlaps.append(s)
+                continue
+            res += protect_html(tex[last:h.beg])
+            res += s
+            last = h.end
+
+        res += protect_html(tex[last:starts[endlin]])
+        res_tot += res + '<br>\n'
+        line_numbers += list(range(beglin, endlin)) + [-1]
+
+    if not line_numbers:
+        # no problems found: just display first context_lines lines
+        endlin = min(context_lines, len(starts) - 1)
+        res_tot = protect_html(tex[:starts[endlin]])
+        line_numbers = list(range(endlin))
+    if line_numbers:
+        res_tot = add_line_numbers(res_tot, line_numbers)
 
     if overlaps:
         prefix += ('<H3>Overlapping message(s) found:'
                         + ' see end of page</H3>\n')
         post = '<H3>Overlapping message(s)</H3>\n'
-        for (m, s, lin, unsure) in overlaps:
-            post += begin_match(m ,lin, unsure)
-            post += protect_html(s)
-            post += end_match() + '<br>\n'
+        for h in overlaps:
+            post += h + '<br>\n'
         postfix = post + postfix
 
-    return prefix + res + postfix
+    return prefix + res_tot + postfix
+
+#   add line numbers using a large <table>
+#
+def add_line_numbers(s, line_numbers):
+    aux = tex2txt.Aux()
+    aux.lineno = 0
+    def f(m):
+        lin = line_numbers[aux.lineno]
+        s = str(lin + 1) if lin >= 0 else ''
+        aux.lineno += 1
+        return (
+            '<tr>\n<td style="' + number_style + '" valign="top">'
+            + s + '&emsp;</td>\n<td>'
+            + m.group(1) + '</td>\n</tr>\n'
+        )
+    s = re.sub(r'((?:.|\n)*?)(<br>\n|\Z)', f, s)
+    return '<table cellspacing="0">\n' + s + '</table>\n'
 
 for file in sys.argv[1:2]:
 
@@ -164,6 +235,8 @@ for file in sys.argv[1:2]:
     f = tex2txt.myopen(file)
     tex = f.read()
     f.close()
+    if not tex.endswith('\n'):
+        tex += '\n'
     (plain, charmap) = tex2txt.tex2txt(tex, options)
 
     # call LanguageTool
