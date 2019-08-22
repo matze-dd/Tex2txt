@@ -1,6 +1,3 @@
-#
-#   BUG: encoding problems under Windows, does not work with last Python version
-#
 
 #
 #   Python3:
@@ -105,7 +102,7 @@ def generate_highlight(m, s, lin, unsure):
     post = end_match()
     def f(m):
         return pre + m.group(1) + post + m.group(2)
-    return re.sub(r'((?:.|\n)*?)(<br>\n|\Z)', f, s)
+    return re.sub(r'((?:.|\n)*?(?!\Z)|(?:.|\n)+?)(<br>\n|\Z)', f, s)
 
 #   generate HTML output
 #
@@ -228,8 +225,13 @@ def add_line_numbers(s, line_numbers):
             + s + '&nbsp;&nbsp;</td>\n<td>'
             + m.group(1) + '</td>\n</tr>\n'
         )
-    s = re.sub(r'((?:.|\n)*?)(<br>\n|\Z)', f, s)
+    s = re.sub(r'((?:.|\n)*?(?!\Z)|(?:.|\n)+?)(<br>\n|\Z)', f, s)
     return '<table cellspacing="0">\n' + s + '</table>\n'
+
+#   ensure UTF-8 encoding for stdout
+#   (not standard with Windows Python)
+#
+sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8')
 
 for file in sys.argv[1:2]:
 
