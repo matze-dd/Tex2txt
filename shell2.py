@@ -43,13 +43,13 @@ for file in sys.argv[1:]:
     #
     proc = subprocess.Popen(ltcmd, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
-    out = proc.communicate(input=plain.encode())[0]
+    out = proc.communicate(input=plain.encode(encoding='utf-8'))[0]
     s = os.getenv('OS')
     if s and s.count('Windows'):
         # under Windows, LanguageTool produces Latin-1 output
         msg = out.decode(encoding='latin-1')
     else:
-        msg = out.decode()
+        msg = out.decode(encoding='utf-8')
 
     lines = msg.splitlines(keepends=True)
     if len(lines) > 0:
