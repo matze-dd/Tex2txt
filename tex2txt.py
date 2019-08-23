@@ -497,9 +497,9 @@ def fatal(msg, detail=None):
     raise_error('internal error', msg, detail, xit=1)
 def warning(msg, detail=None):
     raise_error('warning', msg, detail)
-def myopen(f, mode='r'):
+def myopen(f, encoding, mode='r'):
     try:
-        return open(f, mode=mode, encoding='utf-8')
+        return open(f, mode=mode, encoding=encoding)
     except:
         raise_error('problem', 'could not open file "' + f + '"', xit=1)
 warning_or_error = Aux()
@@ -1860,7 +1860,7 @@ def get_line_starts(s):
 def read_replacements(fn):
     if not fn:
         return None
-    f = myopen(fn)
+    f = myopen(fn, encoding='utf-8')
     lines = f.readlines()
     f.close()
     return (lines, fn)
@@ -1870,7 +1870,7 @@ def read_replacements(fn):
 def read_definitions(fn):
     if not fn:
         return Definitions(None, '?')
-    f = myopen(fn)
+    f = myopen(fn, encoding='utf-8')
     s = f.read()
     f.close()
     return Definitions(s, fn)
@@ -1945,7 +1945,7 @@ def main():
                 unkn=cmdline.unkn)
 
     if cmdline.file:
-        f = myopen(cmdline.file)
+        f = myopen(cmdline.file, encoding='utf-8')
         txt = f.read()
         f.close()
     else:
@@ -1953,7 +1953,7 @@ def main():
         txt = open(sys.stdin.fileno(), encoding='utf-8').read()
 
     if cmdline.nums:
-        cmdline.nums = myopen(cmdline.nums, mode='w')
+        cmdline.nums = myopen(cmdline.nums, encoding='utf-8', mode='w')
 
     # ensure UTF-8 output under Windows, too
     sout = open(sys.stdout.fileno(), mode='w', encoding='utf-8')
