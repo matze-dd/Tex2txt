@@ -373,7 +373,10 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Encoding problems
-The LaTeX files have to be encoded as plain ASCII or UTF-8.
+The LaTeX files normally have to be encoded as plain ASCII or UTF-8.
+Note, however, that in application Python scripts [shell2.py](shell2.py)
+and [shell2-html.py](shell2-html.py),
+input encoding can be specified by variable input\_encoding.
 
 Files with Windows style line endings (CRLF) are accepted, but the text
 output will be Unix style (LF only), unless a Windows Python interpreter
@@ -632,10 +635,10 @@ boolean 'ret.flag' equals 'True', if the actual position may be larger.
 
 Finally, function
 ```
-tex2txt.myopen(filename, mode='r')
+tex2txt.myopen(filename, encoding, mode='r')
 ```
-is similar to standard function open(), but it enforces UTF-8 decoding
-and converts a possible exception into an error message.
+is similar to standard function open(), but it requires an explicit encoding
+specification and converts a possible exception into an error message.
 
 ### Application examples
 The module interface is demonstrated in function main(), which is activated
