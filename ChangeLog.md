@@ -5,7 +5,8 @@
       controlled by variable context\_lines
     - slightly improved display for overlapping messages, removed unnecessary
       code
-    - added \<meta\> tag for UTF-8 encoding
+    - enforce UTF-8 encoded standard output, added HTML \<meta\> tag for
+      UTF-8 encoding
 - README.md: added details for shell2-html.py
 
 Release 1.6.4
