@@ -395,9 +395,11 @@ JSON output is used in application script [shell2-html.py](shell2-html.py).
 
 Similarly, Python's version for Windows by default prints Latin-1 encoded
 text to standard output.
-As this ensures proper work in a Windows command console, we do not change it.
-Only for example script [shell2-html.py](shell2-html.py), we enforce UTF-8
-output in order to determine the encoding of the generated HTML page.
+As this ensures proper work in a Windows command console, we do not change it
+for the example script shell2.py.
+In application script shell2-html.py, we enforce UTF-8 output in order to
+determine the encoding of the generated HTML page.
+The stand-alone script tex2txt.py will produce UTF-8 output, too.
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
