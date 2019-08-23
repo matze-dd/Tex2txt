@@ -187,6 +187,7 @@ parms.heading_macros = lambda: (
     r'section\*?',
     r'subsection\*?',
     r'subsubsection\*?',
+    r'title',
 
 ) + defs.heading_macros
 
@@ -1954,8 +1955,10 @@ def main():
     if cmdline.nums:
         cmdline.nums = myopen(cmdline.nums, mode='w')
 
+    # ensure UTF-8 output under Windows, too
+    sout = open(sys.stdout.fileno(), mode='w', encoding='utf-8')
     text = tex2txt(txt, options)
-    write_output(text, sys.stdout, cmdline.nums)
+    write_output(text, sout, cmdline.nums)
     if cmdline.nums:
         cmdline.nums.close()
 
