@@ -248,8 +248,8 @@ for file in sys.argv[1:2]:
     #
     proc = subprocess.Popen(ltcmd, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
-    out = proc.communicate(input=plain.encode())[0]
-    msg = out.decode()
+    out = proc.communicate(input=plain.encode(encoding='utf-8'))[0]
+    msg = out.decode(encoding='utf-8')
 
     sys.stdout.write(generate_html(tex, charmap, msg, file))
 
