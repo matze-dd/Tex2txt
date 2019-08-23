@@ -18,6 +18,11 @@ import subprocess
 import tex2txt
 import json
 
+# encoding of input file, values as for standard function open()
+#
+input_encoding = 'utf-8'
+# input_encoding = 'latin-1'
+
 # number of context lines (before and after a highlighted place)
 #
 context_lines = 2
@@ -237,7 +242,7 @@ for file in sys.argv[1:2]:
 
     # read file and call tex2txt()
     #
-    f = tex2txt.myopen(file)
+    f = tex2txt.myopen(file, input_encoding)
     tex = f.read()
     f.close()
     if not tex.endswith('\n'):
