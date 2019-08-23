@@ -1,13 +1,15 @@
 "Unreleased"
 ------------
+- tex2txt.py:
+    - ensure UTF-8 encoding for stdout under Windows, too
+    - added macro \\title to collection parms.heading\_macros
 - shell2-html.py:
     - only display excerpts from input text together with line numbers,
       controlled by variable context\_lines
-    - slightly improved display for overlapping messages, removed unnecessary
-      code
     - enforce UTF-8 encoded standard output, added HTML \<meta\> tag for
       UTF-8 encoding
-- README.md: added details for shell2-html.py
+- shell2\*.py: explicitly use "encoding='utf-8'" for encode(), decode()
+- README.md: added details for shell2-html.py and encoding problems
 
 Release 1.6.4
 -------------
