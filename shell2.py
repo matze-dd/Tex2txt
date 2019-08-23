@@ -12,6 +12,11 @@ import sys
 import subprocess
 import tex2txt
 
+# encoding of input file(s), values as for standard function open()
+#
+input_encoding = 'utf-8'
+# input_encoding = 'latin-1'
+
 # path of LT java archive and used options
 #
 ltjar = '../LT/LanguageTool-4.4/languagetool-commandline.jar'
@@ -33,7 +38,7 @@ for file in sys.argv[1:]:
 
     # read file and call tex2txt()
     #
-    f = tex2txt.myopen(file)
+    f = tex2txt.myopen(file, input_encoding)
     tex = f.read()
     f.close()
     (plain, charmap) = tex2txt.tex2txt(tex, options)
