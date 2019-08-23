@@ -393,6 +393,12 @@ from section
 With option --json, LanguageTool always delivers UTF-8 encoded text.
 JSON output is used in application script [shell2-html.py](shell2-html.py).
 
+Similarly, Python's version for Windows by default prints Latin-1 encoded
+text to standard output.
+As this ensures proper work in a Windows command console, we do not change it.
+Only for example script [shell2-html.py](shell2-html.py), we enforce UTF-8
+output in order to determine the encoding of the generated HTML page.
+
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Declaration of LaTeX macros
