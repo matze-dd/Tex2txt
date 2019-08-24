@@ -4,6 +4,8 @@
     - ensure UTF-8 encoding for stdout under Windows, too
     - added macro \\title to collection parms.heading\_macros
     - function myopen() requires mandatory argument 'encoding'
+    - fixed problem in [issue #7](../../issues/7), BUT has to be activated
+      in variable parms.recognise\_braces\_in\_brackets
 - shell2-html.py:
     - only display excerpts from input text together with line numbers,
       controlled by variable context\_lines
