@@ -356,6 +356,10 @@ parms.text_macro = 'text'           # LaTeX package amsmath
 parms.max_depth_br = 20         # for {} braces and [] brackets
 parms.max_depth_env = 10        # for environments of the same type
 
+#   recognise {} braces inside of [] brackets?
+#   - generates really large regular expressions
+#
+parms.recognise_braces_in_brackets = False
 
 #   keep \item labels, if given in [...] option?
 #   (if set to False: use default labels defined next)
@@ -570,13 +574,14 @@ skip_space = r'(?:[ \t]*\n?[ \t]*)'
 #   regular expression for nested {} braces
 #   BUG (but error message on overrun): the nesting limit is unjustified
 #
-def re_braced(max_depth, inner_beg, inner_end):
+def re_braced(max_depth, inner_beg, inner_end, outer_beg='(', outer_end=')'):
     atom = r'[^\\{}]|\\.|\\\n'
     braced = inner_beg + r'\{(?:' + atom + r')*\}' + inner_end
         # (?:...) is (...) without creation of a reference
     for i in range(max_depth - 2):
         braced = r'\{(?:' + atom + r'|' + braced + r')*\}'
-    braced = r'(?<!\\)\{((?:' + atom + r'|' + braced + r')*)\}'
+    braced = (r'(?<!\\)\{' + outer_beg + r'(?:' + atom + r'|' + braced + r')*'
+                    + outer_end + r'\}')
         # outer-most (...) for reference at substitutions below
         # '(?<!x)y' matches 'y' not preceded by 'x'
     return braced
@@ -584,10 +589,13 @@ braced = re_braced(parms.max_depth_br, '', '')
 sp_braced = skip_space + braced
 
 #   the same for [] brackets
-#   BUG (without warning): enclosed {} pairs are not recognised
 #
 def re_bracketed(max_depth, inner_beg, inner_end):
-    atom = r'[^]\\[]|\\.|\\\n'
+    if parms.recognise_braces_in_brackets:
+        atom = (r'[^][{\\]|\\.|\\\n|'
+                    + re_braced(parms.max_depth_br, '', '', '(?:', ')'))
+    else:
+        atom = r'[^][\\]|\\.|\\\n'
     bracketed = inner_beg + r'\[(?:' + atom + r')*\]' + inner_end
     for i in range(max_depth - 2):
         bracketed = r'\[(?:' + atom + r'|' + bracketed + r')*\]'
