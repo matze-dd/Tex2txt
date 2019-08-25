@@ -1865,20 +1865,20 @@ def get_line_starts(s):
 
 #   function for reading replacement file
 #
-def read_replacements(fn):
+def read_replacements(fn, encoding):
     if not fn:
         return None
-    f = myopen(fn, encoding='utf-8')
+    f = myopen(fn, encoding=encoding)
     lines = f.readlines()
     f.close()
     return (lines, fn)
 
 #   function for reading definition file
 #
-def read_definitions(fn):
+def read_definitions(fn, encoding):
     if not fn:
         return Definitions(None, '?')
-    f = myopen(fn, encoding='utf-8')
+    f = myopen(fn, encoding=encoding)
     s = f.read()
     f.close()
     return Definitions(s, fn)
@@ -1925,7 +1925,7 @@ class Options:
         self.defs = defs
         if not self.defs:
             # need default defs object
-            self.defs = read_definitions(None)
+            self.defs = read_definitions(None, '?')
         self.extr = extr
         self.lang = lang
         self.unkn = unkn
@@ -1941,24 +1941,29 @@ def main():
     parser.add_argument('--defs')
     parser.add_argument('--extr')
     parser.add_argument('--lang')
+    parser.add_argument('--ienc')
     parser.add_argument('--unkn', action='store_true')
     cmdline = parser.parse_args()
 
+    if not cmdline.ienc:
+        cmdline.ienc = 'utf-8'
+
     options = Options(
-                repl=read_replacements(cmdline.repl),
+                repl=read_replacements(cmdline.repl, encoding=cmdline.ienc),
                 char=cmdline.char,
-                defs=read_definitions(cmdline.defs),
+                defs=read_definitions(cmdline.defs, encoding='utf-8'),
+                                    # the Python code should be UTF-8
                 extr=cmdline.extr,
                 lang=cmdline.lang,
                 unkn=cmdline.unkn)
 
     if cmdline.file:
-        f = myopen(cmdline.file, encoding='utf-8')
+        f = myopen(cmdline.file, encoding=cmdline.ienc)
         txt = f.read()
         f.close()
     else:
-        # reopen stdin in text mode: handling of '\r'
-        txt = open(sys.stdin.fileno(), encoding='utf-8').read()
+        # reopen stdin in text mode: handling of '\r', proper decoding
+        txt = open(sys.stdin.fileno(), encoding=cmdline.ienc).read()
 
     if cmdline.nums:
         cmdline.nums = myopen(cmdline.nums, encoding='utf-8', mode='w')
