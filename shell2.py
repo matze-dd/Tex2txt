@@ -29,8 +29,10 @@ ltcmd = ('java -jar ' +  ltjar
 #
 options = tex2txt.Options(
             char=True,
-#           repl=tex2txt.read_replacements('Tools/LT/repls.txt'),
-#           defs=tex2txt.read_definitions('Tools/LT/defs.py'),
+#           repl=tex2txt.read_replacements('Tools/LT/repls.txt',
+#                                           encoding=input_encoding),
+#           defs=tex2txt.read_definitions('Tools/LT/defs.py',
+#                                           encoding='utf-8'),
             lang='en'
 )
 
@@ -38,7 +40,7 @@ for file in sys.argv[1:]:
 
     # read file and call tex2txt()
     #
-    f = tex2txt.myopen(file, input_encoding)
+    f = tex2txt.myopen(file, encoding=input_encoding)
     tex = f.read()
     f.close()
     (plain, charmap) = tex2txt.tex2txt(tex, options)
