@@ -377,12 +377,14 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Encoding problems
-Encoding of LaTeX input may be set with option --ienc; the output encoding
-is fixed to UTF-8.
+For script [tex2txt.py](tex2txt.py), the encoding of LaTeX input may be set
+with option --ienc; output encoding is fixed to UTF-8.
 In application Python scripts [shell2.py](shell2.py)
-and [shell2-html.py](shell2-html.py),
+and [shell2-html.py](shell2-html.py) from section
+[Application as Python module](#application-as-python-module),
 input encoding can be specified by variable input\_encoding.
-The Bash scripts currently expect plain ASCII or UTF-8 input.
+The Bash scripts from section [Tool integration](#tool-integration)
+currently expect plain ASCII or UTF-8 input.
 
 Files with Windows style line endings (CRLF) are accepted, but the text
 output will be Unix style (LF only), unless a Windows Python interpreter
@@ -395,9 +397,7 @@ produce Latin-1 output, even if option '--encoding utf-8' is specified.
 Therefore, a translator to UTF-8 has to be placed in front of a Python filter
 for line or column numbers.
 This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
-A similar approach is taken in example Python script [shell2.py](shell2.py)
-from section
-[Application as Python module](#application-as-python-module).
+A similar approach is taken in example Python script [shell2.py](shell2.py).
 
 With option --json, LanguageTool always delivers UTF-8 encoded text.
 JSON output is used in application script [shell2-html.py](shell2-html.py).
