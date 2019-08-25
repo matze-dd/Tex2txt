@@ -208,7 +208,8 @@ Here is a list of the most important script operations.
 The script expects the following parameters.
 ```
 python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
-                   [--extr list] [--lang xy] [--unkn] [texfile]
+                   [--extr list] [--lang xy] [--ienc enc] [--unkn] \
+                   [texfile]
 ```
 - without positional argument `texfile`: read standard input
 - option `--nums file`<br>
@@ -240,6 +241,9 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
   proof titles, for handling of macros like \"\=, and for replacement
   of foreign-language text;
   see LAB:LANGUAGE in script
+- option `--ienc enc`<br>
+  encoding for LaTeX input and file from option --repl, default is UTF-8;
+  Python code in file from option --defs is fixed to UTF-8
 - option `--unkn`<br>
   print list of undeclared macros and environments outside of equations;
   declared macros do appear here, if a mandatory argument is missing
@@ -373,10 +377,12 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Encoding problems
-The LaTeX files normally have to be encoded as plain ASCII or UTF-8.
-Note, however, that in application Python scripts [shell2.py](shell2.py)
+Encoding of LaTeX input may be set with option --ienc; the output encoding
+is fixed to UTF-8.
+In application Python scripts [shell2.py](shell2.py)
 and [shell2-html.py](shell2-html.py),
 input encoding can be specified by variable input\_encoding.
+The Bash scripts currently expect plain ASCII or UTF-8 input.
 
 Files with Windows style line endings (CRLF) are accepted, but the text
 output will be Unix style (LF only), unless a Windows Python interpreter
@@ -607,8 +613,9 @@ tex2txt.Options(...)
 which takes arguments similar to the command-line options of the script.
 They are documented at the definition of class 'Options', see LAB:OPTIONS.
 The parameters 'defs' and 'repl' for this class can be set using functions
-tex2txt.read\_definitions(fn) and tex2txt.read\_replacements(fn), both
-expecting 'None' or a file name as argument.
+tex2txt.read\_definitions(fn, enc) and tex2txt.read\_replacements(fn, enc),
+both expecting 'None' or a file name as argument 'fn', and an encoding name
+for 'enc'.
 
 **Remark.**
 Since the function tex2txt() modifies globals in its module, an application
