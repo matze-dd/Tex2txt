@@ -6,6 +6,8 @@
     - function myopen() requires mandatory argument 'encoding'
     - fixed problem in [issue #7](../../issues/7), BUT has to be activated
       in variable parms.recognise\_braces\_in\_brackets
+    - added option --ienc for input encoding
+    - read\_definitions() and read\_replacements() require 'encoding' argument
 - shell2-html.py:
     - only display excerpts from input text together with line numbers,
       controlled by variable context\_lines
