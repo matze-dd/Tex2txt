@@ -38,6 +38,9 @@ options = tex2txt.Options(
 
 for file in sys.argv[1:]:
 
+    sys.stderr.write('=== ' + file + '\n')
+    sys.stderr.flush()
+
     # read file and call tex2txt()
     #
     f = tex2txt.myopen(file, encoding=input_encoding)
@@ -59,9 +62,10 @@ for file in sys.argv[1:]:
         msg = out.decode(encoding='utf-8')
 
     lines = msg.splitlines(keepends=True)
-    if len(lines) > 0:
+    if lines:
         # write final diagnostic line to stderr
         sys.stderr.write(lines.pop())
+        sys.stderr.flush()
 
     # correct line and column numbers in messages, prepend file name
     #
@@ -83,4 +87,5 @@ for file in sys.argv[1:]:
 
     for s in lines:
         sys.stdout.write(re.sub(expr, f, s))
+    sys.stdout.flush()
 
