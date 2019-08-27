@@ -1,12 +1,12 @@
-"Unreleased"
-------------
+Release 1.6.5
+-------------
 - tex2txt.py:
+    - added option --ienc for input encoding
     - ensure UTF-8 encoding for stdout under Windows, too
     - added macro \\title to collection parms.heading\_macros
-    - function myopen() requires mandatory argument 'encoding'
     - fixed problem in [issue #7](../../issues/7), BUT has to be activated
       in variable parms.recognise\_braces\_in\_brackets
-    - added option --ienc for input encoding
+    - function myopen() requires mandatory argument 'encoding'
     - read\_definitions() and read\_replacements() require 'encoding' argument
 - shell2-html.py:
     - only display excerpts from input text together with line numbers,
@@ -14,8 +14,8 @@
     - enforce UTF-8 encoded standard output, added HTML \<meta\> tag for
       UTF-8 encoding
 - shell2\*.py:
-    - explicitly use "encoding='utf-8'" for encode(), decode()
     - input encoding set by variable input\_encoding
+    - explicitly use "encoding='utf-8'" for encode(), decode()
 - README.md: added details for shell2-html.py and encoding problems
 
 Release 1.6.4
