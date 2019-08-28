@@ -546,6 +546,10 @@ mark_end_env = r'\end{' + mark_internal_pre + r'}'
 mark_begin_env_sub = r'\\begin{' + mark_internal_pre + r'}'
 mark_end_env_sub = r'\\end{' + mark_internal_pre + r'}'
 
+#   this mark enforces a line break without creating a new blank line
+#
+mark_enforce_linebreak = mark_deleted + '\n' + mark_deleted
+
 #   internal representation of double backslash \\
 #
 mark_linebreak = mark_internal_pre + 'L' + mark_internal_post
@@ -1258,7 +1262,9 @@ def tex2txt(txt, options):
         txt = text_get_txt(ret)
         if txt and txt[-1] not in parms.heading_macros_punct:
             ret = text_add_frame('', '.', ret)
-        return ret
+        # ensure that preceding and subsequent macros leave space
+        return text_add_frame(mark_enforce_linebreak,
+                                mark_enforce_linebreak, ret)
     for s in parms.heading_macros():
         actions += [(
             r'\\' + s + r'(?:' + sp_bracketed + r')?' + sp_braced,
