@@ -1,3 +1,12 @@
+"Unreleased"
+------------
+- fixed bug: 'x\\footnotemark\<line break\>\\section{Title}'
+  produced 'xTitle.'
+- Remark: the simple scheme with mark\_enforce\_linebreak can perhaps replace
+  the rather complicated and error-prone mechanism with mark\_begin\_env,
+  mark\_end\_env and spkip\_space\_macro (protects beginnings of environments)
+- README.md: added reference to pylatexenc
+
 Release 1.6.5
 -------------
 - tex2txt.py:
