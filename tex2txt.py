@@ -914,18 +914,10 @@ def mysub_offsets_char(res, t, r):
     return (len(res), len(t), len(r))
 
 def mysub_combine_char(pos, res, r, nt, nr, numbers, nums2, text):
-    if nt + nr > 100:
-        # substantial change: build new number arrray
-        return (res + r, numbers[:pos] + nums2[:nr] + numbers[pos+nt:])
-
-    # smaller change: adapt number array in place
     if numbers is text[1]:
         # myexpand() in mysub() still needs the original array
         numbers = numbers.copy()
-    for i in range(nt):
-        numbers.pop(pos)
-    for i in range(nr):
-        numbers.insert(pos + i, nums2[i])
+    numbers[pos:pos+nt] = nums2[:nr]
     return (res + r, numbers)
 
 def text_combine_char(t1, t2):
