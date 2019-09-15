@@ -80,7 +80,6 @@ Reconstruction of both line and column numbers is possible with script
 option --char, which activates position tracking for each single character
 of input.
 File [Example2.md](Example2.md) shows such an application.
-Very large input texts can lead to slow operation, however.
 
 The first part of the Python script gathers LaTeX macros and environments
 with tailored treatment, which is shortly described
@@ -219,8 +218,7 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
   can be used later to correct line numbers in messages
 - option `--char`<br>
   activates character position tracking; if option --nums is given, then
-  the file contains the estimated input position for each character of
-  output; may be slow for very large texts
+  the file contains the estimated input position for each character of output
 - option `--repl file`<br>
   file with phrase replacements performed at the end, for instance after
   changing inline maths to text, and German hyphen "= to - ;
@@ -369,8 +367,7 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
   do not use LanguageTool but instead Hunspell for native-language checks;
   perform replacements from script variable $repls\_hunspell beforehand
 - option `--columns`<br>
-  correct both line and column numbers in messages from LanguageTool;
-  this may be slow for very large LaTeX files
+  correct both line and column numbers in messages from LanguageTool
 - option `--delete`<br>
   only remove auxiliary directory in script variable $txtdir, and exit
 
