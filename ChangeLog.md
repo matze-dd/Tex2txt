@@ -1,5 +1,6 @@
 "Unreleased"
 ------------
+- simpler and faster implementation of function mysub\_combine\_char()
 - fixed bug: 'x\\footnotemark\<line break\>\\section{Title}'
   produced 'xTitle.'
 - Remark: the simple scheme with mark\_enforce\_linebreak can perhaps replace
