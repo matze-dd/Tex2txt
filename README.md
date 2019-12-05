@@ -12,7 +12,7 @@
 [Remarks on implementation](#remarks-on-implementation)
 
 **Summary and example.**
-This Python software extracts plain text from LaTeX documents.
+This Python program extracts plain text from LaTeX documents.
 Due to the following characteristics, it may be integrated with a
 proofreading software:
 - tracking of line numbers or character positions during text manipulations,
@@ -31,8 +31,8 @@ is the main text.
 will lead to the subsequent output from example application script
 [shell2.py](shell2.py) described in section
 [Application as Python module](#application-as-python-module).
-As proofreading software, the script uses
-[LanguageTool](https://www.languagetool.org).
+The script uses [LanguageTool](https://www.languagetool.org)
+as proofreading software.
 ```
 1.) Line [1], column [6], Rule ID: ENGLISH_WORD_REPEAT_RULE
 Message: Possible typo: you repeated a word
@@ -53,11 +53,13 @@ This is a modest, self-contained [Python](https://www.python.org)
 script for the extraction of plain text from
 [LaTeX](https://www.latex-project.org) documents.
 It can also be used as Python module.
-In some sense, it relates to tools like
+In some sense, it relates to projects like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
+[plasTeX](https://github.com/tiarno/plastex),
+[pylatexenc](https://github.com/phfaist/pylatexenc),
 [TeXtidote](https://github.com/sylvainhalle/textidote), and
 [tex2txt](http://hackage.haskell.org/package/tex2txt).
-For the naming conflict with the latter project, we want to apologise.
+For the naming conflict with the latter tool, we want to apologise.
 
 While virtually no text should be dropped by the filter,
 our aim is to provoke as few as possible “false” warnings when the result

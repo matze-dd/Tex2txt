@@ -1,5 +1,6 @@
 "Unreleased"
 ------------
+- tested with Python version 3.8 and LanguageTool version 4.7
 - simpler and faster implementation of function mysub\_combine\_char()
 - fixed bug: 'x\\footnotemark\<line break\>\\section{Title}'
   produced 'xTitle.'
