@@ -1,5 +1,6 @@
-"Unreleased"
-------------
+Release 1.6.6
+-------------
+- added demo file HTML-report.md for application script shell2-html.py
 - tested with Python version 3.8 and LanguageTool version 4.7
 - simpler and faster implementation of function mysub\_combine\_char()
 - fixed bug: 'x\\footnotemark\<line break\>\\section{Title}'
