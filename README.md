@@ -33,6 +33,8 @@ will lead to the subsequent output from example application script
 [Application as Python module](#application-as-python-module).
 The script uses [LanguageTool](https://www.languagetool.org)
 as proofreading software.
+(Alternatively, script [shell2-html.py](shell2-html.py)
+produces an HTML report, [see the example here](HTML-report.md).)
 ```
 1.) Line [1], column [6], Rule ID: ENGLISH_WORD_REPEAT_RULE
 Message: Possible typo: you repeated a word
