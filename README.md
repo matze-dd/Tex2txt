@@ -24,29 +24,31 @@ proofreading software:
 
 For instance, the LaTeX input
 ```
-This is\footnote{A footnote may be set
-in \textcolor{red}{redx colour.}}
-is the main text.
+Only few people\footnote{We use
+\textcolor{red}{redx colour.}}
+is lazy.
 ```
 will lead to the subsequent output from example application script
 [shell2.py](shell2.py) described in section
-[Application as Python module](#application-as-python-module).
+[Application as Python module](#application-as-python-module) ahead.
 The script uses [LanguageTool](https://www.languagetool.org)
 as proofreading software.
-(Alternatively, script [shell2-html.py](shell2-html.py)
-produces an HTML report, [see the example here](HTML-report.md).)
 ```
-1.) Line [1], column [6], Rule ID: ENGLISH_WORD_REPEAT_RULE
-Message: Possible typo: you repeated a word
-Suggestion: is
-This is is the main text.    A footnote may be set in r...
-     ^^^^^                                             
-2.) Line [2], column [20], Rule ID: MORFOLOGIK_RULE_EN_GB
+1.) Line [3], column [1], Rule ID: PEOPLE_VBZ[1]
+Message: If 'people' is plural here, don't use the third-person singular verb.
+Suggestion: am; are; aren
+Only few people is lazy.    We use redx colour. 
+                ^^                              
+2.) Line [2], column [17], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: red; Rex; reds; redo; Red; Rede; redox; red x
-...s the main text.    A footnote may be set in redx colour. 
-                                                ^^^^        
+Only few people is lazy.    We use redx colour. 
+                                   ^^^^
 ```
+Alternatively, application script [shell2-html.py](shell2-html.py)
+produces an HTML report:
+
+![HTML report](shell2-html.png)
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
@@ -600,9 +602,9 @@ has to be set accordingly.
 ### Module interface
 The module provides the following central function.
 ```
-(plain, nums) = tex2txt.tex2txt(tex, options)
+(plain, nums) = tex2txt.tex2txt(latex, options)
 ```
-Argument 'tex' is the LaTeX text as string, return element 'plain' is the
+Argument 'latex' is the LaTeX text as string, return element 'plain' is the
 plain text as string.
 Array 'nums' contains the estimated original line or character positions,
 counting from one.
@@ -626,9 +628,9 @@ Two additional functions support translation of line and column numbers
 in case of character position tracking.
 Translation is performed by
 ```
-ret = tex2txt.translate_numbers(tex, plain, nums, starts, lin, col)
+ret = tex2txt.translate_numbers(latex, plain, nums, starts, lin, col)
 ```
-with strings 'tex' and 'plain' containing LaTeX and derived plain texts.
+with strings 'latex' and 'plain' containing LaTeX and derived plain texts.
 Argument 'nums' is the number array returned by function tex2txt(),
 'lin' and 'col' are the integers to be translated.
 Argument 'starts' has to be obtained beforehand by the call
@@ -678,7 +680,7 @@ python3 shell2-html.py t.tex > t.html
 will create an HTML file 't.html' from LaTeX file 't.tex'.
 Opened in a browser, it displays excerpts from the original LaTeX text,
 highlighting the problems indicated by LT.
-The content of corresponding LT messages can be seen when hovering the mouse
+The corresponding LT messages can be viewed when hovering the mouse
 over these marked places.
 This idea basically goes back to Sylvain Hallé, who developed
 [TeXtidote](https://github.com/sylvainhalle/textidote).
