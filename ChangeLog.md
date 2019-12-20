@@ -1,3 +1,7 @@
+"Unreleased"
+------------
+- README.md: changed introductory example, added screen shot of HTML report
+
 Release 1.6.6
 -------------
 - added demo file HTML-report.md for application script shell2-html.py
