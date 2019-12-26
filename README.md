@@ -29,8 +29,8 @@ Only few people\footnote{We use
 is lazy.
 ```
 will lead to the subsequent output from example application script
-[shell2.py](shell2.py) described in section
-[Application as Python module](#application-as-python-module) ahead.
+[shell.py](shell.py) described in section
+[Application examples](#application-examples) ahead.
 The script uses [LanguageTool](https://www.languagetool.org)
 as proofreading software.
 ```
@@ -45,10 +45,9 @@ Suggestion: red; Rex; reds; redo; Red; Rede; redox; red x
 Only few people is lazy.    We use redx colour. 
                                    ^^^^
 ```
-Alternatively, application script [shell2-html.py](shell2-html.py)
-produces an HTML report:
+Invoked with option --html, the script produces an HTML report:
 
-![HTML report](shell2-html.png)
+![HTML report](shell.png)
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
@@ -264,16 +263,15 @@ Some encoding problems for the latter case are addressed in section
 If Python and Java are installed under Windows, then the main Python
 program [tex2txt.py](tex2txt.py) may be directly used in a Windows command
 console or script.
-Furthermore, at least the two application scripts [shell2.py](shell2.py)
-and [shell2-html.py](shell2-html.py) from section
-[Application as Python module](#application-as-python-module) can be run,
+Furthermore, at least the application script [shell.py](shell.py) from section
+[Application examples](#application-examples) can be run,
 if the LanguageTool software is present.
 For example, this could look like
 ```
-"c:\Program Files\Python\Python37\python.exe" shell2-html.py t.tex > t.html
+"c:\Program Files\Python\Python37\python.exe" shell.py --html t.tex > t.html
 ```
 The file tex2txt.py must reside in the current directory, and variable
-'ltjar' in script shell2-html.py has to be customised.
+'ltjar' in script shell.py has to be customised.
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
@@ -382,10 +380,9 @@ bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
 ## Encoding problems
 For script [tex2txt.py](tex2txt.py), the encoding of LaTeX input may be set
 with option --ienc; output encoding is fixed to UTF-8.
-In application Python scripts [shell2.py](shell2.py)
-and [shell2-html.py](shell2-html.py) from section
-[Application as Python module](#application-as-python-module),
-input encoding can be specified by variable input\_encoding.
+In application Python script [shell.py](shell.py) from section
+[Application examples](#application-examples),
+this corresponds to option --encoding.
 The Bash scripts from section [Tool integration](#tool-integration)
 currently expect plain ASCII or UTF-8 input.
 
@@ -400,16 +397,17 @@ produce Latin-1 output, even if option '--encoding utf-8' is specified.
 Therefore, a translator to UTF-8 has to be placed in front of a Python filter
 for line or column numbers.
 This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
-A similar approach is taken in example Python script [shell2.py](shell2.py).
+A similar approach is taken in example Python script [shell.py](shell.py).
 
 With option --json, LanguageTool always delivers UTF-8 encoded text.
-JSON output is used in application script [shell2-html.py](shell2-html.py).
+JSON output is used in application script [shell.py](shell.py)
+on option --html.
 
 Similarly, Python's version for Windows by default prints Latin-1 encoded
 text to standard output.
 As this ensures proper work in a Windows command console, we do not change it
-for the example script shell2.py.
-In application script shell2-html.py, we enforce UTF-8 output in order to
+for the example script shell.py when generating a text report.
+On option --html, we enforce UTF-8 output in order to
 determine the encoding of the generated HTML page.
 The stand-alone script tex2txt.py will produce UTF-8 output, too.
 
@@ -652,7 +650,74 @@ specification and converts a possible exception into an error message.
 
 ### Application examples
 The module interface is demonstrated in function main(), which is activated
-when running the script directly.
+when running the script tex2txt.py directly.
+
+Example Python script [shell.py](shell.py) will generate a proofreading report
+in text or HTML format from filtering the LaTeX input and application of
+[LanguageTool](https://www.languagetool.org) (LT).
+The path to LT has to be customised in script variable 'ltjar', compare
+the corresponding comment in script.
+Both LT and the script will print some progress messages to stderr.
+They can be suppressed with `python3 shell.py ... 2>/dev/null`.
+```
+python3 shell.py [--html] [--include] [--extract macros] \
+                 [--language lang] [--encoding ienc] [--replace file] \
+                 [--define file] [--disable rules] [--context number] \
+                 latexfile [latexfile ...] [> text_or_html_file]
+```
+Option names may be abbreviated.
+Default option values are set at the Python script beginning.
+- option `--html`<br>
+  generate HTML report; see below for further details
+- option `--include`<br>
+  track file inclusions like \\input\{...\}; script variable
+  'inclusion\_macros' contains list of the corresponding LaTeX macro names
+- option `--language lang`<br>
+  language code as expected by LT, default: 'en-GB';
+  first two letters are passed to textxt() (currently, only 'de' and 'en')
+- option `--disable rules`<br>
+  comma-separated list of ignored LT rules, passed as --disable to LT;
+  default: 'WHITESPACE_RULE'
+- option `--extract macros`<br>
+  only check arguments of the LaTeX macros whichs names are given as
+  comma-separated list; useful for check of foreign-language text,
+  if marked accordingly
+- option `--context number`<br>
+  number of context lines displayed around each marked text region
+  in HTML report; default: 2; negative number: display whole text
+- option `--encoding ienc`,<br>
+  option `--replace file`,<br>
+  option `--define file`<br>
+  like options --ienc, --repl, --defs described in section
+  [Command line](#command-line).
+
+**Dictionary adaptation.**
+LT evaluates the two files 'spelling.txt' and 'prohibit.txt' in directory
+```
+.../LanguageTool-?.?/org/languagetool/resource/<lang-code>/hunspell/
+```
+Additional words and words that shall raise an error can be appended here.
+Note, that LT does not like blank lines in these files.
+
+**HTML report.**
+The idea of an HTML report goes back to Sylvain Hallé, who developed
+[TeXtidote](https://github.com/sylvainhalle/textidote).
+Opened in a browser, it displays excerpts from the original LaTeX text,
+highlighting the problems indicated by LT.
+The corresponding LT messages can be viewed when hovering the mouse
+over these marked places.
+Script option --context controls the number of lines displayed
+around each tagged region;
+a negative option value will show the complete LaTeX input text.
+If the localisation of a problem is unsure, highlighting will use yellow
+instead of orange colour.
+For simplicity, marked text regions that intertwine with other ones
+are separately repeated at the end.
+In case of multiple input files, the HTML report starts with an index.
+
+### Superseded applications
+The following two scripts now are combined into [shell.py](shell.py)
+described above.
 
 An example application is shown in Python script [shell2.py](shell2.py)
 which resembles the Bash script [shell2.sh](shell2.sh) from section
