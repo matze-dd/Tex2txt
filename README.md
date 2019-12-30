@@ -657,6 +657,9 @@ in text or HTML format from filtering the LaTeX input and application of
 [LanguageTool](https://www.languagetool.org) (LT).
 The path to LT has to be customised in script variable 'ltjar', compare
 the corresponding comment in script.
+Note that from version 4.8, LT does not fully support 32 bit systems anymore.
+File tex2txt.py should reside in the current directory, see also
+the [beginning of this section](#application-as-python-module).
 Both LT and the script will print some progress messages to stderr.
 They can be suppressed with `python3 shell.py ... 2>/dev/null`.
 ```
@@ -677,7 +680,7 @@ Default option values are set at the Python script beginning.
   first two letters are passed to textxt() (currently, only 'de' and 'en')
 - option `--disable rules`<br>
   comma-separated list of ignored LT rules, passed as --disable to LT;
-  default: 'WHITESPACE_RULE'
+  default: 'WHITESPACE\_RULE'
 - option `--extract macros`<br>
   only check arguments of the LaTeX macros whichs names are given as
   comma-separated list; useful for check of foreign-language text,
@@ -697,13 +700,12 @@ LT evaluates the two files 'spelling.txt' and 'prohibit.txt' in directory
 .../LanguageTool-?.?/org/languagetool/resource/<lang-code>/hunspell/
 ```
 Additional words and words that shall raise an error can be appended here.
-Note, that LT does not like blank lines in these files.
 
 **HTML report.**
 The idea of an HTML report goes back to Sylvain Hallé, who developed
 [TeXtidote](https://github.com/sylvainhalle/textidote).
-Opened in a browser, it displays excerpts from the original LaTeX text,
-highlighting the problems indicated by LT.
+Opened in a Web browser, the report displays excerpts from the original 
+LaTeX text, highlighting the problems indicated by LT.
 The corresponding LT messages can be viewed when hovering the mouse
 over these marked places.
 Script option --context controls the number of lines displayed
