@@ -2,8 +2,9 @@
 ------------
 - new application script shell.py: combined version of old scripts
   shell2.py and shell2-html.py, mainly controlled by command-line options
-    - function on --include: tracking of file inclusions
-    - function on --extract: allows to check marked foreign-language text
+    - option --include: tracking of file inclusions
+    - option --extract: allows to check marked foreign-language text
+    - option --skip: exclude certain files
 - README.md
     - changed introductory example, added screen shot of HTML report
     - documentation for shell.py

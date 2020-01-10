@@ -53,9 +53,8 @@ Invoked with option --html, the script produces an HTML report:
 
 ## General description
 This is a modest, self-contained [Python](https://www.python.org)
-script for the extraction of plain text from
+script or module for the extraction of plain text from
 [LaTeX](https://www.latex-project.org) documents.
-It can also be used as Python module.
 In some sense, it relates to projects like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
 [plasTeX](https://github.com/tiarno/plastex),
@@ -105,7 +104,7 @@ main text flow, each separated by blank lines.
 The introductory summary above shows an example.
 Activation of this behaviour is demonstrated for macro \\caption{...}
 in section [Declaration of LaTeX macros](#declaration-of-latex-macros).
-Script option --extr provides another possibility, which is also useful for
+Script option --extr provides another possibility that is also useful for
 the extraction of foreign-language text.
 
 An optional speciality is some parsing of LaTeX environments for displayed
@@ -493,7 +492,7 @@ With the entry
 ```
 in parms.environments of the Python script (but no 'align' entry in
 parms.equation\_environments), the equation environment is simply removed.
-We get the following script output which will probably cause a problem,
+We get the following script output that will probably cause a problem,
 even if the equation ends with a correct interpunction sign.
 ```
 Wir folgern
@@ -611,7 +610,7 @@ Argument 'options' can be created with class
 ```
 tex2txt.Options(...)
 ```
-which takes arguments similar to the command-line options of the script.
+that takes arguments similar to the command-line options of the script.
 They are documented at the definition of class 'Options', see LAB:OPTIONS.
 The parameters 'defs' and 'repl' for this class can be set using functions
 tex2txt.read\_definitions(fn, enc) and tex2txt.read\_replacements(fn, enc),
@@ -649,7 +648,7 @@ is similar to standard function open(), but it requires an explicit encoding
 specification and converts a possible exception into an error message.
 
 ### Application examples
-The module interface is demonstrated in function main(), which is activated
+The module interface is demonstrated in function main() that is activated
 when running the script tex2txt.py directly.
 
 Example Python script [shell.py](shell.py) will generate a proofreading report
@@ -663,7 +662,7 @@ the [beginning of this section](#application-as-python-module).
 Both LT and the script will print some progress messages to stderr.
 They can be suppressed with `python3 shell.py ... 2>/dev/null`.
 ```
-python3 shell.py [--html] [--include] [--extract macros] \
+python3 shell.py [--html] [--include] [--skip regex] [--extract macros] \
                  [--language lang] [--encoding ienc] [--replace file] \
                  [--define file] [--disable rules] [--context number] \
                  latexfile [latexfile ...] [> text_or_html_file]
@@ -685,6 +684,9 @@ Default option values are set at the Python script beginning.
   only check arguments of the LaTeX macros whichs names are given as
   comma-separated list; useful for check of foreign-language text,
   if marked accordingly
+- option `--skip regex`<br>
+  skip files matching the given regular expression;
+  useful, e.g., for exclusion of figures on option --include
 - option `--context number`<br>
   number of context lines displayed around each marked text region
   in HTML report; default: 2; negative number: display whole text
@@ -700,6 +702,8 @@ LT evaluates the two files 'spelling.txt' and 'prohibit.txt' in directory
 .../LanguageTool-?.?/org/languagetool/resource/<lang-code>/hunspell/
 ```
 Additional words and words that shall raise an error can be appended here.
+LT version 4.8 introduced additional files 'spelling\_custom.txt' and
+'prohibit\_custom.txt'.
 
 **HTML report.**
 The idea of an HTML report goes back to Sylvain Hallé, who developed
@@ -722,7 +726,7 @@ The following two scripts now are combined into [shell.py](shell.py)
 described above.
 
 An example application is shown in Python script [shell2.py](shell2.py)
-which resembles the Bash script [shell2.sh](shell2.sh) from section
+that resembles the Bash script [shell2.sh](shell2.sh) from section
 [Simple scripts](#simple-scripts).
 For instance, the Bash command
 ```
@@ -789,7 +793,7 @@ It avoids that a macro without arguments consumes leading space inside of
 an already resolved following environment.
 Besides, that protects a line break, for instance in front of an equation
 environment.
-Another issue emerges with input text like '\\y{a\\z} b' which can lead
+Another issue emerges with input text like '\\y{a\\z} b' that can lead
 to the output 'ab', if macro \\z is expanded after macro \\y{...} taking an
 argument.
 The workaround inserts the temporary placeholder in variable mark\_deleted

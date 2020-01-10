@@ -1,6 +1,6 @@
 #
 #   Tex2txt, a flexible LaTeX filter
-#   Copyright (C) 2018-2019 Matthias Baumann
+#   Copyright (C) 2018-2020 Matthias Baumann
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -83,6 +83,7 @@ parser.add_argument('--extract')
 parser.add_argument('--context', type=int)
 parser.add_argument('--html', action='store_true')
 parser.add_argument('--include', action='store_true')
+parser.add_argument('--skip')
 cmdline = parser.parse_args()
 
 if cmdline.language is None:
@@ -119,11 +120,15 @@ if cmdline.include:
     opts = tex2txt.Options(extr=inclusion_macros, repl=cmdline.replace,
                             defs=cmdline.define, lang=cmdline.language[:2])
 
+def skip_file(fn):
+    # does file name match regex from option --skip?
+    return cmdline.skip and re.search(r'\A' + cmdline.skip + r'\Z', fn)
+
 todo = cmdline.file
 done = []
 while todo:
     f = todo.pop(0)
-    if f in done:
+    if f in done or skip_file(f):
         continue
     done.append(f)
     if not cmdline.include:
@@ -135,7 +140,7 @@ while todo:
     for f in plain.split():
         if not f.endswith('.tex'):
             f += '.tex'
-        if f not in done + todo:
+        if f not in done + todo and not skip_file(f):
             todo.append(f)
 
 cmdline.file = done
