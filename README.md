@@ -52,7 +52,8 @@ Invoked with option --html, the script produces an HTML report:
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## General description
-This is a modest, self-contained [Python](https://www.python.org)
+[Tex2txt.py](tex2txt.py) is a modest, self-contained
+[Python](https://www.python.org)
 script or module for the extraction of plain text from
 [LaTeX](https://www.latex-project.org) documents.
 In some sense, it relates to projects like
