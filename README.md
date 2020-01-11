@@ -45,6 +45,7 @@ Suggestion: red; Rex; reds; redo; Red; Rede; redox; red x
 Only few people is lazy.    We use redx colour. 
                                    ^^^^
 ```
+<a name="example-html-report"></a>
 Invoked with option --html, the script produces an HTML report:
 
 ![HTML report](shell.png)
@@ -270,7 +271,12 @@ For example, this could look like
 ```
 "c:\Program Files\Python\Python37\python.exe" shell.py --html t.tex > t.html
 ```
-The file tex2txt.py must reside in the current directory, and variable
+or simpler
+```
+py -3 shell.py --html t.tex > t.html
+```
+if the Python launcher has been installed.
+The file tex2txt.py should reside in the current directory, and variable
 'ltjar' in script shell.py has to be customised.
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
@@ -657,7 +663,7 @@ in text or HTML format from filtering the LaTeX input and application of
 [LanguageTool](https://www.languagetool.org) (LT).
 The path to LT has to be customised in script variable 'ltjar', compare
 the corresponding comment in script.
-Note that from version 4.8, LT does not fully support 32 bit systems anymore.
+Note that from version 4.8, LT does not fully support 32-bit systems any more.
 File tex2txt.py should reside in the current directory, see also
 the [beginning of this section](#application-as-python-module).
 Both LT and the script will print some progress messages to stderr.
@@ -677,12 +683,12 @@ Default option values are set at the Python script beginning.
   'inclusion\_macros' contains list of the corresponding LaTeX macro names
 - option `--language lang`<br>
   language code as expected by LT, default: 'en-GB';
-  first two letters are passed to textxt() (currently, only 'de' and 'en')
+  first two letters are passed to tex2txt() (currently, only 'de' and 'en')
 - option `--disable rules`<br>
   comma-separated list of ignored LT rules, passed as --disable to LT;
   default: 'WHITESPACE\_RULE'
 - option `--extract macros`<br>
-  only check arguments of the LaTeX macros whichs names are given as
+  only check arguments of the LaTeX macros whose names are given as
   comma-separated list; useful for check of foreign-language text,
   if marked accordingly
 - option `--skip regex`<br>
@@ -712,7 +718,8 @@ The idea of an HTML report goes back to Sylvain Hallé, who developed
 Opened in a Web browser, the report displays excerpts from the original 
 LaTeX text, highlighting the problems indicated by LT.
 The corresponding LT messages can be viewed when hovering the mouse
-over these marked places.
+over these marked places, see the
+[introductory example](#example-html-report) above.
 Script option --context controls the number of lines displayed
 around each tagged region;
 a negative option value will show the complete LaTeX input text.
