@@ -20,7 +20,7 @@ proofreading software:
   treatment,
 - careful conservation of text flows,
 - detection of trailing interpunction in equations,
-- proper handling of nestable elements like {} braces.
+- proper handling of nestable LaTeX elements like {} braces.
 
 For instance, the LaTeX input
 ```
@@ -102,7 +102,7 @@ break) between macro name and next non-space character within the current
 paragraph.
 
 Extra text flows like footnotes are normally appended to the end of the
-main text flow, each separated by blank lines.
+main text flow, each one separated by blank lines.
 The introductory summary above shows an example.
 Activation of this behaviour is demonstrated for macro \\caption{...}
 in section [Declaration of LaTeX macros](#declaration-of-latex-macros).
@@ -216,39 +216,40 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
                    [--extr list] [--lang xy] [--ienc enc] [--unkn] \
                    [texfile]
 ```
-- without positional argument `texfile`: read standard input
-- option `--nums file`<br>
+- without positional argument `texfile`:<br>
+  read standard input
+- option `--nums file`:<br>
   file for storing original position numbers;
   if option --char not given: for each line of output text, the file contains
   a line with the estimated original line number;
   can be used later to correct line numbers in messages
-- option `--char`<br>
+- option `--char`:<br>
   activates character position tracking; if option --nums is given, then
   the file contains the estimated input position for each character of output
-- option `--repl file`<br>
+- option `--repl file`:<br>
   file with phrase replacements performed at the end, for instance after
   changing inline maths to text, and German hyphen "= to - ;
   see LAB:SPELLING in script for line syntax
-- option `--defs file`<br>
+- option `--defs file`:<br>
   file with additional declarations, example file content (defs members,
   given without lambda, are “appended” to corresponding parms members;
   compare section
   [Declaration of LaTeX macros](#declaration-of-latex-macros)):<br>
   `defs.project_macros = (Macro(name='swap', args='AA', repl=r'\2\1'),)`
-- option `--extr ma[,mb,...]` (comma-separated list of macro names)<br>
+- option `--extr ma[,mb,...]` (comma-separated list of macro names):<br>
   extract only first braced argument of these macros;
   useful, e.g., for check of foreign-language text and footnotes,
   or for tracking of file inclusions
-- option `--lang xy`<br>
+- option `--lang xy`:<br>
   language de or en, default: de;
   used for adaptation of equation replacements, maths operator names,
   proof titles, for handling of macros like \"\=, and for replacement
   of foreign-language text;
   see LAB:LANGUAGE in script
-- option `--ienc enc`<br>
+- option `--ienc enc`:<br>
   encoding for LaTeX input and file from option --repl, default is UTF-8;
   Python code in file from option --defs is fixed to UTF-8
-- option `--unkn`<br>
+- option `--unkn`:<br>
   print list of undeclared macros and environments outside of equations;
   declared macros do appear here, if a mandatory argument is missing
   in input text
@@ -365,20 +366,20 @@ They can be deleted with option --delete.
 bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
                [--columns] [--delete] [files]
 ```
-- no positional arguments `files`:
+- no positional arguments `files`:<br>
   use files from script variable $all\_tex\_files
-- option `--recurse`<br>
+- option `--recurse`:<br>
   track file inclusions; see LAB:RECURSE in script for exceptions
-- option `--adapt-lt`<br>
+- option `--adapt-lt`:<br>
   prior to checks, back up LanguageTool's files spelling.txt (additional
   accepted words) and prohibit.txt (words raising an error), and append
   corresponding private files; see LAB:ADAPT-LT in script
-- option `--no-lt`<br>
+- option `--no-lt`:<br>
   do not use LanguageTool but instead Hunspell for native-language checks;
   perform replacements from script variable $repls\_hunspell beforehand
-- option `--columns`<br>
+- option `--columns`:<br>
   correct both line and column numbers in messages from LanguageTool
-- option `--delete`<br>
+- option `--delete`:<br>
   only remove auxiliary directory in script variable $txtdir, and exit
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
@@ -669,37 +670,45 @@ the [beginning of this section](#application-as-python-module).
 Both LT and the script will print some progress messages to stderr.
 They can be suppressed with `python3 shell.py ... 2>/dev/null`.
 ```
-python3 shell.py [--html] [--include] [--skip regex] [--extract macros] \
-                 [--language lang] [--encoding ienc] [--replace file] \
-                 [--define file] [--disable rules] [--context number] \
-                 latexfile [latexfile ...] [> text_or_html_file]
+python3 shell.py [--html] [--link] [--include] [--extract macros] \
+                 [--language lang] [--t2t-lang lang] [--encoding ienc] \
+                 [--replace file] [--define file] [--disable rules] \
+                 [--context number] [--skip regex] [--plain] \
+                 latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.
 Default option values are set at the Python script beginning.
-- option `--html`<br>
+- option `--html`:<br>
   generate HTML report; see below for further details
-- option `--include`<br>
+- option `--link`:<br>
+  if HTML report : left-click on a highlighted text part opens Web link
+  provided by LT
+- option `--include`:<br>
   track file inclusions like \\input\{...\}; script variable
   'inclusion\_macros' contains list of the corresponding LaTeX macro names
-- option `--language lang`<br>
+- option `--language lang`:<br>
   language code as expected by LT, default: 'en-GB';
-  first two letters are passed to tex2txt() (currently, only 'de' and 'en')
-- option `--disable rules`<br>
+  first two letters are passed to tex2txt();
+  currently, only 'de' and 'en' supported, but see --t2-lang
+- option `--t2t-lang lang`:<br>
+  overwrite option for tex2txt() from --language
+- option `--disable rules`:<br>
   comma-separated list of ignored LT rules, passed as --disable to LT;
   default: 'WHITESPACE\_RULE'
-- option `--extract macros`<br>
+- option `--extract macros`:<br>
   only check arguments of the LaTeX macros whose names are given as
   comma-separated list; useful for check of foreign-language text,
   if marked accordingly
-- option `--skip regex`<br>
+- option `--skip regex`:<br>
   skip files matching the given regular expression;
   useful, e.g., for exclusion of figures on option --include
-- option `--context number`<br>
+- option `--context number`:<br>
   number of context lines displayed around each marked text region
   in HTML report; default: 2; negative number: display whole text
-- option `--encoding ienc`,<br>
-  option `--replace file`,<br>
-  option `--define file`<br>
+- option `--plain`:<br>
+  assume plain-text input: no evaluation of LaTeX syntax;
+  cannot be used together with option --include or --replace
+- options `--encoding ienc`, `--replace file`, `--define file`:<br>
   like options --ienc, --repl, --defs described in section
   [Command line](#command-line).
 
@@ -720,6 +729,8 @@ LaTeX text, highlighting the problems indicated by LT.
 The corresponding LT messages can be viewed when hovering the mouse
 over these marked places, see the
 [introductory example](#example-html-report) above.
+With option --link, Web links provided by LT can be directly opened with
+left-click.
 Script option --context controls the number of lines displayed
 around each tagged region;
 a negative option value will show the complete LaTeX input text.
@@ -728,47 +739,6 @@ instead of orange colour.
 For simplicity, marked text regions that intertwine with other ones
 are separately repeated at the end.
 In case of multiple input files, the HTML report starts with an index.
-
-### Superseded applications
-The following two scripts now are combined into [shell.py](shell.py)
-described above.
-
-An example application is shown in Python script [shell2.py](shell2.py)
-that resembles the Bash script [shell2.sh](shell2.sh) from section
-[Simple scripts](#simple-scripts).
-For instance, the Bash command
-```
-python3 shell2.py Banach/*.tex
-```
-will extract plain text from all these LaTeX files and call
-[LanguageTool](https://www.languagetool.org) (LT).
-(The path to LT has to be customised in script variable 'ltjar', compare
-section [Simple scripts](#simple-scripts).)
-Line and column numbers in LT's messages will be corrected, preceding each
-message by the corresponding file name.
-The script does not create auxiliary files.
-In order to suppress purely diagnostic messages from LT, one can say
-`python3 shell2.py Banach/*.tex 2>/dev/null`.
-Files for additional macro definitions and phrase replacements may be read,
-if the corresponding lines at 'options = ...' are uncommented and tailored. 
-
-With example [shell2-html.py](shell2-html.py), the command
-```
-python3 shell2-html.py t.tex > t.html
-```
-will create an HTML file 't.html' from LaTeX file 't.tex'.
-Opened in a browser, it displays excerpts from the original LaTeX text,
-highlighting the problems indicated by LT.
-The corresponding LT messages can be viewed when hovering the mouse
-over these marked places.
-This idea basically goes back to Sylvain Hallé, who developed
-[TeXtidote](https://github.com/sylvainhalle/textidote).
-Script variable 'context\_lines' controls the amount of context displayed
-around each tagged region; a very large value will show the complete input.
-If the localisation of a problem is unsure, highlighting will use yellow
-instead of orange colour.
-For simplicity, marked text regions that intertwine with other ones
-are separately repeated at the page end.
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
