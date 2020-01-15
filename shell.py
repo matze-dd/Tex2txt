@@ -77,6 +77,7 @@ parser.add_argument('file', nargs='+')
 parser.add_argument('--replace')
 parser.add_argument('--define')
 parser.add_argument('--language')
+parser.add_argument('--t2t-lang')
 parser.add_argument('--encoding')
 parser.add_argument('--disable')
 parser.add_argument('--extract')
@@ -84,10 +85,14 @@ parser.add_argument('--context', type=int)
 parser.add_argument('--html', action='store_true')
 parser.add_argument('--include', action='store_true')
 parser.add_argument('--skip')
+parser.add_argument('--plain', action='store_true')
+parser.add_argument('--link', action='store_true')
 cmdline = parser.parse_args()
 
 if cmdline.language is None:
     cmdline.language = default_option_language
+if cmdline.t2t_lang is None:
+    cmdline.t2t_lang = cmdline.language[:2]
 if cmdline.encoding is None:
     cmdline.encoding = default_option_encoding
 if cmdline.disable is None:
@@ -97,6 +102,8 @@ if cmdline.context is None:
 if cmdline.context < 0:
     # huge context: display whole text
     cmdline.context = int(1e8)
+if cmdline.plain and (cmdline.include or cmdline.replace):
+    tex2txt.fatal('cannot handle --plain together with --include or --replace')
 if cmdline.replace:
     cmdline.replace = tex2txt.read_replacements(cmdline.replace,
                                                 encoding=cmdline.encoding)
@@ -118,7 +125,7 @@ if cmdline.include:
     sys.stderr.write('=== checking for file inclusions ... ')
     sys.stderr.flush()
     opts = tex2txt.Options(extr=inclusion_macros, repl=cmdline.replace,
-                            defs=cmdline.define, lang=cmdline.language[:2])
+                            defs=cmdline.define, lang=cmdline.t2t_lang)
 
 def skip_file(fn):
     # does file name match regex from option --skip?
@@ -151,7 +158,7 @@ if cmdline.include:
 # prepare options for tex2txt()
 #
 options = tex2txt.Options(char=True, repl=cmdline.replace,
-                            defs=cmdline.define, lang=cmdline.language[:2],
+                            defs=cmdline.define, lang=cmdline.t2t_lang,
                             extr=cmdline.extract)
 
 
@@ -161,35 +168,44 @@ options = tex2txt.Options(char=True, repl=cmdline.replace,
 #
 #####################################################################
 
-def output_text_report(file):
+#   for given file:
+#   - print progress message to stderr
+#   - read file
+#   - extract plain text
+#   - call LT
+#
+def run_LT(file, cmd):
+
     sys.stderr.write('=== ' + file + '\n')
     sys.stderr.flush()
-
-    # read file and call tex2txt()
-    #
     f = tex2txt.myopen(file, encoding=cmdline.encoding)
     tex = f.read()
     f.close()
     if not tex.endswith('\n'):
         tex += '\n'
-    (plain, charmap) = tex2txt.tex2txt(tex, options)
-    starts = tex2txt.get_line_starts(plain)
 
-    # call LanguageTool
-    #
-    proc = subprocess.Popen(ltcmd, stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE)
-    out = proc.communicate(input=plain.encode(encoding='utf-8'))[0]
+    if cmdline.plain:
+        (plain, charmap) = (tex, list(range(1, len(tex) + 1)))
+    else:
+        (plain, charmap) = tex2txt.tex2txt(tex, options)
+    out = subprocess.run(cmd, input=plain.encode(encoding='utf-8'),
+                                stdout=subprocess.PIPE)
+    return (tex, plain, charmap, out)
+
+def output_text_report(file):
+    (tex, plain, charmap, out) = run_LT(file, ltcmd)
+
     s = os.getenv('OS')
     if s and s.count('Windows'):
         # under Windows, LanguageTool produces Latin-1 output
-        msg = out.decode(encoding='latin-1')
+        msg = out.stdout.decode(encoding='latin-1')
     else:
-        msg = out.decode(encoding='utf-8')
+        msg = out.stdout.decode(encoding='utf-8')
 
+    starts = tex2txt.get_line_starts(plain)
     lines = msg.splitlines(keepends=True)
     if lines:
-        # write final diagnostic line to stderr
+        # write final diagnostic line (processing times) to stderr
         sys.stderr.write(lines.pop())
         sys.stderr.flush()
 
@@ -228,7 +244,18 @@ if not cmdline.html:
 #####################################################################
 
 import json
-decoder = json.JSONDecoder()
+json_decoder = json.JSONDecoder()
+
+def json_fatal(item):
+    tex2txt.fatal('error reading JSON output from LT, (sub-)item "'
+                    + item + '"')
+def json_get(dic, item, typ):
+    if not isinstance(dic, dict):
+        json_fatal(item)
+    ret = dic.get(item)
+    if not isinstance(ret, typ):
+        json_fatal(item)
+    return ret
 
 #   protect text between HTML tags from being seen as HTML code,
 #   preserve text formatting
@@ -247,24 +274,35 @@ def protect_html(s):
 #   generate HTML tag from LT message
 #
 def begin_match(m, lin, unsure):
-    cont = m['context']
-    txt = cont['text']
-    beg = cont['offset']
-    end = beg + cont['length']
+    cont = json_get(m, 'context', dict)
+    txt = json_get(cont, 'text', str)
+    beg = json_get(cont, 'offset', int)
+    end = beg + json_get(cont, 'length', int)
+    rule = json_get(m, 'rule', dict)
 
-    msg = protect_html(m['message'] + '; ' + m['rule']['id']) + '\n'
+    msg = protect_html(json_get(m, 'message', str) + ' ('
+                            + json_get(rule, 'id', str) + ')') + '\n'
 
     msg += protect_html('Line ' + str(lin) + ('+' if unsure else '')
                         + ': >>>' + txt[beg:end] + '<<<') + '\n'
 
-    repls = ' '.join("'" + r['value'] + "'" for r in m['replacements'])
+    repls = ' '.join("'" + json_get(r, 'value', str) + "'"
+                        for r in json_get(m, 'replacements', list))
     msg += 'Suggestions: ' + protect_html(repls) + '\n'
 
     txt = txt[:beg] + '>>>' + txt[beg:end] + '<<<' + txt[end:]
     msg += 'Context: ' + protect_html(txt)
 
     style = highlight_style_unsure if unsure else highlight_style
-    return '<span style="' + style + '" title="' + msg + '">'
+    beg_tag = '<span style="' + style + '" title="' + msg + '">'
+    end_href = ''
+    if cmdline.link and 'urls' in rule:
+        urls = json_get(rule, 'urls', list)
+        if urls:
+            beg_tag += ('<a href="' + json_get(urls[0], 'value', str)
+                        + '" target="_blank">')
+            end_href = '</a>'
+    return (beg_tag, end_href)
 
 def end_match():
     return '</span>'
@@ -273,9 +311,9 @@ def end_match():
 #   - avoid that span tags cross line breaks (otherwise problems in <table>)
 #
 def generate_highlight(m, s, lin, unsure):
-    pre = begin_match(m, lin, unsure)
+    (pre, end_href) = begin_match(m, lin, unsure)
     s = protect_html(s)
-    post = end_match()
+    post = end_href + end_match()
     def f(m):
         return pre + m.group(1) + post + m.group(2)
     return re.sub(r'((?:.|\n)*?(?!\Z)|(?:.|\n)+?)(<br>\n|\Z)', f, s)
@@ -284,7 +322,11 @@ def generate_highlight(m, s, lin, unsure):
 #
 def generate_html(tex, charmap, msg, file):
 
-    matches = decoder.decode(msg)['matches']
+    try:
+        dic = json_decoder.decode(msg)
+    except:
+        json_fatal('JSON root element')
+    matches = json_get(dic, 'matches', list)
     s = 'File "' + file + '" with ' + str(len(matches)) + ' problem(s)'
     title = protect_html(s)
     anchor = file
@@ -295,8 +337,8 @@ def generate_html(tex, charmap, msg, file):
     #
     hdata = []
     for m in matches:
-        beg = m['offset']
-        end = beg + max(1, m['length'])
+        beg = json_get(m, 'offset', int)
+        end = beg + max(1, json_get(m, 'length', int))
         if beg < 0 or end < 0 or beg >= len(charmap) or end >= len(charmap):
             tex2txt.fatal('generate_html():'
                             + ' bad message read from LanguageTool')
@@ -407,41 +449,26 @@ def add_line_numbers(s, line_numbers):
     s = re.sub(r'((?:.|\n)*?(?!\Z)|(?:.|\n)+?)(<br>\n|\Z)', f, s)
     return '<table cellspacing="0">\n' + s + '</table>\n'
 
+
+#   generate HTML report: a part for each file
+#
+html_report_parts = []
+for file in cmdline.file:
+    (tex, plain, charmap, out) = run_LT(file, ltcmd)
+    msg = out.stdout.decode(encoding='utf-8')
+    html_report_parts.append(generate_html(tex, charmap, msg, file))
+
 #   ensure UTF-8 encoding for stdout
 #   (not standard with Windows Python)
 #
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8')
-
-html_report_parts = []
-for file in cmdline.file:
-
-    sys.stderr.write('=== ' + file + '\n')
-    sys.stderr.flush()
-
-    # read file and call tex2txt()
-    #
-    f = tex2txt.myopen(file, encoding=cmdline.encoding)
-    tex = f.read()
-    f.close()
-    if not tex.endswith('\n'):
-        tex += '\n'
-    (plain, charmap) = tex2txt.tex2txt(tex, options)
-
-    # call LanguageTool
-    #
-    proc = subprocess.Popen(ltcmd, stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE)
-    out = proc.communicate(input=plain.encode(encoding='utf-8'))[0]
-    msg = out.decode(encoding='utf-8')
-
-    html_report_parts.append(generate_html(tex, charmap, msg, file))
-
 
 page_prefix = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
 page_postfix = '\n</body>\n</html>\n'
 
 sys.stdout.write(page_prefix)
 if len(html_report_parts) > 1:
+    # start page with file index
     sys.stdout.write('<H3>Index</H3>\n<ul>\n')
     for r in html_report_parts:
         s = '<li><a href="#' + r[1] + '">' + r[0] + '</a></li>\n'
