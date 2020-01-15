@@ -4,10 +4,15 @@
   shell2.py and shell2-html.py, mainly controlled by command-line options
     - option --include: tracking of file inclusions
     - option --extract: allows to check marked foreign-language text
-    - option --skip: exclude certain files
+    - option --skip: exclude certain input files
+    - option --link: in HTML report, a Web link provided by LT message can
+      be opened with left-click on corresponding highlighted place
+    - option --plain: do not evaluate LaTeX syntax
+    - added error checks for JSON output from LT
 - README.md
     - changed introductory example, added screen shot of HTML report
-    - documentation for shell.py
+    - added documentation for shell.py
+    - removed description of shell2.py, shell2-html.py
 
 Release 1.6.6
 -------------
