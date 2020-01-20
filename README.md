@@ -151,16 +151,17 @@ of a real LaTeX system.
 Apart from many minor shortcomings, a list of major incompatibilities
 must contain at least the following points.
 
-- In text mode, macro arguments have to be delimited by {} braces or
-  \[\] brackets.
+- Macro arguments, if any, have to be delimited by {} braces or \[\] brackets
+  in text mode.
   This is perhaps the most severe restriction.
-  (Currently, only macros for text-mode accents form an exception.)
+  Currently, only macros for text-mode accents form an exception.
 - Mathematical material is represented by simple replacements.
+- Parsing does not cross file boundaries. Tracking of file inclusions is
+  possible though.
 - Macros depending on (spacing) lengths may be treated incorrectly.
-- Parsing does not cross file boundaries.
 - Macro definitions in the text are ignored.
 - Macros are not expanded in the order they appear in the text.
-  We have tried to compensate this by several hacks.
+  We have tried to compensate related problems by several hacks.
 
 Please compare section
 [Remarks on implementation](#remarks-on-implementation), too.
@@ -452,7 +453,8 @@ Synopsis of `Macro(name, args, repl='', extr='')`:
 - argument `name`:
     - macro name without leading backslash
     - characters with special meaning in regular expressions, e.g. '\*',
-      may need to be escaped; see for example declaration of macro \\hspace
+      may need to be escaped; see for example declaration of macro \\hspace,
+      and use only unreferenced groups \(?:...\), see \\renewcommand
 - argument `args`:
     - string that encodes argument sequence
     - A: a mandatory \{...\} argument
@@ -739,6 +741,12 @@ instead of orange colour.
 For simplicity, marked text regions that intertwine with other ones
 are separately repeated at the end.
 In case of multiple input files, the HTML report starts with an index.
+
+**Simpler demonstration script.**
+A simpler Python application is [shell2.py](shell2.py).
+It resembles Bash script [shell2.sh](shell2.sh)
+from section [Simple scripts](#simple-scripts),
+but it accepts multiple inputs and does not create temporary files.
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
