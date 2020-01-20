@@ -1,5 +1,8 @@
-"Unreleased"
-------------
+Version 1.6.7
+-------------
+- tex2txt.py
+    - added optional argument to macro \\newcommand
+    - added macro \\renewcommand
 - new application script shell.py: combined version of old scripts
   shell2.py and shell2-html.py, mainly controlled by command-line options
     - option --include: tracking of file inclusions
@@ -9,6 +12,8 @@
       be opened with left-click on corresponding highlighted place
     - option --plain: do not evaluate LaTeX syntax
     - added error checks for JSON output from LT
+- slightly simplified shell2.py
+- removed shell2-html.py
 - README.md
     - changed introductory example, added screen shot of HTML report
     - added documentation for shell.py
