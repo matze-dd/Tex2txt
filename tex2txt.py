@@ -1,6 +1,6 @@
 #
 #   Tex2txt, a flexible LaTeX filter
-#   Copyright (C) 2018-2019 Matthias Baumann
+#   Copyright (C) 2018-2020 Matthias Baumann
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -50,7 +50,8 @@ parms = Aux()
 #   name:
 #       - macro name without leading backslash
 #       - characters with special meaning in regular expressions, e.g. '*',
-#         may need to be escaped; see for example declaration of \hspace
+#         may need to be escaped; see for example declaration of \hspace,
+#         and use only unreferenced groups (?:...), see \renewcommand
 #   args:
 #       - string that codes argument sequence
 #       - A: a mandatory {...} argument
@@ -125,7 +126,6 @@ parms.system_macros = lambda: (
     # \label: see LAB:EQU_MACROS
     # \mathrlap: see LAB:EQU_MACROS
     # \medspace: treated at LAB:SPACE, parms.mathspace
-    Macro('newcommand', 'AOA'),
     Simple('newline', ' '),
     # \nonumber: see LAB:EQU_MACROS
     # \notag: see LAB:EQU_MACROS
@@ -135,6 +135,7 @@ parms.system_macros = lambda: (
     # \qquad: treated at LAB:SPACE, parms.mathspace
     # \quad: treated at LAB:SPACE, parms.mathspace
     Macro('ref', 'A', '13'),
+    Macro('(?:re)?newcommand\*?', 'AOOA'),
     Macro('texorpdfstring', 'AA', r'\1'),
     # \textasciicircum: defined below
     # \textasciitilde: defined below
@@ -1175,6 +1176,8 @@ def tex2txt(txt, options):
     #     - gather macros with same argument pattern and replacement string:
     #       lists of names in a dictionary with tuple (args, repl) as key
     #     - handle macros in a dictionary entry with one replacement run
+    #     RATHER NOT:
+    #     resolution order e.g. for \begin{proof}[...] and \begin{proof}?
     #   )
     #
     list_macs_envs = []
@@ -1705,7 +1708,7 @@ def tex2txt(txt, options):
 
     #   perform replacements in file of option --repl
     #   line syntax:
-    #   - '#: comment till end of line
+    #   - '#': comment till end of line
     #   - the words (delimiter: white space) in front of first separated '&'
     #     are replaced by the words following this '&'
     #   - if no replacement given: just delete phrase
