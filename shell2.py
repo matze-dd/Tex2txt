@@ -19,7 +19,7 @@ input_encoding = 'utf-8'
 
 # path of LT java archive and used options
 #
-ltjar = '../LT/LanguageTool-4.4/languagetool-commandline.jar'
+ltjar = '../LT/LanguageTool-4.7/languagetool-commandline.jar'
 ltcmd = ('java -jar ' +  ltjar
             + ' --language en-GB --encoding utf-8'
             + ' --disable WHITESPACE_RULE'
@@ -51,15 +51,14 @@ for file in sys.argv[1:]:
 
     # call LanguageTool
     #
-    proc = subprocess.Popen(ltcmd, stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE)
-    out = proc.communicate(input=plain.encode(encoding='utf-8'))[0]
+    out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
+                                stdout=subprocess.PIPE)
     s = os.getenv('OS')
     if s and s.count('Windows'):
         # under Windows, LanguageTool produces Latin-1 output
-        msg = out.decode(encoding='latin-1')
+        msg = out.stdout.decode(encoding='latin-1')
     else:
-        msg = out.decode(encoding='utf-8')
+        msg = out.stdout.decode(encoding='utf-8')
 
     lines = msg.splitlines(keepends=True)
     if lines:
