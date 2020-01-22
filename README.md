@@ -199,6 +199,8 @@ Here is a list of the most important script operations.
   corresponding UTF-8 characters;
   replacement of '\~' and '\\,' by UTF-8 non-breaking space and
   narrow non-breaking space
+- on option --lang de: suitable replacements for macros like '"\`' and '"=',
+  see variable parms.misc\_replace\_de in script
 - treatment of \\verb(\*) macros and verbatim(\*) environments,
   see LAB:VERBATIM in script; note, however, [issue #6](../../issues/6)
 - handling of % comments near to TeX: skipping of line break under certain
@@ -213,8 +215,8 @@ Here is a list of the most important script operations.
 ## Command line
 The script expects the following parameters.
 ```
-python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
-                   [--extr list] [--lang xy] [--ienc enc] [--unkn] \
+python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file]
+                   [--extr list] [--lang xy] [--ienc enc] [--unkn]
                    [texfile]
 ```
 - without positional argument `texfile`:<br>
@@ -258,11 +260,6 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file] \
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Usage under Windows
-The software has been developed under Linux and tested additionally under
-Cygwin on Windows&nbsp;7.
-Some encoding problems for the latter case are addressed in section
-[Encoding problems](#encoding-problems).
-
 If Python and Java are installed under Windows, then the main Python
 program [tex2txt.py](tex2txt.py) may be directly used in a Windows command
 console or script.
@@ -271,15 +268,20 @@ Furthermore, at least the application script [shell.py](shell.py) from section
 if the LanguageTool software is present.
 For example, this could look like
 ```
-"c:\Program Files\Python\Python37\python.exe" shell.py --html t.tex > t.html
-```
-or simpler
-```
 py -3 shell.py --html t.tex > t.html
 ```
-if the Python launcher has been installed.
+or
+```
+"c:\Program Files\Python\Python37\python.exe" shell.py --html t.tex > t.html
+```
+if the Python launcher has not been installed.
 The file tex2txt.py should reside in the current directory, and variable
 'ltjar' in script shell.py has to be customised.
+
+The software has been developed under Linux and additionally tested under
+Cygwin on Windows&nbsp;7.
+Some possible encoding problems related to Windows are addressed in
+section [Encoding problems](#encoding-problems).
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
@@ -364,7 +366,7 @@ They can be deleted with option --delete.
 
 ### Usage of the Bash script
 ```
-bash checks.sh [--recurse] [--adapt-lt] [--no-lt] \
+bash checks.sh [--recurse] [--adapt-lt] [--no-lt]
                [--columns] [--delete] [files]
 ```
 - no positional arguments `files`:<br>
@@ -672,10 +674,10 @@ the [beginning of this section](#application-as-python-module).
 Both LT and the script will print some progress messages to stderr.
 They can be suppressed with `python3 shell.py ... 2>/dev/null`.
 ```
-python3 shell.py [--html] [--link] [--include] [--extract macros] \
-                 [--language lang] [--t2t-lang lang] [--encoding ienc] \
-                 [--replace file] [--define file] [--disable rules] \
-                 [--context number] [--skip regex] [--plain] \
+python3 shell.py [--html] [--link] [--include] [--extract macros]
+                 [--language lang] [--t2t-lang lang] [--encoding ienc]
+                 [--replace file] [--define file] [--disable rules]
+                 [--context number] [--skip regex] [--plain]
                  latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.

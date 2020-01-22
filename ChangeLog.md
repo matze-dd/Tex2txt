@@ -1,7 +1,11 @@
+Work in progress
+----------------
+- README.md
+
 Version 1.6.7
 -------------
 - tex2txt.py
-    - added optional argument to macro \\newcommand
+    - added second optional argument to macro \\newcommand
     - added macro \\renewcommand
 - new application script shell.py: combined version of old scripts
   shell2.py and shell2-html.py, mainly controlled by command-line options
