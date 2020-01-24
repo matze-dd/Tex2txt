@@ -186,12 +186,12 @@ options = tex2txt.Options(char=True, repl=cmdline.replace,
                             defs=cmdline.define, lang=cmdline.t2t_lang,
                             extr=cmdline.extract)
 
-# JSON stuff
+# helpers for robust JSON evaluation
 #
 json_decoder = json.JSONDecoder()
 
 def json_fatal(item):
-    tex2txt.fatal('error reading JSON output from LT, (sub-)item "'
+    tex2txt.fatal('error reading JSON output from proofreader, (sub-)item "'
                     + item + '"')
 def json_get(dic, item, typ):
     if not isinstance(dic, dict):
@@ -300,7 +300,7 @@ def output_text_report(tex, plain, charmap, matches, file):
         txt = json_get(cont, 'text', str)
         beg = json_get(cont, 'offset', int)
         len = json_get(cont, 'length', int)
-        print(txt)
+        print(txt.replace('\t', ' '))
         print(' ' * beg + '^' * len)
 
         if 'urls' in rule:
