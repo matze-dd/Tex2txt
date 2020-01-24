@@ -1,5 +1,10 @@
 Work in progress
 ----------------
+- shell.py
+    - text report: apply LT's JSON interface, too
+    - HTML report: slightly adapted tooltip format
+    - new option --server: use LT's Web server instead of local installation
+- updated shell.png
 - README.md
 
 Version 1.6.7
