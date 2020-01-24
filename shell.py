@@ -69,6 +69,7 @@ import sys
 import subprocess
 import tex2txt
 import argparse
+import json
 
 # parse command line
 #
@@ -112,9 +113,8 @@ if cmdline.define:
 
 # complement LT options
 #
-ltcmd = ltcmd.split() + ['--encoding', 'utf-8', '--language', cmdline.language]
-if cmdline.html:
-    ltcmd += ['--json']
+ltcmd = ltcmd.split() + ['--json', '--encoding', 'utf-8',
+                            '--language', cmdline.language]
 if cmdline.disable:
     ltcmd += ['--disable', cmdline.disable]
 
@@ -161,20 +161,28 @@ options = tex2txt.Options(char=True, repl=cmdline.replace,
                             defs=cmdline.define, lang=cmdline.t2t_lang,
                             extr=cmdline.extract)
 
+# JSON stuff
+#
+json_decoder = json.JSONDecoder()
 
-#####################################################################
-#
-#   text report
-#
-#####################################################################
+def json_fatal(item):
+    tex2txt.fatal('error reading JSON output from LT, (sub-)item "'
+                    + item + '"')
+def json_get(dic, item, typ):
+    if not isinstance(dic, dict):
+        json_fatal(item)
+    ret = dic.get(item)
+    if not isinstance(ret, typ):
+        json_fatal(item)
+    return ret
 
 #   for given file:
 #   - print progress message to stderr
 #   - read file
 #   - extract plain text
-#   - call LT
+#   - call proofreading program
 #
-def run_LT(file, cmd):
+def run_proofreader(file):
 
     sys.stderr.write('=== ' + file + '\n')
     sys.stderr.flush()
@@ -188,52 +196,85 @@ def run_LT(file, cmd):
         (plain, charmap) = (tex, list(range(1, len(tex) + 1)))
     else:
         (plain, charmap) = tex2txt.tex2txt(tex, options)
-    out = subprocess.run(cmd, input=plain.encode(encoding='utf-8'),
-                                stdout=subprocess.PIPE)
-    return (tex, plain, charmap, out)
 
-def output_text_report(file):
-    (tex, plain, charmap, out) = run_LT(file, ltcmd)
-
-    s = os.getenv('OS')
-    if s and s.count('Windows'):
-        # under Windows, LanguageTool produces Latin-1 output
-        msg = out.stdout.decode(encoding='latin-1')
-    else:
-        msg = out.stdout.decode(encoding='utf-8')
-
-    starts = tex2txt.get_line_starts(plain)
-    lines = msg.splitlines(keepends=True)
-    if lines:
-        # write final diagnostic line (processing times) to stderr
-        sys.stderr.write(lines.pop())
-        sys.stderr.flush()
-
-    # correct line and column numbers in messages, prepend file name
+    # here, we could dispatch to other tools,
+    # see for instance Python package prowritingaid.python
     #
-    expr=r'^\d+\.\) Line (\d+), column (\d+), Rule ID: '
-    def f(m):
-        def ret(s1, s2):
-            s = m.group(0)
-            return ('=== ' + file + ' ===\n'
-                    + s[:m.start(1)] + '[' + s1 + ']' + s[m.end(1):m.start(2)]
-                    + '[' + s2 + ']' + s[m.end(2):])
+    matches = run_languagetool(plain)
 
-        lin = int(m.group(1))
-        col = int(m.group(2))
-        r = tex2txt.translate_numbers(tex, plain, charmap, starts, lin, col)
-        if not r:
-            return ret('?', '?')
-        mark = '+' if r.flag else ''
-        return ret(str(r.lin) + mark, str(r.col) + mark)
+    return (tex, plain, charmap, matches)
 
-    for s in lines:
-        sys.stdout.write(re.sub(expr, f, s))
-    sys.stdout.flush()
+#   run LT and return element 'matches' from JSON output
+#
+def run_languagetool(plain):
+    out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
+                                stdout=subprocess.PIPE)
+    out = out.stdout.decode(encoding='utf-8')
+    try:
+        dic = json_decoder.decode(out)
+    except:
+        json_fatal('JSON root element')
+    matches = json_get(dic, 'matches', list)
+    return matches
+
+
+#####################################################################
+#
+#   text report
+#
+#####################################################################
+
+#   generate text report from element 'matches' of JSON output
+#
+#   - compare printMatches() in file CommandLineTools.java in directory
+#     languagetool-commandline/src/main/java/org/languagetool/commandline/
+#   - XXX: some code duplication with begin_match()
+#
+def output_text_report(tex, plain, charmap, matches, file):
+    starts = tex2txt.get_line_starts(plain)
+
+    for (nr, m) in enumerate(matches, 1):
+        offset = json_get(m, 'offset', int)
+        lin = plain.count('\n', 0, offset) + 1
+        nl = plain.rfind('\n', 0, offset) + 1
+        col = offset - nl + 1
+        lc = tex2txt.translate_numbers(tex, plain, charmap, starts, lin, col)
+
+        rule = json_get(m, 'rule', dict)
+        if nr > 1:
+            print('')
+        print('=== ' + file + ' ===')
+
+        s = (str(nr) + '.) Line ' + str(lc.lin) + ', column ' + str(lc.col)
+                + ', Rule ID: ' + json_get(rule, 'id', str))
+        if 'subId' in rule:
+                s += '[' + json_get(rule, 'subId', str) + ']'
+        print(s)
+        print('Message: ' + json_get(m, 'message', str))
+
+        repls = '; '.join(json_get(r, 'value', str)
+                                for r in json_get(m, 'replacements', list))
+        print('Suggestion: ' + repls)
+
+        cont = json_get(m, 'context', dict)
+        txt = json_get(cont, 'text', str)
+        beg = json_get(cont, 'offset', int)
+        len = json_get(cont, 'length', int)
+        print(txt)
+        print(' ' * beg + '^' * len)
+
+        if 'urls' in rule:
+            urls = json_get(rule, 'urls', list)
+            if urls:
+                print('More info: ' + json_get(urls[0], 'value', str))
+
+    sys.stdout.flush()  # in case redirected to file
+
 
 if not cmdline.html:
     for file in cmdline.file:
-        output_text_report(file)
+        (tex, plain, charmap, matches) = run_proofreader(file)
+        output_text_report(tex, plain, charmap, matches, file)
     exit()
 
 
@@ -242,20 +283,6 @@ if not cmdline.html:
 #   HTML report
 #
 #####################################################################
-
-import json
-json_decoder = json.JSONDecoder()
-
-def json_fatal(item):
-    tex2txt.fatal('error reading JSON output from LT, (sub-)item "'
-                    + item + '"')
-def json_get(dic, item, typ):
-    if not isinstance(dic, dict):
-        json_fatal(item)
-    ret = dic.get(item)
-    if not isinstance(ret, typ):
-        json_fatal(item)
-    return ret
 
 #   protect text between HTML tags from being seen as HTML code,
 #   preserve text formatting
@@ -280,15 +307,18 @@ def begin_match(m, lin, unsure):
     end = beg + json_get(cont, 'length', int)
     rule = json_get(m, 'rule', dict)
 
-    msg = protect_html(json_get(m, 'message', str) + ' ('
-                            + json_get(rule, 'id', str) + ')') + '\n'
+    msg = protect_html(json_get(m, 'message', str)) + '\n'
 
     msg += protect_html('Line ' + str(lin) + ('+' if unsure else '')
-                        + ': >>>' + txt[beg:end] + '<<<') + '\n'
+                        + ': >>>' + txt[beg:end] + '<<<')
+    rule_id = json_get(rule, 'id', str)
+    if 'subId' in rule:
+            rule_id += '[' + json_get(rule, 'subId', str) + ']'
+    msg += protect_html('    (Rule ID: ' + rule_id + ')') + '\n'
 
-    repls = ' '.join("'" + json_get(r, 'value', str) + "'"
+    repls = '; '.join(json_get(r, 'value', str)
                         for r in json_get(m, 'replacements', list))
-    msg += 'Suggestions: ' + protect_html(repls) + '\n'
+    msg += 'Suggestion: ' + protect_html(repls) + '\n'
 
     txt = txt[:beg] + '>>>' + txt[beg:end] + '<<<' + txt[end:]
     msg += 'Context: ' + protect_html(txt)
@@ -320,13 +350,8 @@ def generate_highlight(m, s, lin, unsure):
 
 #   generate HTML output
 #
-def generate_html(tex, charmap, msg, file):
+def generate_html(tex, charmap, matches, file):
 
-    try:
-        dic = json_decoder.decode(msg)
-    except:
-        json_fatal('JSON root element')
-    matches = json_get(dic, 'matches', list)
     s = 'File "' + file + '" with ' + str(len(matches)) + ' problem(s)'
     title = protect_html(s)
     anchor = file
@@ -454,9 +479,8 @@ def add_line_numbers(s, line_numbers):
 #
 html_report_parts = []
 for file in cmdline.file:
-    (tex, plain, charmap, out) = run_LT(file, ltcmd)
-    msg = out.stdout.decode(encoding='utf-8')
-    html_report_parts.append(generate_html(tex, charmap, msg, file))
+    (tex, plain, charmap, matches) = run_proofreader(file)
+    html_report_parts.append(generate_html(tex, charmap, matches, file))
 
 #   ensure UTF-8 encoding for stdout
 #   (not standard with Windows Python)
