@@ -36,6 +36,10 @@
 ltjar = '../LT/LanguageTool-4.7/languagetool-commandline.jar'
 ltcmd = 'java -jar ' +  ltjar
 
+# on option --server: address of server hosted by LT
+#
+ltserver = 'https://languagetool.org/api/v2/check'
+
 # default option values
 #
 default_option_language = 'en-GB'
@@ -56,6 +60,24 @@ highlight_style_unsure = 'background: yellow; border: solid thin black'
 #
 number_style = 'color: grey'
 
+# messages on usage of server hosted by LT
+#
+msg_LT_server_txt = '''===
+=== Using LanguageTool server at https://languagetool.org/
+=== For conditions and restrictions, refer to
+===     http://wiki.languagetool.org/public-http-api
+===
+'''
+msg_LT_server_html = '''
+<H2>Using LanguageTool server at
+<a href="https://languagetool.org/" target="_blank">
+https://languagetool.org/</a></H2>
+For conditions and restrictions, refer to
+<a href="http://wiki.languagetool.org/public-http-api" target="_blank">
+http://wiki.languagetool.org/public-http-api</a>
+<hr><hr>
+'''
+
 
 #####################################################################
 #
@@ -70,6 +92,8 @@ import subprocess
 import tex2txt
 import argparse
 import json
+import urllib.parse
+import urllib.request
 
 # parse command line
 #
@@ -88,6 +112,7 @@ parser.add_argument('--include', action='store_true')
 parser.add_argument('--skip')
 parser.add_argument('--plain', action='store_true')
 parser.add_argument('--link', action='store_true')
+parser.add_argument('--server', action='store_true')
 cmdline = parser.parse_args()
 
 if cmdline.language is None:
@@ -207,9 +232,24 @@ def run_proofreader(file):
 #   run LT and return element 'matches' from JSON output
 #
 def run_languagetool(plain):
-    out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
-                                stdout=subprocess.PIPE)
-    out = out.stdout.decode(encoding='utf-8')
+    if cmdline.server:
+        # use Web server hosted by LT
+        data = {            # see package pyLanguagetool for field names
+            'text': plain,
+            'language': cmdline.language,
+            'disabledRules': cmdline.disable,
+        }
+        data = urllib.parse.urlencode(data).encode(encoding='ascii')
+        request = urllib.request.Request(ltserver, data=data)
+        reply = urllib.request.urlopen(request)
+        out = reply.read()
+        reply.close()
+    else:
+        # use local installation
+        out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
+                                    stdout=subprocess.PIPE).stdout
+
+    out = out.decode(encoding='utf-8')
     try:
         dic = json_decoder.decode(out)
     except:
@@ -272,6 +312,8 @@ def output_text_report(tex, plain, charmap, matches, file):
 
 
 if not cmdline.html:
+    if cmdline.server:
+        sys.stderr.write(msg_LT_server_txt)
     for file in cmdline.file:
         (tex, plain, charmap, matches) = run_proofreader(file)
         output_text_report(tex, plain, charmap, matches, file)
@@ -491,6 +533,8 @@ page_prefix = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
 page_postfix = '\n</body>\n</html>\n'
 
 sys.stdout.write(page_prefix)
+if cmdline.server:
+    sys.stdout.write(msg_LT_server_html)
 if len(html_report_parts) > 1:
     # start page with file index
     sys.stdout.write('<H3>Index</H3>\n<ul>\n')
