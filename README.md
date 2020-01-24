@@ -31,15 +31,16 @@ is lazy.
 will lead to the subsequent output from example application script
 [shell.py](shell.py) described in section
 [Application examples](#application-examples) ahead.
-The script uses [LanguageTool](https://www.languagetool.org)
-as proofreading software.
+The script invokes [LanguageTool](https://www.languagetool.org)
+as proofreading software, using a local installation or the Web server
+hosted by LanguageTool.
 ```
-1.) Line [3], column [1], Rule ID: PEOPLE_VBZ[1]
+1.) Line 3, column 1, Rule ID: PEOPLE_VBZ[1]
 Message: If 'people' is plural here, don't use the third-person singular verb.
 Suggestion: am; are; aren
 Only few people is lazy.    We use redx colour. 
-                ^^                              
-2.) Line [2], column [17], Rule ID: MORFOLOGIK_RULE_EN_GB
+                ^^
+2.) Line 2, column 17, Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: red; Rex; reds; redo; Red; Rede; redox; red x
 Only few people is lazy.    We use redx colour. 
@@ -265,7 +266,7 @@ program [tex2txt.py](tex2txt.py) may be directly used in a Windows command
 console or script.
 Furthermore, at least the application script [shell.py](shell.py) from section
 [Application examples](#application-examples) can be run,
-if the LanguageTool software is present.
+if option --server is used or the LanguageTool software is present locally.
 For example, this could look like
 ```
 py -3 shell.py --html t.tex > t.html
@@ -275,8 +276,9 @@ or
 "c:\Program Files\Python\Python37\python.exe" shell.py --html t.tex > t.html
 ```
 if the Python launcher has not been installed.
-The file tex2txt.py should reside in the current directory, and variable
-'ltjar' in script shell.py has to be customised.
+The file tex2txt.py should reside in the current directory.
+Variable 'ltjar' in script shell.py has to be customised, unless option
+--server is used.
 
 The software has been developed under Linux and additionally tested under
 Cygwin on Windows&nbsp;7.
@@ -407,11 +409,10 @@ produce Latin-1 output, even if option '--encoding utf-8' is specified.
 Therefore, a translator to UTF-8 has to be placed in front of a Python filter
 for line or column numbers.
 This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
-A similar approach is taken in example Python script [shell.py](shell.py).
+A similar approach is taken in example Python script [shell2.py](shell2.py).
 
 With option --json, LanguageTool always delivers UTF-8 encoded text.
-JSON output is used in application script [shell.py](shell.py)
-on option --html.
+JSON output is used in application script [shell.py](shell.py).
 
 Similarly, Python's version for Windows by default prints Latin-1 encoded
 text to standard output.
@@ -666,8 +667,9 @@ when running the script tex2txt.py directly.
 Example Python script [shell.py](shell.py) will generate a proofreading report
 in text or HTML format from filtering the LaTeX input and application of
 [LanguageTool](https://www.languagetool.org) (LT).
-The path to LT has to be customised in script variable 'ltjar', compare
-the corresponding comment in script.
+On option --server, LT's Web server is contacted.
+Otherwise, the path to LT has to be customised in script variable 'ltjar',
+compare the corresponding comment in script.
 Note that from version 4.8, LT does not fully support 32-bit systems any more.
 File tex2txt.py should reside in the current directory, see also
 the [beginning of this section](#application-as-python-module).
@@ -677,7 +679,7 @@ They can be suppressed with `python3 shell.py ... 2>/dev/null`.
 python3 shell.py [--html] [--link] [--include] [--extract macros]
                  [--language lang] [--t2t-lang lang] [--encoding ienc]
                  [--replace file] [--define file] [--disable rules]
-                 [--context number] [--skip regex] [--plain]
+                 [--context number] [--skip regex] [--plain] [--server]
                  latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.
@@ -712,6 +714,11 @@ Default option values are set at the Python script beginning.
 - option `--plain`:<br>
   assume plain-text input: no evaluation of LaTeX syntax;
   cannot be used together with option --include or --replace
+- option `--server`:<br>
+  use LT's Web server instead of a local LT installation;
+  the address is set in script variable 'ltserver';
+  for conditions and restrictions, please refer to
+  [http://wiki.languagetool.org/public-http-api](http://wiki.languagetool.org/public-http-api).
 - options `--encoding ienc`, `--replace file`, `--define file`:<br>
   like options --ienc, --repl, --defs described in section
   [Command line](#command-line).
