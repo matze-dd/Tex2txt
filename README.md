@@ -47,7 +47,7 @@ Only few people is lazy.    We use redx colour.
                                    ^^^^
 ```
 <a name="example-html-report"></a>
-Invoked with option --html, the script produces an HTML report:
+Run with option --html, the script produces an HTML report:
 
 ![HTML report](shell.png)
 
@@ -261,12 +261,13 @@ python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file]
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
 ## Usage under Windows
-If Python and Java are installed under Windows, then the main Python
+If Python is installed under Windows, then the main Python
 program [tex2txt.py](tex2txt.py) may be directly used in a Windows command
 console or script.
 Furthermore, at least the application script [shell.py](shell.py) from section
 [Application examples](#application-examples) can be run,
-if option --server is used or the LanguageTool software is present locally.
+if option --server is used, or if Java and the LanguageTool software
+are locally present.
 For example, this could look like
 ```
 py -3 shell.py --html t.tex > t.html
@@ -282,6 +283,7 @@ Variable 'ltjar' in script shell.py has to be customised, unless option
 
 The software has been developed under Linux and additionally tested under
 Cygwin on Windows&nbsp;7.
+In the latter case, a Windows Java installation is sufficient.
 Some possible encoding problems related to Windows are addressed in
 section [Encoding problems](#encoding-problems).
 
@@ -668,7 +670,8 @@ Example Python script [shell.py](shell.py) will generate a proofreading report
 in text or HTML format from filtering the LaTeX input and application of
 [LanguageTool](https://www.languagetool.org) (LT).
 On option --server, LT's Web server is contacted.
-Otherwise, the path to LT has to be customised in script variable 'ltjar',
+Otherwise, [Java](https://java.com) has to be present, and
+the path to LT has to be customised in script variable 'ltjar';
 compare the corresponding comment in script.
 Note that from version 4.8, LT does not fully support 32-bit systems any more.
 File tex2txt.py should reside in the current directory, see also
@@ -695,7 +698,7 @@ Default option values are set at the Python script beginning.
 - option `--language lang`:<br>
   language code as expected by LT, default: 'en-GB';
   first two letters are passed to tex2txt();
-  currently, only 'de' and 'en' supported, but see --t2-lang
+  currently, only 'de' and 'en' supported, but see --t2t-lang
 - option `--t2t-lang lang`:<br>
   overwrite option for tex2txt() from --language
 - option `--disable rules`:<br>
@@ -718,10 +721,10 @@ Default option values are set at the Python script beginning.
   use LT's Web server instead of a local LT installation;
   the address is set in script variable 'ltserver';
   for conditions and restrictions, please refer to
-  [http://wiki.languagetool.org/public-http-api](http://wiki.languagetool.org/public-http-api).
+  [http://wiki.languagetool.org/public-http-api](http://wiki.languagetool.org/public-http-api)
 - options `--encoding ienc`, `--replace file`, `--define file`:<br>
   like options --ienc, --repl, --defs described in section
-  [Command line](#command-line).
+  [Command line](#command-line)
 
 **Dictionary adaptation.**
 LT evaluates the two files 'spelling.txt' and 'prohibit.txt' in directory
