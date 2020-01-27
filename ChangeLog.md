@@ -4,6 +4,7 @@ Work in progress
     - text report: apply LT's JSON interface, too
     - HTML report: slightly adapted tooltip format
     - new option --server: use LT's Web server instead of local installation
+    - catch exceptions when using Java or LT server
 - updated shell.png
 - README.md
 
