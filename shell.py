@@ -241,13 +241,19 @@ def run_languagetool(plain):
         }
         data = urllib.parse.urlencode(data).encode(encoding='ascii')
         request = urllib.request.Request(ltserver, data=data)
-        reply = urllib.request.urlopen(request)
-        out = reply.read()
-        reply.close()
+        try:
+            reply = urllib.request.urlopen(request)
+            out = reply.read()
+            reply.close()
+        except:
+            tex2txt.fatal('error connecting to "' + ltserver + '"')
     else:
         # use local installation
-        out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
-                                    stdout=subprocess.PIPE).stdout
+        try:
+            out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
+                                        stdout=subprocess.PIPE).stdout
+        except:
+            tex2txt.fatal('error starting "' + ltcmd[0] + '"')
 
     out = out.decode(encoding='utf-8')
     try:
@@ -281,8 +287,6 @@ def output_text_report(tex, plain, charmap, matches, file):
         lc = tex2txt.translate_numbers(tex, plain, charmap, starts, lin, col)
 
         rule = json_get(m, 'rule', dict)
-        if nr > 1:
-            print('')
         print('=== ' + file + ' ===')
 
         s = (str(nr) + '.) Line ' + str(lc.lin) + ', column ' + str(lc.col)
@@ -299,14 +303,16 @@ def output_text_report(tex, plain, charmap, matches, file):
         cont = json_get(m, 'context', dict)
         txt = json_get(cont, 'text', str)
         beg = json_get(cont, 'offset', int)
-        len = json_get(cont, 'length', int)
+        length = json_get(cont, 'length', int)
         print(txt.replace('\t', ' '))
-        print(' ' * beg + '^' * len)
+        print(' ' * beg + '^' * length)
 
         if 'urls' in rule:
             urls = json_get(rule, 'urls', list)
             if urls:
                 print('More info: ' + json_get(urls[0], 'value', str))
+
+        print('')
 
     sys.stdout.flush()  # in case redirected to file
 
@@ -408,7 +414,7 @@ def generate_html(tex, charmap, matches, file):
         end = beg + max(1, json_get(m, 'length', int))
         if beg < 0 or end < 0 or beg >= len(charmap) or end >= len(charmap):
             tex2txt.fatal('generate_html():'
-                            + ' bad message read from LanguageTool')
+                            + ' bad message read from proofreader')
         h = tex2txt.Aux()
         h.unsure = (charmap[beg] < 0 or charmap[end] < 0)
         h.beg = abs(charmap[beg]) - 1
