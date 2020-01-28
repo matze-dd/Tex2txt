@@ -5,6 +5,7 @@ Work in progress
     - HTML report: slightly adapted tooltip format
     - new option --server: use LT's Web server instead of local installation
     - catch exceptions when using Java or LT server
+    - fixed Issue #21 and similar problem (too often "unsure localisation")
 - updated shell.png
 - README.md
 
