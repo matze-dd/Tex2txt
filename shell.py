@@ -253,7 +253,7 @@ def run_languagetool(plain):
             out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
                                         stdout=subprocess.PIPE).stdout
         except:
-            tex2txt.fatal('error starting "' + ltcmd[0] + '"')
+            tex2txt.fatal('error running "' + ltcmd[0] + '"')
 
     out = out.decode(encoding='utf-8')
     try:
@@ -416,9 +416,9 @@ def generate_html(tex, charmap, matches, file):
             tex2txt.fatal('generate_html():'
                             + ' bad message read from proofreader')
         h = tex2txt.Aux()
-        h.unsure = (charmap[beg] < 0 or charmap[end] < 0)
+        h.unsure = (charmap[beg] < 0 or charmap[max(beg, end - 1)] < 0)
         h.beg = abs(charmap[beg]) - 1
-        h.end = abs(charmap[end]) - 1
+        h.end = abs(charmap[max(beg, end - 1)])         # see issue #21
         if h.unsure or h.end <= h.beg:
             h.end = h.beg + 1
 
