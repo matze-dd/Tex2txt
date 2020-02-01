@@ -178,7 +178,8 @@ Here is a list of the most important script operations.
 - “undeclared” macros are silently ignored, keeping their arguments
   with enclosing \{\} braces removed
 - frames \\begin\{...\} and \\end\{...\} of environments are deleted;
-  tailored behaviour for environment types listed in script
+  tailored behaviour for environment types listed in script:
+  fixed environment replacement or removal, treatment of \\begin arguments
 - text in heading macros as \\section\{...\} is extracted with
   added interpunction (suppresses false positives from LanguageTool)
 - suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
