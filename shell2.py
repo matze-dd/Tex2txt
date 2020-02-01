@@ -1,9 +1,16 @@
 
 #
 #   Python3:
-#   application of tex2txt as module
+#   simple application of tex2txt.py as module
 #
-#   python3 this_script file1 file2 ...
+#   - extract plain text from LaTeX file(s)
+#     (phrase replacements and macro definitions: see variable 'options')
+#   - run LanguageTool (LT), see variables 'ltjar' and 'ltcmd'
+#   - filter stdout of LT: correct line and column numbers in messages
+#     (displayed in [] brackets to indicate filter operation)
+#
+#   Usage:
+#   python3 this_script latex_file [latex_file ...]
 #
 
 import os
@@ -53,8 +60,7 @@ for file in sys.argv[1:]:
     #
     out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
                                 stdout=subprocess.PIPE)
-    s = os.getenv('OS')
-    if s and s.count('Windows'):
+    if 'Windows' in os.getenv('OS', default=''):
         # under Windows, LanguageTool produces Latin-1 output
         msg = out.stdout.decode(encoding='latin-1')
     else:
