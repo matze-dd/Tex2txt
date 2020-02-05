@@ -227,6 +227,16 @@ def run_proofreader(file):
     #
     matches = run_languagetool(plain)
 
+    # sort matches according to position in LaTeX text
+    #
+    def f(m):
+        beg = json_get(m, 'offset', int)
+        if beg < 0 or beg >= len(charmap):
+            tex2txt.fatal('run_proofreader():'
+                            + ' bad message read from proofreader')
+        return abs(charmap[beg])
+    matches.sort(key=f)
+
     return (tex, plain, charmap, matches)
 
 #   run LT and return element 'matches' from JSON output
@@ -442,11 +452,6 @@ def generate_html(tex, charmap, matches, file):
         h.lin = h.beglin
         h.m = m
         hdata.append(h)
-
-    # sort matches according to offset in tex
-    # - necessary for separated footnotes etc.
-    #
-    hdata.sort(key=lambda h: h.beg)
 
     # group adjacent matches into regions
     #
