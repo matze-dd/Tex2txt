@@ -474,7 +474,7 @@ def generate_html(tex, charmap, matches, file):
             s = generate_highlight(h.m, tex[h.beg:h.end], h.lin + 1, h.unsure)
             if h.beg < last:
                 # overlapping with last message
-                overlaps.append(s)
+                overlaps.append((s, h.lin + 1))
                 continue
             res += protect_html(tex[last:h.beg])
             res += s
@@ -500,8 +500,12 @@ def generate_html(tex, charmap, matches, file):
         postfix = ('<a id="' + anchor_overlap + '"></a><H3>'
                     + protect_html('File "' + file + '":')
                     + ' overlapping message(s)</H3>\n')
-        for h in overlaps:
-            postfix += h + '<br>\n'
+        postfix += '<table cellspacing="0">\n'
+        for (s, lin) in overlaps:
+            postfix += ('<tr><td style="' + number_style
+                            + '" align="right" valign="top">' + str(lin)
+                            + '&nbsp;&nbsp;</td><td>' + s + '</td></tr>\n')
+        postfix += '</table>\n'
 
     return (title, anchor, prefix + res_tot + postfix)
 
