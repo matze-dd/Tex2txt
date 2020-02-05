@@ -430,6 +430,12 @@ def generate_html(tex, charmap, matches, file):
             s = re.search(r'\A\\[a-zA-Z]+', tex[h.beg:])
             if s:
                 h.end = h.beg + len(s.group(0))
+        elif h.unsure and tex[h.beg].isalpha():
+            # HACK:
+            # if unsure: mark till end of word (only letters)
+            s = re.search(r'\A.[^\W0-9_]+', tex[h.beg:])
+            if s:
+                h.end = h.beg + len(s.group(0))
 
         h.beglin = tex.count('\n', 0, h.beg)
         h.endlin = tex.count('\n', 0, h.end) + 1
