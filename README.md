@@ -35,16 +35,16 @@ The script invokes [LanguageTool](https://www.languagetool.org)
 as proofreading software, using a local installation or the Web server
 hosted by LanguageTool.
 ```
-1.) Line 3, column 1, Rule ID: PEOPLE_VBZ[1]
-Message: If 'people' is plural here, don't use the third-person singular verb.
-Suggestion: am; are; aren
-Only few people is lazy.    We use redx colour. 
-                ^^
-2.) Line 2, column 17, Rule ID: MORFOLOGIK_RULE_EN_GB
+1.) Line 2, column 17, Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: red; Rex; reds; redo; Red; Rede; redox; red x
 Only few people is lazy.    We use redx colour. 
                                    ^^^^
+2.) Line 3, column 1, Rule ID: PEOPLE_VBZ[1]
+Message: If 'people' is plural here, don't use the third-person singular verb.
+Suggestion: am; are; aren
+Only few people is lazy.    We use redx colour. 
+                ^^
 ```
 <a name="example-html-report"></a>
 Run with option --html, the script produces an HTML report:
@@ -683,7 +683,8 @@ They can be suppressed with `python3 shell.py ... 2>/dev/null`.
 python3 shell.py [--html] [--link] [--include] [--extract macros]
                  [--language lang] [--t2t-lang lang] [--encoding ienc]
                  [--replace file] [--define file] [--disable rules]
-                 [--context number] [--skip regex] [--plain] [--server]
+                 [--context number] [--skip regex]
+                 [--single-letters accept] [--plain] [--server]
                  latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.
@@ -715,6 +716,13 @@ Default option values are set at the Python script beginning.
 - option `--context number`:<br>
   number of context lines displayed around each marked text region
   in HTML report; default: 2; negative number: display whole text
+- option `--single-letters accept`:<br>
+  check for single letters, accepting those in the patterns given as list
+  separated by '\|';
+  for instance `--singe-letters 'A|a|I|e.g.|i.e.'` for an English text
+  without equations;
+  all characters except '\|' are taken verbatim, but '~' and '\\,' are
+  interpreted as UTF-8 non-breaking space and narrow non-breaking space
 - option `--plain`:<br>
   assume plain-text input: no evaluation of LaTeX syntax;
   cannot be used together with option --include or --replace
