@@ -1,13 +1,23 @@
 Work in progress
 ----------------
 - shell.py
-    - text report: apply LT's JSON interface, too
     - HTML report: slightly adapted tooltip format
     - new option --server: use LT's Web server instead of local installation
+    - HTML report: display line numbers for overlapping LT messages, too
+      (was: only shown in corresponding tooltip)
+    - HTML report: if highlighting of a word is unsure (yellow colour),
+      then mark till end of word (was: mark only one character)
+    - text report: sort messages according to position in LaTeX text
+    - new option --single-letter accept: check for single letters,
+      accepting occurences in given patterns
+      <br><br>
+    - text report: apply LT's JSON interface, too
     - catch exceptions when using Java or LT server
-    - fixed Issue #21 and similar problem (too often "unsure localisation")
-- updated shell.png
-- README.md
+    - fixed [Issue #21](../../issues/21) and a similar problem
+      (less "unsure localisation", yellow colour)
+- shell2.py: added usage comments, simpler call of os.getenv()
+- shell.png: updated
+- README.md: minor corrections
 
 Version 1.6.7
 -------------
