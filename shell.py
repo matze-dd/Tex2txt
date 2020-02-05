@@ -110,6 +110,7 @@ parser.add_argument('--context', type=int)
 parser.add_argument('--html', action='store_true')
 parser.add_argument('--include', action='store_true')
 parser.add_argument('--skip')
+parser.add_argument('--single-letters')
 parser.add_argument('--plain', action='store_true')
 parser.add_argument('--link', action='store_true')
 parser.add_argument('--server', action='store_true')
@@ -227,6 +228,8 @@ def run_proofreader(file):
     #
     matches = run_languagetool(plain)
 
+    matches += create_single_letter_matches(plain)
+
     # sort matches according to position in LaTeX text
     #
     def f(m):
@@ -272,6 +275,73 @@ def run_languagetool(plain):
         json_fatal('JSON root element')
     matches = json_get(dic, 'matches', list)
     return matches
+
+#   create error messages for single letters
+#
+def create_single_letter_matches(plain):
+    if cmdline.single_letters is None:
+        # option not given: do not check
+        return []
+
+    #   some processing of the accepted patterns given in the option
+    #
+    accept = cmdline.single_letters.split('|')
+    def f(s):
+        # - replace '~' and '\\,' with UTF-8 (narrow) non-breaking space
+        # - escape the rest, for instance dots '.'
+        # - add word boundaries if appropriate
+        #
+        s = s.replace('~', '\N{NO-BREAK SPACE}')
+        s = s.replace('\\,', '\N{NARROW NO-BREAK SPACE}')
+        s = re.escape(s)
+        if s[0].isalpha():
+            s = r'\b' + s
+        if s[-1].isalpha():
+            s = s + r'\b'
+        return r'(' + s + r')'
+    accept = r'|'.join(f(s) for s in accept if s)
+
+    #   a list of all occurences of accepted patterns
+    #
+    if accept:
+        hits = list((m.start(0), m.end(0))
+                        for m in re.finditer(accept, plain))
+    else:
+        hits = []
+
+    def f(m):
+        #   return True if match of single letter occurs inside of
+        #   a place in list 'hits'
+        #
+        for (beg, end) in hits:
+            if beg <= m.start(0) < end:
+                return True
+        return False
+    single = r'\b[^\W0-9_]\b'
+    return list(single_letter_message(m)
+                for m in re.finditer(single, plain) if not f(m))
+
+#   build error message for a single letter
+#
+def single_letter_message(m):
+    context_size = 20
+    offset = m.start(0)
+    beg = max(offset - context_size, 0)
+    end = min(offset + context_size, len(m.string))
+    s = m.string[beg:end].replace('\t', ' ').replace('\n', ' ')
+    context = {
+        'text': '...' + s + '...',
+        'offset': offset - beg + 3,
+        'length': 1
+    }
+    return {
+        'offset': offset,
+        'length': 1,
+        'context': context,
+        'rule': {'id': 'PRIVATE::SINGLE_LETTER'},
+        'message': 'Single letter detected.',
+        'replacements': [{'value': '—'}]
+    }
 
 
 #####################################################################
