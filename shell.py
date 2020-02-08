@@ -51,6 +51,15 @@ default_option_context = 2
 #
 inclusion_macros = 'include,input'
 
+# equation replacements used for option --equation-punctuation
+# - have to start and end with a letter for proper operation
+# - also used by option --single-letters
+#
+equation_replacements_display = r'U-U-U|V-V-V|W-W-W|X-X-X|Y-Y-Y|Z-Z-Z'
+equation_replacements_inline = r'B-B-B|C-C-C|D-D-D|E-E-E|F-F-F|G-G-G'
+equation_replacements = (equation_replacements_display
+                            + r'|' + equation_replacements_inline)
+
 # HTML: properties of <span> tag for highlighting
 #
 highlight_style = 'background: orange; border: solid thin black'
@@ -114,6 +123,7 @@ parser.add_argument('--single-letters')
 parser.add_argument('--plain', action='store_true')
 parser.add_argument('--link', action='store_true')
 parser.add_argument('--server', action='store_true')
+parser.add_argument('--equation-punctuation')
 cmdline = parser.parse_args()
 
 if cmdline.language is None:
@@ -131,6 +141,8 @@ if cmdline.context < 0:
     cmdline.context = int(1e8)
 if cmdline.plain and (cmdline.include or cmdline.replace):
     tex2txt.fatal('cannot handle --plain together with --include or --replace')
+if cmdline.single_letters and cmdline.single_letters.endswith('||'):
+    cmdline.single_letters += equation_replacements
 if cmdline.replace:
     cmdline.replace = tex2txt.read_replacements(cmdline.replace,
                                                 encoding=cmdline.encoding)
@@ -229,6 +241,7 @@ def run_proofreader(file):
     matches = run_languagetool(plain)
 
     matches += create_single_letter_matches(plain)
+    matches += create_equation_punct_messages(plain)
 
     # sort matches according to position in LaTeX text
     #
@@ -309,6 +322,9 @@ def create_single_letter_matches(plain):
     else:
         hits = []
 
+    def msg(m):
+        return create_message(m, rule='PRIVATE::SINGLE_LETTER',
+                    msg='Single letter detected.', repl='—')
     def f(m):
         #   return True if match of single letter occurs inside of
         #   a place in list 'hits'
@@ -318,29 +334,67 @@ def create_single_letter_matches(plain):
                 return True
         return False
     single = r'\b[^\W0-9_]\b'
-    return list(single_letter_message(m)
-                for m in re.finditer(single, plain) if not f(m))
+    return list(msg(m) for m in re.finditer(single, plain) if not f(m))
 
-#   build error message for a single letter
+#   create error messages for problem with equation punctuation
 #
-def single_letter_message(m):
+def create_equation_punct_messages(plain):
+    if cmdline.equation_punctuation is None:
+        return []
+
+    mode = {
+        'displayed': equation_replacements_display,
+        'inline': equation_replacements_inline,
+        'all': equation_replacements,
+    }
+    repls = mode.get(cmdline.equation_punctuation) 
+    if repls is None:
+        tex2txt.fatal('mode for --equation-punctuation has to be in '
+                        + ', '.join(mode.keys()))
+
+    def msg(m):
+        return create_message(m, rule='PRIVATE::EQUATION_PUNCTUATION',
+                    msg='Possibly incorrect punctuation after equation.',
+                    repl='—')
+    def f(m):
+        #   return True if equation is followed by
+        #   - another equation (possibly after punctuation in punct)
+        #   - a dot
+        #   - a lower-case word (possibly after punctuation in punct)
+        #
+        groups = m.groups()
+        equ = groups[0]     # another equation follows: not consumed!
+        dot = groups[-2]    # a dot follows
+        word = groups[-1]   # a word follows
+        return equ or dot or word and word[0].islower()
+    punct = ',;:'
+    equ = r'\b(?:' + repls + r')\b'
+    expr = (r'(' + equ + r'(?=\s*[' + punct + r']?\s*' + equ + r'))|'
+                + equ + r'\s*(?:(\.)|[' + punct + r']?\s*([^\W0-9_]+))?')
+    return list(msg(m) for m in re.finditer(expr, plain) if not f(m))
+
+#   construct message element for a match from re.finditer()
+#
+def create_message(m, rule, msg, repl):
     context_size = 20
+
     offset = m.start(0)
+    length = len(m.group(0))
     beg = max(offset - context_size, 0)
     end = min(offset + context_size, len(m.string))
     s = m.string[beg:end].replace('\t', ' ').replace('\n', ' ')
     context = {
         'text': '...' + s + '...',
         'offset': offset - beg + 3,
-        'length': 1
+        'length': length,
     }
     return {
         'offset': offset,
-        'length': 1,
+        'length': length,
         'context': context,
-        'rule': {'id': 'PRIVATE::SINGLE_LETTER'},
-        'message': 'Single letter detected.',
-        'replacements': [{'value': '—'}]
+        'rule': {'id': rule},
+        'message': msg,
+        'replacements': [{'value': repl}],
     }
 
 
