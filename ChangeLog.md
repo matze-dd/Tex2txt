@@ -1,23 +1,30 @@
 Work in progress
 ----------------
+- tex2txt.py: changed equation replacements for English and German,
+  compare [Issue #22](../../issues/22)
+- checks.sh: adapted to new equation replacements (exception patterns for
+  single letters)
 - shell.py
-    - HTML report: slightly adapted tooltip format
     - new option --server: use LT's Web server instead of local installation
+    - new option --single-letters accept: check for single letters,
+      accepting occurences in given patterns
+    - new option --equation-punctuation: hack for finding missing dots at
+      the end of equations in English texts
+    - HTML report: slightly adapted tooltip format
     - HTML report: display line numbers for overlapping LT messages, too
       (was: only shown in corresponding tooltip)
     - HTML report: if highlighting of a word is unsure (yellow colour),
       then mark till end of word (was: mark only one character)
     - text report: sort messages according to position in LaTeX text
-    - new option --single-letter accept: check for single letters,
-      accepting occurences in given patterns
       <br><br>
     - text report: apply LT's JSON interface, too
     - catch exceptions when using Java or LT server
     - fixed [Issue #21](../../issues/21) and a similar problem
       (less "unsure localisation", yellow colour)
 - shell2.py: added usage comments, simpler call of os.getenv()
+- Example.md, Example2.md: updated with new equation replacements
 - shell.png: updated
-- README.md: minor corrections
+- README.md: updated
 
 Version 1.6.7
 -------------
