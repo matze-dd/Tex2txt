@@ -404,14 +404,18 @@ def set_language_de():
     #   - word repetitions are detected
     #   - resulting text can be checked for single letters (German)
     # other variant: AInlA, BInlB, ... (but has to be added to dictionary)
-    parms.inline_math = ('I1I', 'I2I', 'I3I', 'I4I', 'I5I', 'I6I')
+    # parms.inline_math = ('I1I', 'I2I', 'I3I', 'I4I', 'I5I', 'I6I')
     # parms.inline_math = ('AInlA', 'BInlB', 'CInlC',
     #                       'DInlD', 'EInlE', 'FInlF')
 
     # replacements for maths parts in displayed formulas
-    parms.display_math = ('D1D', 'D2D', 'D3D', 'D4D', 'D5D', 'D6D')
+    # parms.display_math = ('D1D', 'D2D', 'D3D', 'D4D', 'D5D', 'D6D')
     # parms.display_math = ('ADsplA', 'BDsplB', 'CDsplC',
     #                       'DDsplD', 'EDsplE', 'FDsplF')
+
+    # compare Issue #22
+    parms.inline_math = ('B-B-B', 'C-C-C', 'D-D-D', 'E-E-E', 'F-F-F', 'G-G-G')
+    parms.display_math = ('U-U-U', 'V-V-V', 'W-W-W', 'X-X-X', 'Y-Y-Y', 'Z-Z-Z')
 
     # LAB:CHECK_EQU_REPLS
     # this check is important if replacements had to be added to dictionary
@@ -437,8 +441,12 @@ def set_language_de():
 
 def set_language_en():
     # see comments in set_language_de()
-    parms.inline_math = ('B', 'C', 'D', 'E', 'F', 'G')
-    parms.display_math = ('U', 'V', 'W', 'X', 'Y', 'Z')
+#   parms.inline_math = ('B', 'C', 'D', 'E', 'F', 'G')
+#   parms.display_math = ('U', 'V', 'W', 'X', 'Y', 'Z')
+    # compare Issue #22
+    parms.inline_math = ('B-B-B', 'C-C-C', 'D-D-D', 'E-E-E', 'F-F-F', 'G-G-G')
+    parms.display_math = ('U-U-U', 'V-V-V', 'W-W-W', 'X-X-X', 'Y-Y-Y', 'Z-Z-Z')
+
     parms.check_equation_replacements = False
     parms.mathoptext = {'+': ' plus ', '-': ' minus ',
                         '*': ' times ', '/': ' over ',
