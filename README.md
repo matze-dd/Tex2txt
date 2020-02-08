@@ -138,9 +138,6 @@ If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues),
 or initiate a pull request.
 Many thanks in advance.
-(See, for example, the problem in section
-[Replacements in English documents](#replacements-in-english-documents)
-below.)
 
 Happy TeXing!
 
@@ -485,10 +482,13 @@ Synopsis of `Macro(name, args, repl='', extr='')`:
 ## Handling of displayed equations
 Displayed equations should be part of the text flow and include the
 necessary interpunction.
-At least the German version of
+The German version of
 [LanguageTool](https://www.languagetool.org) (LT)
-will detect a missing dot
-in the following snippet, where 'a' to 'd' stand for arbitrary mathematical
+will detect a missing dot in the following snippet.
+For English texts, see the comments in section
+[Equation replacements in English documents](#equation-replacements-in-english-documents)
+ahead.
+Here, 'a' to 'd' stand for arbitrary mathematical
 terms (meaning: “We conclude maths Therefore, ...”).
 ```
 Wir folgern
@@ -538,18 +538,18 @@ With the entry
 we obtain (“gleich” means equal, and option --lang en will print “equal”):
 ```
 Wir folgern
-  D1D  gleich D2D
-  D2D  gleich D3D.
+  U-U-U  gleich V-V-V 
+  V-V-V  gleich W-W-W 
 Daher ...
 ```
-The replacements 'D1D' to 'D3D' are taken from the collection in script
+The replacements 'U-U-U' to 'W-W-W' are taken from the collection in script
 variable parms.display\_math that depends on option --lang, too.
-Now, LT will complain about repetition of D2D.
-Finally, writing “= b,” in the equation leads to the output:
+Now, LT will additionally complain about repetition of V-V-V.
+Finally, writing “= b,” and “= d.“ in the equation leads to the output:
 ```
 Wir folgern
-  D1D  gleich D2D,
-  D3D  gleich D4D.
+  U-U-U  gleich V-V-V, 
+  W-W-W  gleich X-X-X. 
 Daher ...
 ```
 The rules for this equation parsing are described at LAB:EQUATIONS
@@ -571,7 +571,7 @@ In contrast, the text
     -c  &= d.
 ```
 will again produce an LT warning due to the missing comma after b,
-since the script replaces both b and -c by D2D without intermediate text.
+since the script replaces both b and -c by V-V-V without intermediate text.
 
 In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
 to avoid false warnings from the proofreader.
@@ -585,24 +585,18 @@ Therefore, one will get warnings from the proofreading program, if subsequent
 \\text and maths parts are not properly separated.
 See file [Example.md](Example.md).
 
-### Replacements in English documents
-The replacement collection in variable parms.display\_math works
-quite well, if German is the main language.
-Requirements for replacements are summarised in the script in function
-set\_language\_de().
-Till now, we could not yet select replacements that work equally well
-with the English version of LanguageTool.
-For example, sensitivity is not good with the collection provided in function
-set\_language\_en() in these cases:
-- missing final dot in an equation, if something like 'Therefore'
-  is following;
-- lower-case text continuation after an equation with final dot.
-
-Currently (LanguageTool version 4.5), only the second case is detected in
-only variant “Simple version” above, e.g.:
-```
-EquEnv('align', repl='  relation'),
-```
+### Equation replacements in English documents
+The replacement collection in variable parms.display\_math does not work well,
+if single letters are taken as replacements, compare
+[Issue #22](../../issues/22).
+We now have chosen replacements as 'B-B-B' for English texts.
+Furthermore, the English version of LanguageTool (like other proofreading
+tools) rarely detects mistakenly capital words inside of a sentence;
+they are probably considered as proper names.
+Therefore, a missing dot at the end of a displayed equation is hardly found.
+An experimental hack is provided by option --equation-punctuation of
+application script [shell.py](shell.py) described in section
+[Application examples](#application-examples).
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
@@ -684,7 +678,8 @@ python3 shell.py [--html] [--link] [--include] [--extract macros]
                  [--language lang] [--t2t-lang lang] [--encoding ienc]
                  [--replace file] [--define file] [--disable rules]
                  [--context number] [--skip regex]
-                 [--single-letters accept] [--plain] [--server]
+                 [--single-letters accept] [--equation-punctuation mode]
+                 [--plain] [--server]
                  latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.
@@ -719,10 +714,24 @@ Default option values are set at the Python script beginning.
 - option `--single-letters accept`:<br>
   check for single letters, accepting those in the patterns given as list
   separated by '\|';
-  for instance `--singe-letters 'A|a|I|e.g.|i.e.'` for an English text
-  without equations;
+  for instance `--singe-letters 'A|a|I|e.g.|i.e.||'` for an English text,
+  where the trailing '\|\|' causes addition of equation replacements
+  from script variable equation\_replacements;
   all characters except '\|' are taken verbatim, but '~' and '\\,' are
   interpreted as UTF-8 non-breaking space and narrow non-breaking space
+- option `--equation-punctuation mode`:<br>
+  experimental hack for check of punctuation after equations in English texts,
+  compare section
+  [Equation replacements in English documents](#equation-replacements-in-english-documents);
+  possible mode values, indicating checked equation type:
+  'displayed', 'inline', 'all';
+  generates a message, if an element of an equation is not terminated
+  by a dot '.' and at the same time is not followed by a lower-case word or
+  another equation element, both possibly separated by a mark from ',;:';
+  patterns for equations are given by script variables
+  equation\_replacements\_display and equation\_replacements\_inline
+  corresponding to variables parms.display\_math and parms.inline\_math
+  in script tex2txt.py
 - option `--plain`:<br>
   assume plain-text input: no evaluation of LaTeX syntax;
   cannot be used together with option --include or --replace
