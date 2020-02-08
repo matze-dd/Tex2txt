@@ -16,16 +16,18 @@ f(x)
     &= 0 \quad\text{for all} x \in M \setminus \Omega. \label{l2}
 \end{align}
 ```
-Using option --lang en, one gets the following Python script output.
+Using option --lang en, one gets the following output from Python script
+[tex2txt.py](tex2txt.py).
 ```
+Thix is a footnote.
 We consider
-  a set C, a domain D, andx
-  a function E.
+  a set C-C-C, a domain D-D-D, andx
+  a function E-E-E.
 
-With a constant F, we require
-  U  equal V for all W, 
-  X  equal Y for all Z 
-  Z  equal U for allV. 
+With a constant F-F-F, we require
+  U-U-U  equal V-V-V for all W-W-W, 
+  X-X-X  equal Y-Y-Y for all Z-Z-Z 
+  Z-Z-Z  equal U-U-U for allV-V-V. 
 
 
 
@@ -44,30 +46,26 @@ text is stored in file z.tex.
 Line numbers in \[\] brackets have been added by the filter in variable
 \$repl\_lines of the Bash script.
 ```
-Expected text language: English (GB)
-Working on z.tex.txt...
 1.) Line 2 [3], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: and; Andy; and x
-We consider   a set C, a domain D, andx   a function E.  With a constant F, we requi...
-                                   ^^^^                                             
+We consider   a set C-C-C, a domain D-D-D, andx   a function E-E-E.  With a constant F-F-F, ...
+                                           ^^^^                                             
 
 2.) Line 7 [11+], Rule ID: ENGLISH_WORD_REPEAT_RULE
 Message: Possible typo: you repeated a word
-Suggestion: Z
-... U  equal V for all W,    X  equal Y for all Z    Z  equal U for allV.     Thix is a footnote. 
-                                                ^^^^^^                                            
+Suggestion: Z-Z-Z
+...for all W-W-W,    X-X-X  equal Y-Y-Y for all Z-Z-Z    Z-Z-Z  equal U-U-U for allV-V-V.     Thix is a foo...
+                                                ^^^^^^^^^^^^^^                                             
 
 3.) Line 8 [13+], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
-Suggestion: all; ally; alls; All; all V
-...W,    X  equal Y for all Z    Z  equal U for allV.     Thix is a footnote. 
-                                                ^^^^                          
+...-Y-Y for all Z-Z-Z    Z-Z-Z  equal U-U-U for allV-V-V.     Thix is a footnote. 
+                                                ^^^^^^^^                          
 
 4.) Line 12 [1], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: This; Thin; Hix; Th ix
-...qual Y for all Z    Z  equal U for allV.     Thix is a footnote. 
+...-Z-Z    Z-Z-Z  equal U-U-U for allV-V-V.     Thix is a footnote. 
                                                 ^^^^                
-Time: 2850ms for 4 sentences (1.4 sentences/sec)
 ```

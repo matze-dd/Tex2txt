@@ -22,30 +22,26 @@ text is stored in file z.tex.
 In order to indicate action of the output filter in [shell2.sh](shell2.sh),
 line and column numbers are placed in \[\] brackets.
 ```
-Expected text language: English (GB)
-Working on z.tex.txt...
 1.) Line [3], column [46], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: and; Andy; and x
-We consider   a set C, a domain D, andx   a function E.  With a constant F, we requi...
-                                   ^^^^                                             
+We consider   a set C-C-C, a domain D-D-D, andx   a function E-E-E.  With a constant F-F-F, ...
+                                           ^^^^                                             
 
 2.) Line [12+], column [6+], Rule ID: ENGLISH_WORD_REPEAT_RULE
 Message: Possible typo: you repeated a word
-Suggestion: Z
-... U  equal V for all W,    X  equal Y for all Z    Z  equal U for allV.     Thix is a footnote. 
-                                                ^^^^^^                                            
+Suggestion: Z-Z-Z
+...for all W-W-W,    X-X-X  equal Y-Y-Y for all Z-Z-Z    Z-Z-Z  equal U-U-U for allV-V-V.     Thix is a foo...
+                                                ^^^^^^^^^^^^^^                                             
 
 3.) Line [14+], column [6+], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
-Suggestion: all; ally; alls; All; all V
-...W,    X  equal Y for all Z    Z  equal U for allV.     Thix is a footnote. 
-                                                ^^^^                          
+...-Y-Y for all Z-Z-Z    Z-Z-Z  equal U-U-U for allV-V-V.     Thix is a footnote. 
+                                                ^^^^^^^^                          
 
 4.) Line [1], column [22], Rule ID: MORFOLOGIK_RULE_EN_GB
 Message: Possible spelling mistake found
 Suggestion: This; Thin; Hix; Th ix
-...qual Y for all Z    Z  equal U for allV.     Thix is a footnote. 
+...-Z-Z    Z-Z-Z  equal U-U-U for allV-V-V.     Thix is a footnote. 
                                                 ^^^^                
-Time: 2855ms for 4 sentences (1.4 sentences/sec)
 ```
