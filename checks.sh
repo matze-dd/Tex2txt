@@ -31,7 +31,7 @@ all_tex_files="vorwort.tex */*.tex"
 
 #   LanguageTool for check of native-language text
 #
-LTprefix=../LT/LanguageTool-4.6
+LTprefix=../LT/LanguageTool-4.7
 LTcommand="$LTprefix/languagetool-commandline.jar \
     --language de-DE --encoding utf-8 \
     --disable \
@@ -44,7 +44,7 @@ KOMMA_VOR_UND_ODER"
 LT_info_line='^\d+\.\) Line (\d+), column (\d+), Rule ID: '
 
 tooldir=Tools/LT            # Python scripts and private dictionaries
-txtdir=$tooldir/Tex2txt     # directory for extraction of raw text 
+txtdir=../Tex2txt           # directory for extraction of raw text 
                             # (subdirectories will be created if necessary)
 ext=txt                     # file name extension for raw text
 num=lin                     # ... for line number information
@@ -69,9 +69,12 @@ repls_hunspell=' -e s/\<0\>/Null/g'
 #
 check_for_single_letters=yes
 acronyms='d\. h\.|f\. ü\.|i\. A\.|u\. a\.|v\. g\. V\.|z\. B\.'
+equation_repls='|B-B-B|C-C-C|D-D-D|E-E-E|F-F-F|G-G-G'
+equation_repls+='|U-U-U|V-V-V|W-W-W|X-X-X|Y-Y-Y|Z-Z-Z'
 
 utf8_nbsp=$(python3 -c 'print("\N{NO-BREAK SPACE}", end="")')
 acronyms=$(echo -n $acronyms | sed -E "s/ /$utf8_nbsp/g")
+acronyms+=$equation_repls
 
 #   LAB:ADAPT-LT
 #   append private hunspell dictionary to LT's spelling.txt
