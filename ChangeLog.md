@@ -1,5 +1,5 @@
-Work in progress
-----------------
+Version 1.6.8
+-------------
 - tex2txt.py: changed equation replacements for English and German,
   compare [Issue #22](../../issues/22)
 - checks.sh: adapted to new equation replacements (exception patterns for
