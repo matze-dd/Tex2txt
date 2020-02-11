@@ -488,8 +488,6 @@ will detect a missing dot in the following snippet.
 For English texts, see the comments in section
 [Equation replacements in English documents](#equation-replacements-in-english-documents)
 ahead.
-Here, 'a' to 'd' stand for arbitrary mathematical
-terms (meaning: “We conclude maths Therefore, ...”).
 ```
 Wir folgern
 \begin{align}
@@ -498,6 +496,8 @@ Wir folgern
 \end{align}
 Daher ...
 ```
+Here, 'a' to 'd' stand for arbitrary mathematical
+terms (meaning: “We conclude \<maths\> Therefore, ...”).
 In fact, LT complains about the capital “Daher” that should start a
 new sentence.
 
@@ -526,7 +526,7 @@ Wir folgern
   Relation
 Daher ...
 ```
-Adding a dot “= d.” in the equation will lead to “Relation.” in the output.
+Adding a dot '= d.' in the equation will lead to 'Relation.' in the output.
 This will also hold true, if the interpunction sign is followed by maths space
 or by macros as \\label and \\nonumber.
 
@@ -544,8 +544,8 @@ Daher ...
 ```
 The replacements 'U-U-U' to 'W-W-W' are taken from the collection in script
 variable parms.display\_math that depends on option --lang, too.
-Now, LT will additionally complain about repetition of V-V-V.
-Finally, writing “= b,” and “= d.“ in the equation leads to the output:
+Now, LT will additionally complain about repetition of 'V-V-V'.
+Finally, writing '= b,' and '= d.' in the equation leads to the output:
 ```
 Wir folgern
   U-U-U  gleich V-V-V, 
@@ -570,8 +570,9 @@ In contrast, the text
     a   &= b \\
     -c  &= d.
 ```
-will again produce an LT warning due to the missing comma after b,
-since the script replaces both b and -c by V-V-V without intermediate text.
+will again produce an LT warning due to the missing comma after 'b',
+since the script replaces both 'b' and '-c' by 'V-V-V' without
+intermediate text.
 
 In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
 to avoid false warnings from the proofreader.
@@ -589,7 +590,8 @@ See file [Example.md](Example.md).
 The replacement collection in variable parms.display\_math does not work well,
 if single letters are taken as replacements, compare
 [Issue #22](../../issues/22).
-We now have chosen replacements as 'B-B-B' for English texts.
+We now have chosen replacements as 'B-B-B' for German and English texts.
+
 Furthermore, the English version of LanguageTool (like other proofreading
 tools) rarely detects mistakenly capital words inside of a sentence;
 they are probably considered as proper names.
