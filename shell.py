@@ -748,7 +748,7 @@ def generate_html(tex, charmap, matches, file):
                             + '&nbsp;&nbsp;</td><td>' + s + '</td></tr>\n')
         postfix += '</table>\n'
 
-    return (title, anchor, prefix + res_tot + postfix)
+    return (title, anchor, prefix + res_tot + postfix, len(matches))
 
 #   add line numbers using a large <table>
 #
@@ -790,7 +790,8 @@ if len(html_report_parts) > 1:
     # start page with file index
     sys.stdout.write('<H3>Index</H3>\n<ul>\n')
     for r in html_report_parts:
-        s = '<li><a href="#' + r[1] + '">' + r[0] + '</a></li>\n'
+        colour = '" style="color: red' if r[3] else ''
+        s = '<li><a href="#' + r[1] + colour + '">' + r[0] + '</a></li>\n'
         sys.stdout.write(s)
     sys.stdout.write('</ul>\n<hr><hr>\n')
 for (i, r) in enumerate(html_report_parts):
