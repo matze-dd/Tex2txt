@@ -1,3 +1,11 @@
+Work in progress
+----------------
+- shell.py
+    - added mode argument to option --server: can use a local LT server
+    - new option --textgears: use TextGears server
+    - added option --lt-options: passes further options to LT
+    - index in HTML report: use red colour for files with problems
+
 Version 1.6.8
 -------------
 - tex2txt.py: changed equation replacements for English and German,
