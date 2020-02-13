@@ -60,6 +60,10 @@ equation_replacements_inline = r'B-B-B|C-C-C|D-D-D|E-E-E|F-F-F|G-G-G'
 equation_replacements = (equation_replacements_display
                             + r'|' + equation_replacements_inline)
 
+# option --textgears
+#
+textgears_server = 'https://api.textgears.com/check.php'
+
 # HTML: properties of <span> tag for highlighting
 #
 highlight_style = 'background: orange; border: solid thin black'
@@ -124,6 +128,7 @@ parser.add_argument('--plain', action='store_true')
 parser.add_argument('--link', action='store_true')
 parser.add_argument('--server', action='store_true')
 parser.add_argument('--equation-punctuation')
+parser.add_argument('--textgears')
 cmdline = parser.parse_args()
 
 if cmdline.language is None:
@@ -235,10 +240,14 @@ def run_proofreader(file):
     else:
         (plain, charmap) = tex2txt.tex2txt(tex, options)
 
-    # here, we could dispatch to other tools,
-    # see for instance Python package prowritingaid.python
+    # here, we could dispatch to other tools, see for instance
+    #   - https://textgears.com/api
+    #   - Python package prowritingaid.python
     #
-    matches = run_languagetool(plain)
+    if cmdline.textgears:
+        matches = run_textgears(plain)
+    else:
+        matches = run_languagetool(plain)
 
     matches += create_single_letter_matches(plain)
     matches += create_equation_punct_messages(plain)
@@ -288,6 +297,42 @@ def run_languagetool(plain):
         json_fatal('JSON root element')
     matches = json_get(dic, 'matches', list)
     return matches
+
+#   contact TextGears server, translate JSON output to our format
+#
+def run_textgears(plain):
+    data = {
+        'key': cmdline.textgears,
+        'text': plain,
+    }
+    data = urllib.parse.urlencode(data).encode(encoding='ascii')
+    request = urllib.request.Request(textgears_server, data=data)
+    try:
+        reply = urllib.request.urlopen(request)
+        out = reply.read()
+        reply.close()
+    except:
+        tex2txt.fatal('error connecting to "' + textgears_server + '"')
+
+    out = out.decode(encoding='utf-8')
+    try:
+        dic = json_decoder.decode(out)
+    except:
+        json_fatal('JSON root element')
+
+    def f(err):
+        offset = json_get(err, 'offset', int)
+        length = json_get(err, 'length', int)
+        return {
+            'message': 'Error type: ' + json_get(err, 'type', str),
+            'offset': offset,
+            'length': length,
+            'context': create_context(plain, offset, length),
+            'replacements': list({'value': r} for r in
+                                    json_get(err, 'better', list)),
+            'rule': {'id': 'Not available'},
+        }
+    return list(f(err) for err in json_get(dic, 'errors', list))
 
 #   create error messages for single letters
 #
@@ -347,10 +392,12 @@ def create_equation_punct_messages(plain):
         'inline': equation_replacements_inline,
         'all': equation_replacements,
     }
-    repls = mode.get(cmdline.equation_punctuation) 
-    if repls is None:
-        tex2txt.fatal('mode for --equation-punctuation has to be in '
-                        + ', '.join(mode.keys()))
+    k = list(k for k in mode.keys()
+                        if k.startswith(cmdline.equation_punctuation))
+    if len(k) != 1:
+        tex2txt.fatal('mode for --equation-punctuation has to determine'
+                        + ' one of ' + ', '.join(mode.keys()))
+    repls = mode[k[0]]
 
     def msg(m):
         return create_message(m, rule='PRIVATE::EQUATION_PUNCTUATION',
@@ -373,25 +420,26 @@ def create_equation_punct_messages(plain):
                 + equ + r'\s*(?:(\.)|[' + punct + r']?\s*([^\W0-9_]+))?')
     return list(msg(m) for m in re.finditer(expr, plain) if not f(m))
 
-#   construct message element for a match from re.finditer()
-#
-def create_message(m, rule, msg, repl):
-    context_size = 20
-
-    offset = m.start(0)
-    length = len(m.group(0))
+def create_context(txt, offset, length):
+    context_size = 45
     beg = max(offset - context_size, 0)
-    end = min(offset + context_size, len(m.string))
-    s = m.string[beg:end].replace('\t', ' ').replace('\n', ' ')
-    context = {
+    end = min(offset + context_size, len(txt))
+    s = txt[beg:end].replace('\t', ' ').replace('\n', ' ')
+    return  {
         'text': '...' + s + '...',
         'offset': offset - beg + 3,
         'length': length,
     }
+
+#   construct message element for a match from re.finditer()
+#
+def create_message(m, rule, msg, repl):
+    offset = m.start(0)
+    length = len(m.group(0))
     return {
         'offset': offset,
         'length': length,
-        'context': context,
+        'context': create_context(m.string, offset, length),
         'rule': {'id': rule},
         'message': msg,
         'replacements': [{'value': repl}],
