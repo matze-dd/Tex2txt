@@ -33,12 +33,20 @@
 # - Java has to be installed,
 #   under Cygwin the Windows version is used
 #
-ltjar = '../LT/LanguageTool-4.7/languagetool-commandline.jar'
-ltcmd = 'java -jar ' +  ltjar
+ltdirectory = '../LT/LanguageTool-4.7/'
+ltcommand = 'java -jar ' +  ltdirectory + 'languagetool-commandline.jar'
 
-# on option --server: address of server hosted by LT
+# on option --server lt: address of server hosted by LT
 #
 ltserver = 'https://languagetool.org/api/v2/check'
+
+# on option --server my: use local LT server
+#
+ltserver_local_port = 8081
+ltserver_local = 'http://localhost:' + str(ltserver_local_port) + '/v2/check'
+ltserver_local_cmd = ('java -cp'
+            + ' languagetool-server.jar org.languagetool.server.HTTPServer'
+            + ' --port ' + str(ltserver_local_port))
 
 # default option values
 #
@@ -107,6 +115,8 @@ import argparse
 import json
 import urllib.parse
 import urllib.request
+import socket
+import time
 
 # parse command line
 #
@@ -126,7 +136,7 @@ parser.add_argument('--skip')
 parser.add_argument('--single-letters')
 parser.add_argument('--plain', action='store_true')
 parser.add_argument('--link', action='store_true')
-parser.add_argument('--server', action='store_true')
+parser.add_argument('--server')
 parser.add_argument('--equation-punctuation')
 parser.add_argument('--textgears')
 cmdline = parser.parse_args()
@@ -144,6 +154,8 @@ if cmdline.context is None:
 if cmdline.context < 0:
     # huge context: display whole text
     cmdline.context = int(1e8)
+if cmdline.server is not None and cmdline.server not in ('lt', 'my'):
+    tex2txt.fatal('mode for --server has to be one of lt, my')
 if cmdline.plain and (cmdline.include or cmdline.replace):
     tex2txt.fatal('cannot handle --plain together with --include or --replace')
 if cmdline.single_letters and cmdline.single_letters.endswith('||'):
@@ -156,10 +168,10 @@ if cmdline.define:
 
 # complement LT options
 #
-ltcmd = ltcmd.split() + ['--json', '--encoding', 'utf-8',
+ltcommand = ltcommand.split() + ['--json', '--encoding', 'utf-8',
                             '--language', cmdline.language]
 if cmdline.disable:
-    ltcmd += ['--disable', cmdline.disable]
+    ltcommand += ['--disable', cmdline.disable]
 
 # on option --include: add included files to work list
 # otherwise: remove duplicates
@@ -268,27 +280,32 @@ def run_proofreader(file):
 #
 def run_languagetool(plain):
     if cmdline.server:
-        # use Web server hosted by LT
+        # use Web server hosted by LT or local server
+        if cmdline.server == 'lt':
+            server = ltserver
+        else:
+            start_local_lt_server()
+            server = ltserver_local
         data = {            # see package pyLanguagetool for field names
             'text': plain,
             'language': cmdline.language,
             'disabledRules': cmdline.disable,
         }
         data = urllib.parse.urlencode(data).encode(encoding='ascii')
-        request = urllib.request.Request(ltserver, data=data)
+        request = urllib.request.Request(server, data=data)
         try:
             reply = urllib.request.urlopen(request)
             out = reply.read()
             reply.close()
         except:
-            tex2txt.fatal('error connecting to "' + ltserver + '"')
+            tex2txt.fatal('error connecting to "' + server + '"')
     else:
         # use local installation
         try:
-            out = subprocess.run(ltcmd, input=plain.encode(encoding='utf-8'),
+            out = subprocess.run(ltcommand, input=plain.encode('utf-8'),
                                         stdout=subprocess.PIPE).stdout
         except:
-            tex2txt.fatal('error running "' + ltcmd[0] + '"')
+            tex2txt.fatal('error running "' + ltcommand[0] + '"')
 
     out = out.decode(encoding='utf-8')
     try:
@@ -297,6 +314,42 @@ def run_languagetool(plain):
         json_fatal('JSON root element')
     matches = json_get(dic, 'matches', list)
     return matches
+
+#   start local LT server, if none is running
+#
+def start_local_lt_server():
+    def check_server():
+        # check for server on port ltserver_local_port
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect(('localhost', ltserver_local_port))
+        except:
+            return False
+        s.close()
+        return True
+
+    if check_server():
+        return
+    try:
+        subprocess.Popen(ltserver_local_cmd.split(), cwd=ltdirectory,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except:
+        tex2txt.fatal('error running "' + ltserver_local_cmd + '"')
+
+    # wait for server to be available
+    #
+    sys.stderr.write('=== starting local LT server at "' + ltdirectory
+                        + '":\n=== ' + ltserver_local_cmd + ' ')
+    sys.stderr.flush()
+    for x in range(50):
+        time.sleep(0.2)
+        sys.stderr.write('.') and sys.stderr.flush()
+        if check_server():
+            sys.stderr.write('\n') and sys.stderr.flush()
+            return
+    sys.stderr.write('\n')
+    tex2txt.fatal('error starting server "' + ltserver_local_cmd + '"')
+
 
 #   contact TextGears server, translate JSON output to our format
 #
@@ -500,7 +553,7 @@ def output_text_report(tex, plain, charmap, matches, file):
 
 
 if not cmdline.html:
-    if cmdline.server:
+    if cmdline.server == 'lt':
         sys.stderr.write(msg_LT_server_txt)
     for file in cmdline.file:
         (tex, plain, charmap, matches) = run_proofreader(file)
@@ -726,7 +779,7 @@ page_prefix = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
 page_postfix = '\n</body>\n</html>\n'
 
 sys.stdout.write(page_prefix)
-if cmdline.server:
+if cmdline.server == 'lt':
     sys.stdout.write(msg_LT_server_html)
 if len(html_report_parts) > 1:
     # start page with file index
