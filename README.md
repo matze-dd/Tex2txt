@@ -264,7 +264,7 @@ program [tex2txt.py](tex2txt.py) may be directly used in a Windows command
 console or script.
 Furthermore, at least the application script [shell.py](shell.py) from section
 [Application examples](#application-examples) can be run,
-if option --server is used, or if Java and the LanguageTool software
+if option '--server lt' is used, or if Java and the LanguageTool software
 are locally present.
 For example, this could look like
 ```
@@ -276,8 +276,8 @@ or
 ```
 if the Python launcher has not been installed.
 The file tex2txt.py should reside in the current directory.
-Variable 'ltjar' in script shell.py has to be customised, unless option
---server is used.
+Variable 'ltdirectory' in script shell.py has to be customised, unless option
+'--server lt' is used.
 
 The software has been developed under Linux and additionally tested under
 Cygwin on Windows&nbsp;7.
@@ -666,9 +666,9 @@ when running the script tex2txt.py directly.
 Example Python script [shell.py](shell.py) will generate a proofreading report
 in text or HTML format from filtering the LaTeX input and application of
 [LanguageTool](https://www.languagetool.org) (LT).
-On option --server, LT's Web server is contacted.
+On option '--server lt', LT's Web server is contacted.
 Otherwise, [Java](https://java.com) has to be present, and
-the path to LT has to be customised in script variable 'ltjar';
+the path to LT has to be customised in script variable 'ltdirectory';
 compare the corresponding comment in script.
 Note that from version 4.8, LT does not fully support 32-bit systems any more.
 File tex2txt.py should reside in the current directory, see also
@@ -681,7 +681,8 @@ python3 shell.py [--html] [--link] [--include] [--extract macros]
                  [--replace file] [--define file] [--disable rules]
                  [--context number] [--skip regex]
                  [--single-letters accept] [--equation-punctuation mode]
-                 [--plain] [--server]
+                 [--server mode] [--textgears apikey] [--plain]
+                 [--lt-options opts]
                  latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.
@@ -725,7 +726,7 @@ Default option values are set at the Python script beginning.
   experimental hack for check of punctuation after equations in English texts,
   compare section
   [Equation replacements in English documents](#equation-replacements-in-english-documents);
-  possible mode values, indicating checked equation type:
+  abbreviatable mode values, indicating checked equation type:
   'displayed', 'inline', 'all';
   generates a message, if an element of an equation is not terminated
   by a dot '.' and at the same time is not followed by a lower-case word or
@@ -734,14 +735,33 @@ Default option values are set at the Python script beginning.
   equation\_replacements\_display and equation\_replacements\_inline
   corresponding to variables parms.display\_math and parms.inline\_math
   in script tex2txt.py
+- option `--server mode`:<br>
+  use LT's Web server (mode is 'lt') or a local LT server (mode is 'my')
+  - LT's server: address set in script variable 'ltserver';
+    for conditions and restrictions, please refer to
+    [http://wiki.languagetool.org/public-http-api](http://wiki.languagetool.org/public-http-api)
+  - local server: if not yet running (only tested by check on localhost:8081),
+    then start it according to script variable 'ltserver\_local\_cmd';
+    will not be stopped at the end;
+    additional server options can be passed with --lt-options;
+    see also
+    [http://wiki.languagetool.org/http-server](http://wiki.languagetool.org/http-server);
+    may be faster than command-line tool used otherwise, especially for large
+    number of LaTeX files
+- option `--textgears apikey`:<br>
+  use the TextGears server, see [https://textgears.com](https://textgears.com);
+  language is fixed to American English;
+  access key 'apikey' can be obtained on page
+  [https://textgears.com/signup.php?givemethatgoddamnkey=please](https://textgears.com/signup.php?givemethatgoddamnkey=please),
+  but key 'DEMO\_KEY' seems to work for short input;
+  server address is given by script variable textgears\_server
 - option `--plain`:<br>
   assume plain-text input: no evaluation of LaTeX syntax;
   cannot be used together with option --include or --replace
-- option `--server`:<br>
-  use LT's Web server instead of a local LT installation;
-  the address is set in script variable 'ltserver';
-  for conditions and restrictions, please refer to
-  [http://wiki.languagetool.org/public-http-api](http://wiki.languagetool.org/public-http-api)
+- option `--lt-options opts`:<br>
+  pass additional options to LT;
+  first character of argument 'opts' will be skipped and must not be '-';
+  for instance: `--lt-options '~--languagemodel ../LT/Ngrams'`
 - options `--encoding ienc`, `--replace file`, `--define file`:<br>
   like options --ienc, --repl, --defs described in section
   [Command line](#command-line)
