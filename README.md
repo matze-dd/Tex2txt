@@ -676,13 +676,14 @@ the [beginning of this section](#application-as-python-module).
 Both LT and the script will print some progress messages to stderr.
 They can be suppressed with `python3 shell.py ... 2>/dev/null`.
 ```
-python3 shell.py [--html] [--link] [--include] [--extract macros]
+python3 shell.py [--html] [--link] [--context number]
+                 [--include] [--skip regex] [--plain]
                  [--language lang] [--t2t-lang lang] [--encoding ienc]
-                 [--replace file] [--define file] [--disable rules]
-                 [--context number] [--skip regex]
+                 [--replace file] [--define file] [--extract macros]
+                 [--disable rules] [--lt-options opts]
                  [--single-letters accept] [--equation-punctuation mode]
-                 [--server mode] [--textgears apikey] [--plain]
-                 [--lt-options opts]
+                 [--server mode] [--lt-server-options opts]
+                 [--textgears apikey]
                  latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.
@@ -692,28 +693,40 @@ Default option values are set at the Python script beginning.
 - option `--link`:<br>
   if HTML report : left-click on a highlighted text part opens Web link
   provided by LT
+- option `--context number`:<br>
+  number of context lines displayed around each marked text region
+  in HTML report; default: 2; negative number: display whole text
 - option `--include`:<br>
   track file inclusions like \\input\{...\}; script variable
   'inclusion\_macros' contains list of the corresponding LaTeX macro names
+- option `--skip regex`:<br>
+  skip files matching the given regular expression;
+  useful, e.g., for exclusion of figures on option --include
+- option `--plain`:<br>
+  assume plain-text input: no evaluation of LaTeX syntax;
+  cannot be used together with option --include or --replace
 - option `--language lang`:<br>
   language code as expected by LT, default: 'en-GB';
   first two letters are passed to tex2txt();
   currently, only 'de' and 'en' supported, but see --t2t-lang
 - option `--t2t-lang lang`:<br>
   overwrite option for tex2txt() from --language
-- option `--disable rules`:<br>
-  comma-separated list of ignored LT rules, passed as --disable to LT;
-  default: 'WHITESPACE\_RULE'
+- options `--encoding ienc`, `--replace file`, `--define file`:<br>
+  like options --ienc, --repl, --defs described in section
+  [Command line](#command-line)
 - option `--extract macros`:<br>
   only check arguments of the LaTeX macros whose names are given as
   comma-separated list; useful for check of foreign-language text,
   if marked accordingly
-- option `--skip regex`:<br>
-  skip files matching the given regular expression;
-  useful, e.g., for exclusion of figures on option --include
-- option `--context number`:<br>
-  number of context lines displayed around each marked text region
-  in HTML report; default: 2; negative number: display whole text
+- option `--disable rules`:<br>
+  comma-separated list of ignored LT rules, passed as --disable to LT;
+  default: 'WHITESPACE\_RULE'
+- option `--lt-options opts`:<br>
+  pass additional options to LT as single string in argument 'opts';
+  first character of 'opts' will be skipped and must not be '-';
+  for instance: `--lt-options '~--languagemodel ../LT/Ngrams --mothertongue de-DE'`;
+  some options are included into HTML requests to an LT server, see script
+  variable lt\_option\_map
 - option `--single-letters accept`:<br>
   check for single letters, accepting those in the patterns given as list
   separated by '\|';
@@ -740,14 +753,17 @@ Default option values are set at the Python script beginning.
   - LT's server: address set in script variable 'ltserver';
     for conditions and restrictions, please refer to
     [http://wiki.languagetool.org/public-http-api](http://wiki.languagetool.org/public-http-api)
-  - local server: if not yet running (only tested by check on localhost:8081),
-    then start it according to script variable 'ltserver\_local\_cmd';
+  - local server: if not yet running, then start it according to script
+    variable 'ltserver\_local\_cmd';
     will not be stopped at the end;
-    additional server options can be passed with --lt-options;
+    additional server options can be passed with --lt-server-options;
     see also
     [http://wiki.languagetool.org/http-server](http://wiki.languagetool.org/http-server);
     may be faster than command-line tool used otherwise, especially for large
     number of LaTeX files
+- option `--lt-server-options opts`:<br>
+  pass additional options when starting a local LT server;
+  syntax as for --lt-options
 - option `--textgears apikey`:<br>
   use the TextGears server, see [https://textgears.com](https://textgears.com);
   language is fixed to American English;
@@ -755,16 +771,6 @@ Default option values are set at the Python script beginning.
   [https://textgears.com/signup.php?givemethatgoddamnkey=please](https://textgears.com/signup.php?givemethatgoddamnkey=please),
   but key 'DEMO\_KEY' seems to work for short input;
   server address is given by script variable textgears\_server
-- option `--plain`:<br>
-  assume plain-text input: no evaluation of LaTeX syntax;
-  cannot be used together with option --include or --replace
-- option `--lt-options opts`:<br>
-  pass additional options to LT;
-  first character of argument 'opts' will be skipped and must not be '-';
-  for instance: `--lt-options '~--languagemodel ../LT/Ngrams'`
-- options `--encoding ienc`, `--replace file`, `--define file`:<br>
-  like options --ienc, --repl, --defs described in section
-  [Command line](#command-line)
 
 **Dictionary adaptation.**
 LT evaluates the two files 'spelling.txt' and 'prohibit.txt' in directory
