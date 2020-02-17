@@ -121,25 +121,25 @@ import time
 # parse command line
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('file', nargs='+')
-parser.add_argument('--replace')
-parser.add_argument('--define')
+parser.add_argument('--html', action='store_true')
+parser.add_argument('--link', action='store_true')
+parser.add_argument('--context', type=int)
+parser.add_argument('--include', action='store_true')
+parser.add_argument('--skip')
+parser.add_argument('--plain', action='store_true')
 parser.add_argument('--language')
 parser.add_argument('--t2t-lang')
 parser.add_argument('--encoding')
-parser.add_argument('--disable')
+parser.add_argument('--replace')
+parser.add_argument('--define')
 parser.add_argument('--extract')
-parser.add_argument('--context', type=int)
-parser.add_argument('--html', action='store_true')
-parser.add_argument('--include', action='store_true')
-parser.add_argument('--skip')
-parser.add_argument('--single-letters')
-parser.add_argument('--plain', action='store_true')
-parser.add_argument('--link', action='store_true')
-parser.add_argument('--server')
-parser.add_argument('--equation-punctuation')
-parser.add_argument('--textgears')
+parser.add_argument('--disable')
 parser.add_argument('--lt-options')
+parser.add_argument('--single-letters')
+parser.add_argument('--equation-punctuation')
+parser.add_argument('--server')
+parser.add_argument('--textgears')
+parser.add_argument('file', nargs='+')
 cmdline = parser.parse_args()
 
 if cmdline.language is None:
@@ -177,6 +177,7 @@ if cmdline.lt_options:
     s = cmdline.lt_options[1:]
     ltcommand += s.split()
     ltserver_local_cmd += ' ' + s
+ltcommand += ['-']
 
 # on option --include: add included files to work list
 # otherwise: remove duplicates
