@@ -137,6 +137,7 @@ parser.add_argument('--lt-options')
 parser.add_argument('--single-letters')
 parser.add_argument('--equation-punctuation')
 parser.add_argument('--server')
+parser.add_argument('--lt-server-options')
 parser.add_argument('--textgears')
 parser.add_argument('file', nargs='+')
 cmdline = parser.parse_args()
@@ -173,10 +174,10 @@ ltcommand = ltcommand.split() + ['--json', '--encoding', 'utf-8',
 if cmdline.disable:
     ltcommand += ['--disable', cmdline.disable]
 if cmdline.lt_options:
-    s = cmdline.lt_options[1:]
-    ltcommand += s.split()
-    ltserver_local_cmd += ' ' + s
+    ltcommand += cmdline.lt_options[1:].split()
 ltcommand += ['-']
+if cmdline.lt_server_options:
+    ltserver_local_cmd += ' ' + cmdline.lt_server_options[1:]
 
 # on option --include: add included files to work list
 # otherwise: remove duplicates
