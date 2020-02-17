@@ -4,7 +4,13 @@ Work in progress
     - added mode argument to option --server: can use a local LT server
     - new option --textgears: use TextGears server
     - added option --lt-options: passes further options to LT
+    - added option --lt-server-options: further options for local LT server
+    - added some translation between CLI options for --lt-options and
+      HTML request fields, see script variable lt\_option\_map
     - index in HTML report: use red colour for files with problems
+      <br><br>
+    - tidied up script options
+- README.md: updated
 
 Version 1.6.8
 -------------
