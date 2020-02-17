@@ -282,6 +282,18 @@ def run_proofreader(file):
 
     return (tex, plain, charmap, matches)
 
+#   translation between CLI option names and HTML request fields,
+#   see package pyLanguagetool for field names
+#
+lt_option_map = {
+    # (HTML request field): ([list of CLI option names], # of arguments)
+    'disabledRules': (['--disable', '-d'], 1),
+    'enabledRules': (['--enable', '-e'], 1),
+    'enabledOnly': (['--enabledonly', '-eo'], 0),
+    'disabledCategories': (['--disablecategories'], 1),
+    'enabledCategories': (['--enablecategories'], 1),
+}
+
 #   run LT and return element 'matches' from JSON output
 #
 def run_languagetool(plain):
@@ -292,11 +304,22 @@ def run_languagetool(plain):
         else:
             start_local_lt_server()
             server = ltserver_local
-        data = {            # see package pyLanguagetool for field names
-            'text': plain,
-            'language': cmdline.language,
-            'disabledRules': cmdline.disable,
-        }
+        data = {'text': plain, 'language': cmdline.language}
+        if cmdline.disable:
+            data['disabledRules'] = cmdline.disable
+        if cmdline.lt_options:
+            # translate options to entries in HTML request
+            ltopts = cmdline.lt_options[1:].split()
+            for opt in lt_option_map:
+                entry = lt_option_map[opt]
+                if not any(s in ltopts for s in entry[0]):
+                    continue
+                idx = max(ltopts.index(s) for s in entry[0] if s in ltopts)
+                if entry[1]:
+                    data[opt] = ltopts[idx+1] if idx + 1 < len(ltopts) else ''
+                else:
+                    data[opt] = 'true'
+
         data = urllib.parse.urlencode(data).encode(encoding='ascii')
         request = urllib.request.Request(server, data=data)
         try:
