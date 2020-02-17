@@ -115,7 +115,6 @@ import argparse
 import json
 import urllib.parse
 import urllib.request
-import socket
 import time
 
 # parse command line
@@ -323,16 +322,24 @@ def run_languagetool(plain):
 
 #   start local LT server, if none is running
 #
+ltserver_local_running = False
 def start_local_lt_server():
     def check_server():
-        # check for server on port ltserver_local_port
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # check for running server
+        global ltserver_local_running
+        if ltserver_local_running:
+            return True
+
+        data = {'text': '', 'language': 'en'}
+        data = urllib.parse.urlencode(data).encode(encoding='ascii')
+        request = urllib.request.Request(ltserver_local, data=data)
         try:
-            s.connect(('localhost', ltserver_local_port))
+            reply = urllib.request.urlopen(request)
+            reply.close()
+            ltserver_local_running = True
+            return True
         except:
             return False
-        s.close()
-        return True
 
     if check_server():
         return
@@ -347,8 +354,8 @@ def start_local_lt_server():
     sys.stderr.write('=== starting local LT server at "' + ltdirectory
                         + '":\n=== ' + ltserver_local_cmd + ' ')
     sys.stderr.flush()
-    for x in range(50):
-        time.sleep(0.2)
+    for x in range(20):
+        time.sleep(0.5)
         sys.stderr.write('.') and sys.stderr.flush()
         if check_server():
             sys.stderr.write('\n') and sys.stderr.flush()
