@@ -42,11 +42,14 @@ ltserver = 'https://languagetool.org/api/v2/check'
 
 # on option --server my: use local LT server
 #
-ltserver_local_port = 8081
-ltserver_local = 'http://localhost:' + str(ltserver_local_port) + '/v2/check'
+ltserver_local = 'http://localhost:8081/v2/check'
 ltserver_local_cmd = ('java -cp'
             + ' languagetool-server.jar org.languagetool.server.HTTPServer'
-            + ' --port ' + str(ltserver_local_port))
+            + ' --port 8081')
+
+# config file
+#
+config_file = '.t2t-shell'
 
 # default option values
 #
@@ -140,7 +143,16 @@ parser.add_argument('--server')
 parser.add_argument('--lt-server-options')
 parser.add_argument('--textgears')
 parser.add_argument('file', nargs='+')
-cmdline = parser.parse_args()
+
+try:
+    f = open(config_file)
+    config = f.read().splitlines()
+    f.close()
+    # split a line only once --> option argument may contain space
+    config = sum((lin.strip().split(maxsplit=1) for lin in config), [])
+except:
+    config = []
+cmdline = parser.parse_args(config + sys.argv[1:])
 
 if cmdline.language is None:
     cmdline.language = default_option_language
