@@ -149,8 +149,8 @@ of a real LaTeX system.
 Apart from many minor shortcomings, a list of major incompatibilities
 must contain at least the following points.
 
-- Macro arguments, if any, have to be delimited by {} braces or \[\] brackets
-  in text mode.
+- Macro arguments, which shall be processed somehow, have to be delimited
+  by {} braces or \[\] brackets in text mode.
   This is perhaps the most severe restriction.
   Currently, only macros for text-mode accents form an exception.
 - Mathematical material is represented by simple replacements.
@@ -687,6 +687,8 @@ python3 shell.py [--html] [--link] [--context number]
                  latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.
+If present, options are also read from a configuration file designated
+by script variable config\_file (one option per line, possibly with argument).
 Default option values are set at the Python script beginning.
 - option `--html`:<br>
   generate HTML report; see below for further details
