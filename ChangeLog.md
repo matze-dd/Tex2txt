@@ -1,5 +1,5 @@
-Work in progress
-----------------
+Version 1.6.9
+-------------
 - shell.py
     - added mode argument to option --server: can use a local LT server
     - new option --textgears: use TextGears server
@@ -7,6 +7,7 @@ Work in progress
     - added option --lt-server-options: further options for local LT server
     - added some translation between CLI options for --lt-options and
       HTML request fields, see script variable lt\_option\_map
+    - added config file, name in script variable config\_file
     - index in HTML report: use red colour for files with problems
       <br><br>
     - tidied up script options
