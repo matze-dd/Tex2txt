@@ -135,7 +135,7 @@ parms.system_macros = lambda: (
     # \qquad: treated at LAB:SPACE, parms.mathspace
     # \quad: treated at LAB:SPACE, parms.mathspace
     Macro('ref', 'A', '13'),
-    Macro('(?:re)?newcommand\*?', 'AOOA'),
+    Macro(r'(?:re)?newcommand\*?', 'AOOA'),
     Macro('texorpdfstring', 'AA', r'\1'),
     # \textasciicircum: defined below
     # \textasciitilde: defined below
