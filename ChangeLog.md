@@ -1,3 +1,7 @@
+Work in progress
+----------------
+- tex2txt.py: fixed bug in RE for macro \\(re)newcommand
+
 Version 1.6.9
 -------------
 - shell.py
