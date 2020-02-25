@@ -19,5 +19,6 @@ redx colour.
 opts = tex2txt.Options(lang='en')
 plain, nums = tex2txt.tex2txt(latex, opts)
 
-assert plain == res
+def test_plain():
+    assert plain == res
 
