@@ -1,6 +1,19 @@
 Work in progress
 ----------------
 - tex2txt.py: fixed bug in RE for macro \\(re)newcommand
+  (problematic escape sequence detected by pytest)
+- added tests for tex2txt.py
+    - test\_1.py:
+      introductory example from README.md
+    - test\_comments.py:
+      treatment of comments and removal of blank lines from macros
+    - test\_equations.py:
+      equation replacements in text from Example.md
+    - test\_macros.py:
+      detection of macro arguments, treatment of optional arguments
+      for \\cite, \\begin{proof}
+    - test\_verbatim.py:
+      \\verb macro and verbatim environment
 
 Version 1.6.9
 -------------
