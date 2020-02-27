@@ -10,11 +10,15 @@ options = tex2txt.Options(lang='en', char=True)
 
 def test_verb():
 
-    latex = '\\verb?x\\y?\\label{z}?'
+    latex = '\\verb?%x\\y?\\label{z}?'
     plain, nums = tex2txt.tex2txt(latex, options)
-    assert plain == 'x\\y?'
+    assert plain == '%x\\y?'
+
+
+def test_verbatim():
 
     # extra blank lines: see LAB:VERBATIM in tex2txt.py
-    latex = '\\begin{verbatim}\\verb?\\?\n\\end{verbatim}'
+    latex = '\\begin{verbatim}\\verb?%\\x?\n\\end{verbatim}'
     plain, nums = tex2txt.tex2txt(latex, options)
-    assert plain == '\n\n\\verb?\\?\n\n'
+    assert plain == '\n\n\\verb?%\\x?\n\n'
+
