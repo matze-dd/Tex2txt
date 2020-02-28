@@ -4,6 +4,7 @@
 #   - test of detection of macro arguments
 #   - test of optional parameters for \cite, \begin{proof}
 #   - test of optional parameter for \footnotemark
+#   - treatment of unknown macros
 #
 
 import tex2txt
@@ -75,4 +76,20 @@ def test_footnotemark():
     latex = '\\footnotemark\n\n[1]'
     plain, nums = tex2txt.tex2txt(latex, options)
     assert plain == '\n[1]'
+
+
+def test_unknown_macro():
+
+    latex = 'a\\xxx b'
+    plain, nums = tex2txt.tex2txt(latex, options)
+    assert plain == 'ab'
+
+    latex = 'a\\xxx \n{b} c'
+    plain, nums = tex2txt.tex2txt(latex, options)
+    assert plain == 'ab c'
+
+
+    latex = 'a\\xxx\n\n{b} c'
+    plain, nums = tex2txt.tex2txt(latex, options)
+    assert plain == 'a\n\nb c'
 
