@@ -34,9 +34,11 @@ def test_shell():
     out_html = out.stdout.decode('utf-8')
 
     # stop server
-    requ = urllib.request.Request(server_stop, 'x'.encode('ascii'))
+    data = 'x'.encode('ascii')
+    requ = urllib.request.Request(server_stop, data)
     try:
-        urllib.request.urlopen(requ)
+        f = urllib.request.urlopen(requ)
+        f.close()
     except:
         pass
 
