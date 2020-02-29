@@ -22,7 +22,7 @@ def test_shell():
 
     subprocess.Popen(server_cmd.split(), stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL)
-    time.sleep(20)
+    time.sleep(10)
 
     out = subprocess.run(shell_cmd.split(), stdout=subprocess.PIPE,
                         stderr=subprocess.DEVNULL)
