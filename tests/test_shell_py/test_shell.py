@@ -7,19 +7,14 @@ import subprocess
 import time
 import urllib.request
 
-server_cmd = 'python tests/test_shell_py/lt-server.py'
-shell_cmd = 'python shell.py --server my tests/test_shell_py/latex.tex'
+directory = 'tests/test_shell_py/'
+file = directory + 'latex'
 
+server_cmd = 'python ' + directory + 'lt-server.py'
+shell_cmd = 'python shell.py --server my ' + file + '.tex'
+shell_cmd_html = shell_cmd + ' --html'
 server_stop = 'http://localhost:8081/stop'
 
-err_t = r"""=== tests/test_shell_py/latex.tex ===
-1.) Line 3, column 6, Rule ID: None
-Message: Error
-Suggestion: is
-This isx a test. 
-     ^^^
-
-"""
 
 def test_shell():
 
@@ -31,7 +26,12 @@ def test_shell():
     # run shell.py
     out = subprocess.run(shell_cmd.split(), stdout=subprocess.PIPE,
                         stderr=subprocess.DEVNULL)
-    err = out.stdout.decode('utf-8')
+    out_txt = out.stdout.decode('utf-8')
+
+    # run shell.py --html
+    out = subprocess.run(shell_cmd_html.split(), stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL)
+    out_html = out.stdout.decode('utf-8')
 
     # stop server
     requ = urllib.request.Request(server_stop, 'x'.encode('ascii'))
@@ -40,5 +40,13 @@ def test_shell():
     except:
         pass
 
-    assert err == err_t
+    f = open(file + '.txt')
+    expect_txt = f.read()
+    f.close()
+    f = open(file + '.html')
+    expect_html = f.read()
+    f.close()
+
+    assert out_txt == expect_txt
+    assert out_html == expect_html
 
