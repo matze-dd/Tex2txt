@@ -34,5 +34,5 @@ class Handler(BaseHTTPRequestHandler):
             exit()
 
 httpd = HTTPServer((addr, port), Handler)
-httpd.serve_forever(0.1)
+httpd.serve_forever()
 
