@@ -5,6 +5,7 @@
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
+import sys
 
 addr = 'localhost'
 port = 8081
@@ -31,7 +32,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(message).encode('ascii'))
         if self.path == stop:
-            exit()
+            sys.exit()
 
 httpd = HTTPServer((addr, port), Handler)
 httpd.serve_forever()
