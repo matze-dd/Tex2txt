@@ -524,7 +524,7 @@ def raise_error(kind, msg, detail=None, xit=None):
         err += strip_internal_marks(detail) + '\n'
     sys.stderr.write(err)
     if xit is not None:
-        exit(xit)
+        sys.exit(xit)
 def strip_internal_marks(s):
     # will be redefined below
     return s
