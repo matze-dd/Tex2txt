@@ -607,7 +607,7 @@ if not cmdline.html:
     for file in cmdline.file:
         (tex, plain, charmap, matches) = run_proofreader(file)
         output_text_report(tex, plain, charmap, matches, file)
-    exit()
+    sys.exit()
 
 
 #####################################################################

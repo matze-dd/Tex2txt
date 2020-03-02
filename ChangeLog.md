@@ -4,6 +4,7 @@ Work in progress
   (problematic escape sequence detected by pytest)
 - added tests for tex2txt.py
 - added test for shell.py
+- use sys.exit() instead of exit() in Python scripts
 
 Version 1.6.9
 -------------
