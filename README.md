@@ -60,6 +60,7 @@ script or module for the extraction of plain text from
 [LaTeX](https://www.latex-project.org) documents.
 In some sense, it relates to projects like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
+[Pandoc](https://github.com/jgm/pandoc),
 [plasTeX](https://github.com/tiarno/plastex),
 [pylatexenc](https://github.com/phfaist/pylatexenc),
 [TeXtidote](https://github.com/sylvainhalle/textidote), and
@@ -806,7 +807,7 @@ In case of multiple input files, the HTML report starts with an index.
 A simpler Python application is [shell2.py](shell2.py).
 It resembles Bash script [shell2.sh](shell2.sh)
 from section [Simple scripts](#simple-scripts),
-but it accepts multiple inputs and does not create temporary files.
+but it accepts multiple inputs and does not create auxiliary files.
 
 [Back to top](#tex2txt-a-flexible-latex-filter)
 
