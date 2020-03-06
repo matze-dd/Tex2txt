@@ -1,11 +1,11 @@
-Work in progress
-----------------
+Version 1.7.0
+-------------
 - tex2txt.py: fixed bug in RE for macro \\(re)newcommand
   (problematic escape sequence detected by pytest)
 - shell.py
     - new option --list-unknown: show unknown macros and environments
     - new option variant '--server stop': stop a local LT server
-      (currently only works under Linux)
+      (currently only works under Linux and Cygwin)
 - added tests
     - for tex2txt.py
     - a simple test for shell.py
