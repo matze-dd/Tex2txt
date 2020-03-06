@@ -756,7 +756,8 @@ Default option values are set at the Python script beginning.
   in script tex2txt.py
 - option `--server mode`:<br>
   use LT's Web server (mode is 'lt') or a local LT server (mode is 'my');
-  stop the local server (mode is 'stop', currently only works under Linux)
+  stop the local server (mode is 'stop', currently only works under Linux
+  and Cygwin)
   - LT's server: address set in script variable 'ltserver';
     for conditions and restrictions, please refer to
     [http://wiki.languagetool.org/public-http-api](http://wiki.languagetool.org/public-http-api)
