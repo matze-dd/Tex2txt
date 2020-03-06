@@ -119,6 +119,7 @@ import json
 import urllib.parse
 import urllib.request
 import time
+import signal
 
 # parse command line
 #
@@ -168,8 +169,8 @@ if cmdline.context is None:
 if cmdline.context < 0:
     # huge context: display whole text
     cmdline.context = int(1e8)
-if cmdline.server is not None and cmdline.server not in ('lt', 'my'):
-    tex2txt.fatal('mode for --server has to be one of lt, my')
+if cmdline.server is not None and cmdline.server not in ('lt', 'my', 'stop'):
+    tex2txt.fatal('mode for --server has to be one of lt, my, stop')
 if cmdline.plain and (cmdline.include or cmdline.replace):
     tex2txt.fatal('cannot handle --plain together with --include or --replace')
 if cmdline.single_letters and cmdline.single_letters.endswith('||'):
@@ -179,6 +180,25 @@ if cmdline.replace:
                                                 encoding=cmdline.encoding)
 if cmdline.define:
     cmdline.define = tex2txt.read_definitions(cmdline.define, encoding='utf-8')
+
+# only stop local LT server?
+#
+if cmdline.server == 'stop':
+    ps_cmd = 'ps -C ' + ltserver_local_cmd.split()[0] + ' -o pid= -o cmd='
+    try:
+        out = subprocess.run(ps_cmd.split(), stdout=subprocess.PIPE)
+        out = out.stdout.decode('utf-8')
+    except:
+        out = ''
+    for s in out.splitlines():
+        if ltserver_local_cmd not in s:
+            continue
+        try:
+            os.kill(int(s.split()[0]), signal.SIGINT)
+        except:
+            tex2txt.fatal('could not kill LT server process')
+        sys.exit()
+    tex2txt.fatal('could not find LT server "' + ltserver_local_cmd + '"')
 
 # complement LT options
 #
