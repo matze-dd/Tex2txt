@@ -60,7 +60,7 @@ script or module for the extraction of plain text from
 [LaTeX](https://www.latex-project.org) documents.
 In some sense, it relates to projects like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
-[Pandoc](https://github.com/jgm/pandoc),
+[pandoc](https://github.com/jgm/pandoc),
 [plasTeX](https://github.com/tiarno/plastex),
 [pylatexenc](https://github.com/phfaist/pylatexenc),
 [TeXtidote](https://github.com/sylvainhalle/textidote), and
@@ -678,7 +678,7 @@ Both LT and the script will print some progress messages to stderr.
 They can be suppressed with `python3 shell.py ... 2>/dev/null`.
 ```
 python3 shell.py [--html] [--link] [--context number]
-                 [--include] [--skip regex] [--plain]
+                 [--include] [--skip regex] [--plain] [--list-unknown]
                  [--language lang] [--t2t-lang lang] [--encoding ienc]
                  [--replace file] [--define file] [--extract macros]
                  [--disable rules] [--lt-options opts]
@@ -708,6 +708,9 @@ Default option values are set at the Python script beginning.
 - option `--plain`:<br>
   assume plain-text input: no evaluation of LaTeX syntax;
   cannot be used together with option --include or --replace
+- option `--list-unknown`:<br>
+  only print list of unknown macros and environments, compare option
+  --unkn in section [Command line](#command-line)
 - option `--language lang`:<br>
   language code as expected by LT, default: 'en-GB';
   first two letters are passed to tex2txt();
@@ -752,18 +755,19 @@ Default option values are set at the Python script beginning.
   corresponding to variables parms.display\_math and parms.inline\_math
   in script tex2txt.py
 - option `--server mode`:<br>
-  use LT's Web server (mode is 'lt') or a local LT server (mode is 'my')
+  use LT's Web server (mode is 'lt') or a local LT server (mode is 'my');
+  stop the local server (mode is 'stop', currently only works under Linux)
   - LT's server: address set in script variable 'ltserver';
     for conditions and restrictions, please refer to
     [http://wiki.languagetool.org/public-http-api](http://wiki.languagetool.org/public-http-api)
   - local server: if not yet running, then start it according to script
     variable 'ltserver\_local\_cmd';
-    will not be stopped at the end;
     additional server options can be passed with --lt-server-options;
     see also
     [http://wiki.languagetool.org/http-server](http://wiki.languagetool.org/http-server);
     may be faster than command-line tool used otherwise, especially for large
-    number of LaTeX files
+    number of LaTeX files;
+    server will not be stopped at the end (use '--server stop')
 - option `--lt-server-options opts`:<br>
   pass additional options when starting a local LT server;
   syntax as for --lt-options
