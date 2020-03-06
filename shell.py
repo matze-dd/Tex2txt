@@ -119,6 +119,7 @@ import json
 import urllib.parse
 import urllib.request
 import time
+import signal
 
 # parse command line
 #
@@ -129,6 +130,7 @@ parser.add_argument('--context', type=int)
 parser.add_argument('--include', action='store_true')
 parser.add_argument('--skip')
 parser.add_argument('--plain', action='store_true')
+parser.add_argument('--list-unknown', action='store_true')
 parser.add_argument('--language')
 parser.add_argument('--t2t-lang')
 parser.add_argument('--encoding')
@@ -167,8 +169,8 @@ if cmdline.context is None:
 if cmdline.context < 0:
     # huge context: display whole text
     cmdline.context = int(1e8)
-if cmdline.server is not None and cmdline.server not in ('lt', 'my'):
-    tex2txt.fatal('mode for --server has to be one of lt, my')
+if cmdline.server is not None and cmdline.server not in ('lt', 'my', 'stop'):
+    tex2txt.fatal('mode for --server has to be one of lt, my, stop')
 if cmdline.plain and (cmdline.include or cmdline.replace):
     tex2txt.fatal('cannot handle --plain together with --include or --replace')
 if cmdline.single_letters and cmdline.single_letters.endswith('||'):
@@ -178,6 +180,25 @@ if cmdline.replace:
                                                 encoding=cmdline.encoding)
 if cmdline.define:
     cmdline.define = tex2txt.read_definitions(cmdline.define, encoding='utf-8')
+
+# only stop local LT server?
+#
+if cmdline.server == 'stop':
+    ps_cmd = 'ps -C ' + ltserver_local_cmd.split()[0] + ' -o pid= -o cmd='
+    try:
+        out = subprocess.run(ps_cmd.split(), stdout=subprocess.PIPE)
+        out = out.stdout.decode('utf-8')
+    except:
+        out = ''
+    for s in out.splitlines():
+        if ltserver_local_cmd not in s:
+            continue
+        try:
+            os.kill(int(s.split()[0]), signal.SIGINT)
+        except:
+            tex2txt.fatal('could not kill LT server process')
+        sys.exit()
+    tex2txt.fatal('could not find LT server "' + ltserver_local_cmd + '"')
 
 # complement LT options
 #
@@ -232,7 +253,7 @@ if cmdline.include:
 #
 options = tex2txt.Options(char=True, repl=cmdline.replace,
                             defs=cmdline.define, lang=cmdline.t2t_lang,
-                            extr=cmdline.extract)
+                            extr=cmdline.extract, unkn=cmdline.list_unknown)
 
 # helpers for robust JSON evaluation
 #
@@ -269,6 +290,9 @@ def run_proofreader(file):
         (plain, charmap) = (tex, list(range(1, len(tex) + 1)))
     else:
         (plain, charmap) = tex2txt.tex2txt(tex, options)
+        if cmdline.list_unknown:
+            # only look for unknown macros and environemnts
+            return (tex, plain, charmap, [])
 
     # here, we could dispatch to other tools, see for instance
     #   - https://textgears.com/api
@@ -601,12 +625,24 @@ def output_text_report(tex, plain, charmap, matches, file):
     sys.stdout.flush()  # in case redirected to file
 
 
-if not cmdline.html:
+#   on option --list-unknown
+#
+def output_list_unknown(unkn, file):
+    if not unkn.split():
+        return
+    print('=== ' + file + ' ===')
+    print(unkn)
+
+
+if not cmdline.html or cmdline.list_unknown:
     if cmdline.server == 'lt':
         sys.stderr.write(msg_LT_server_txt)
     for file in cmdline.file:
         (tex, plain, charmap, matches) = run_proofreader(file)
-        output_text_report(tex, plain, charmap, matches, file)
+        if cmdline.list_unknown:
+            output_list_unknown(plain, file)
+        else:
+            output_text_report(tex, plain, charmap, matches, file)
     sys.exit()
 
 
