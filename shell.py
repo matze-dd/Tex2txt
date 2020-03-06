@@ -129,6 +129,7 @@ parser.add_argument('--context', type=int)
 parser.add_argument('--include', action='store_true')
 parser.add_argument('--skip')
 parser.add_argument('--plain', action='store_true')
+parser.add_argument('--list-unknown', action='store_true')
 parser.add_argument('--language')
 parser.add_argument('--t2t-lang')
 parser.add_argument('--encoding')
@@ -232,7 +233,7 @@ if cmdline.include:
 #
 options = tex2txt.Options(char=True, repl=cmdline.replace,
                             defs=cmdline.define, lang=cmdline.t2t_lang,
-                            extr=cmdline.extract)
+                            extr=cmdline.extract, unkn=cmdline.list_unknown)
 
 # helpers for robust JSON evaluation
 #
@@ -269,6 +270,9 @@ def run_proofreader(file):
         (plain, charmap) = (tex, list(range(1, len(tex) + 1)))
     else:
         (plain, charmap) = tex2txt.tex2txt(tex, options)
+        if cmdline.list_unknown:
+            # only look for unknown macros and environemnts
+            return (tex, plain, charmap, [])
 
     # here, we could dispatch to other tools, see for instance
     #   - https://textgears.com/api
@@ -601,12 +605,24 @@ def output_text_report(tex, plain, charmap, matches, file):
     sys.stdout.flush()  # in case redirected to file
 
 
-if not cmdline.html:
+#   on option --list-unknown
+#
+def output_list_unknown(unkn, file):
+    if not unkn.split():
+        return
+    print('=== ' + file + ' ===')
+    print(unkn)
+
+
+if not cmdline.html or cmdline.list_unknown:
     if cmdline.server == 'lt':
         sys.stderr.write(msg_LT_server_txt)
     for file in cmdline.file:
         (tex, plain, charmap, matches) = run_proofreader(file)
-        output_text_report(tex, plain, charmap, matches, file)
+        if cmdline.list_unknown:
+            output_list_unknown(plain, file)
+        else:
+            output_text_report(tex, plain, charmap, matches, file)
     sys.exit()
 
 
