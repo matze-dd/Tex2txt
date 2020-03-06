@@ -184,21 +184,24 @@ if cmdline.define:
 # only stop local LT server?
 #
 if cmdline.server == 'stop':
-    ps_cmd = 'ps -C ' + ltserver_local_cmd.split()[0] + ' -o pid= -o cmd='
+    done = False
     try:
-        out = subprocess.run(ps_cmd.split(), stdout=subprocess.PIPE)
-        out = out.stdout.decode('utf-8')
+        for pid in [s for s in os.listdir('/proc') if s.isdecimal()]:
+            with open('/proc/' + pid + '/cmdline') as f:
+                args = ' '.join(f.read().split('\000')[1:])
+            # for Cygwin with Window's Java: do not check image name
+            if ' '.join(ltserver_local_cmd.split()[1:]) not in args:
+                continue
+            os.kill(int(pid), signal.SIGINT)
+            done = True
+            break
     except:
-        out = ''
-    for s in out.splitlines():
-        if ltserver_local_cmd not in s:
-            continue
-        try:
-            os.kill(int(s.split()[0]), signal.SIGINT)
-        except:
-            tex2txt.fatal('could not kill LT server process')
+        pass
+    if done:
+        sys.stderr.write('=== done: killed local LT server "'
+                                    + ltserver_local_cmd + '"\n')
         sys.exit()
-    tex2txt.fatal('could not find LT server "' + ltserver_local_cmd + '"')
+    tex2txt.fatal('could not kill LT server "' + ltserver_local_cmd + '"')
 
 # complement LT options
 #
