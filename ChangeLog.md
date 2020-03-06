@@ -2,9 +2,15 @@ Work in progress
 ----------------
 - tex2txt.py: fixed bug in RE for macro \\(re)newcommand
   (problematic escape sequence detected by pytest)
-- added tests for tex2txt.py
-- added test for shell.py
-- use sys.exit() instead of exit() in Python scripts
+- shell.py
+    - new option --list-unknown: show unknown macros and environments
+    - new option variant '--server stop': stop a local LT server
+      (currently only works under Linux)
+- added tests
+    - for tex2txt.py
+    - a simple test for shell.py
+- all Python scripts: use sys.exit() instead of exit()
+- README.md: updated, included reference to pandoc
 
 Version 1.6.9
 -------------
