@@ -824,6 +824,8 @@ high flexibility from the Python environment.
 A stricter approach could be based on software like
 [plasTeX](https://github.com/tiarno/plastex)
 or [pylatexenc](https://github.com/phfaist/pylatexenc).
+Another attempt has been started with
+[YaLafi](https://github.com/matze-dd/YaLafi).
 
 In order to parse nested structures, some regular expressions are constructed
 by iteration.
