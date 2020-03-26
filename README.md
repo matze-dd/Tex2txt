@@ -11,6 +11,9 @@
 [Application as Python module](#application-as-python-module)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
 
+**\*\* For an alternative implementation, please note the follow-on project
+[<ins>YaLafi</ins>](https://github.com/matze-dd/YaLafi) \*\***
+
 **Summary and example.**
 This Python program extracts plain text from LaTeX documents.
 Due to the following characteristics, it may be integrated with a
