@@ -11,8 +11,9 @@
 [Application as Python module](#application-as-python-module)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
 
-**\*\* For an alternative implementation, please note the follow-on project
-[<ins>YaLafi</ins>](https://github.com/matze-dd/YaLafi) \*\***
+**\*\*\* For an alternative implementation, please note the follow-on project
+[<ins>YaLafi</ins>](https://github.com/matze-dd/YaLafi), \*\*\***<br>
+**\*\*\* editor Vim can be used via plug-in vim-grammarous \*\*\***
 
 **Summary and example.**
 This Python program extracts plain text from LaTeX documents.
