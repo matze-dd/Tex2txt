@@ -14,11 +14,12 @@
 **\*\*\***<br>
 **\*\*\*&emsp;Please note the follow-on project
         [<ins>YaLafi</ins>](https://github.com/matze-dd/YaLafi):**<br>
-**\*\*\*&emsp;- Editor Emacs can be used via plug-in vim-grammarous**<br>
-**\*\*\*&emsp;- Editor Vim can be used via plug-in Emacs-langtool**<br>
+**\*\*\*&emsp;- Editor Emacs can be used via plug-in Emacs-langtool**<br>
+**\*\*\*&emsp;- Editor Vim can be used via plug-in Vim-grammarous**<br>
 **\*\*\*&emsp;- Emulation of LanguageTool server with integrated LaTeX
         filter**<br>
-**\*\*\*&emsp;- Filter implementation based on scanner / parser**<br>
+**\*\*\*&emsp;- Filter implementation more flexible,
+        based on scanner / parser**<br>
 **\*\*\***
 
 **Summary and example.**
