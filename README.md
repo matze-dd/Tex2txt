@@ -1,25 +1,24 @@
-# Tex2txt: a flexible LaTeX filter
-[General description](#general-description)&nbsp;\|
+
+# YaLafi: Yet another LaTeX filter
+
+[Installation](#installation)&nbsp;\|
+[Example application](#example-application)&nbsp;\|
+[Interface to Vim](#interface-to-vim)&nbsp;\|
+[Interface to Emacs](#interface-to-emacs)&nbsp;\|
+[Filter actions](#filter-actions)&nbsp;\|
 [Principal limitations](#principal-limitations)&nbsp;\|
-[Selected actions](#selected-actions)&nbsp;\|
-[Command line](#command-line)&nbsp;\|
 [Usage under Windows](#usage-under-windows)&nbsp;\|
-[Tool integration](#tool-integration)&nbsp;\|
-[Encoding problems](#encoding-problems)&nbsp;\|
-[Declaration of LaTeX macros](#declaration-of-latex-macros)&nbsp;\|
+[Inclusion of own macros](#inclusion-of-own-macros)&nbsp;\|
+[Package interface](#package-interface)&nbsp;\|
 [Handling of displayed equations](#handling-of-displayed-equations)&nbsp;\|
-[Application as Python module](#application-as-python-module)&nbsp;\|
+[Differences to Tex2txt](#differences-to-tex2txt)&nbsp;\|
 [Remarks on implementation](#remarks-on-implementation)
 
-**\*\*\* For an alternative implementation, please note the follow-on project
-[<ins>YaLafi</ins>](https://github.com/matze-dd/YaLafi), \*\*\***<br>
-**\*\*\* editor Vim can be used via plug-in vim-grammarous \*\*\***
+This Python package extracts plain text from LaTeX documents.
+The software may be integrated with a proofreading tool and an editor.
+It provides
 
-**Summary and example.**
-This Python program extracts plain text from LaTeX documents.
-Due to the following characteristics, it may be integrated with a
-proofreading software:
-- tracking of line numbers or character positions during text manipulations,
+- mapping of character positions between LaTeX and plain text,
 - simple inclusion of own LaTeX macros and environments with tailored
   treatment,
 - careful conservation of text flows,
@@ -33,8 +32,8 @@ Only few people\footnote{We use
 is lazy.
 ```
 will lead to the subsequent output from example application script
-[shell.py](shell.py) described in section
-[Application examples](#application-examples) ahead.
+[yalafi/shell/shell.py](yalafi/shell/shell.py) described in section
+[Example application](#example-application) ahead.
 The script invokes [LanguageTool](https://www.languagetool.org)
 as proofreading software, using a local installation or the Web server
 hosted by LanguageTool.
@@ -51,93 +50,37 @@ Only few people is lazy.    We use redx colour.
                 ^^
 ```
 <a name="example-html-report"></a>
-Run with option --html, the script produces an HTML report:
+The script can also emulate a LanguageTool server with integrated LaTeX filter
+(compare section [Interface to Emacs](#interface-to-emacs)),
+and it produces an HTML report when run with option '--output html':
 
 ![HTML report](shell.png)
 
-[Back to top](#tex2txt-a-flexible-latex-filter)
-
-## General description
-[Tex2txt.py](tex2txt.py) is a modest, self-contained
-[Python](https://www.python.org)
-script or module for the extraction of plain text from
-[LaTeX](https://www.latex-project.org) documents.
-In some sense, it relates to projects like
+In some sense, this project relates to software like
 [OpenDetex](https://github.com/pkubowicz/opendetex),
 [pandoc](https://github.com/jgm/pandoc),
 [plasTeX](https://github.com/tiarno/plastex),
 [pylatexenc](https://github.com/phfaist/pylatexenc),
 [TeXtidote](https://github.com/sylvainhalle/textidote), and
 [tex2txt](http://hackage.haskell.org/package/tex2txt).
-For the naming conflict with the latter tool, we want to apologise.
 
-While virtually no text should be dropped by the filter,
-our aim is to provoke as few as possible “false” warnings when the result
-is fed into a proofreading software.
-The goal especially applies to documents containing displayed equations.
-Problems with interpunction and case sensitivity would arise, if
-equation environments were simply removed or replaced by fixed text.
-Altogether, the script can help to create a compact report from language
-examination of a single file or a complete document tree.
-Simple and more complete applications are addressed in sections
-[Tool integration](#tool-integration) and
-[Application as Python module](#application-as-python-module) below.
+The tool builds on results from [Tex2txt](https://github.com/matze-dd/Tex2txt),
+but differs in the internal processing method.
+Instead of using recursive regular expressions, a simple tokeniser
+and a small machinery for macro expansion are implemented; see sections
+[Differences to Tex2txt](#differences-to-tex2txt) and
+[Remarks on implementation](#remarks-on-implementation).
 
-For ease of problem localisation, we implement a mechanism that tracks
-line number changes during the text manipulations.
-Unnecessary creation of empty lines therefore can be avoided, sentences
-and paragraphs remain intact.
-This is demonstrated in file [Example.md](Example.md).
-Reconstruction of both line and column numbers is possible with script
-option --char, which activates position tracking for each single character
-of input.
-File [Example2.md](Example2.md) shows such an application.
-
-The first part of the Python script gathers LaTeX macros and environments
-with tailored treatment, which is shortly described
-in section [Declaration of LaTeX macros](#declaration-of-latex-macros).
-Some standard macros and environments are already included, but very probably
-the collections have to be complemented.
-With option --defs, definitions also can be extended by an additional file.
-
-Unknown LaTeX macros and environments are silently ignored while keeping their
-arguments and bodies, respectively; script option --unkn will list them.
-Declared macros can be used recursively.
-As in TeX, macro expansion consumes white space (possibly including a line
-break) between macro name and next non-space character within the current
-paragraph.
-
-Extra text flows like footnotes are normally appended to the end of the
-main text flow, each one separated by blank lines.
-The introductory summary above shows an example.
-Activation of this behaviour is demonstrated for macro \\caption{...}
-in section [Declaration of LaTeX macros](#declaration-of-latex-macros).
-Script option --extr provides another possibility that is also useful for
-the extraction of foreign-language text.
-
-An optional speciality is some parsing of LaTeX environments for displayed
-equations.
-Therefore, one may check embedded \\text{...} parts (macro from LaTeX package
-amsmath), and trailing interpunction of these equations
-can be taken into account during language check of the main text flow.
-Further details are given in section
-[Handling of displayed equations](#handling-of-displayed-equations).
-An example is shown in file [Example.md](Example.md), operation is summarised
-in the script at label LAB:EQUATIONS.
-
-Interface and examples for application as Python module are described in
-section [Application as Python module](#application-as-python-module) below.
-
-The Python script may be seen as an exercise in application of regular
-expressions.
-Its internal design could be more orderly.
-Currently, it is mainly structured by comments, and it mixes definitions of
-variables and functions with statements that actually perform text replacement
-operations.
-Moreover, it uses many global variables without clear naming convention,
-and some of them are even manipulated by the central module function.
-In section [Remarks on implementation](#remarks-on-implementation),
-some general techniques and problems are addressed.
+Beside the interface from section [Package interface](#package-interface),
+application Python scripts like [yalafi/shell/shell.py](yalafi/shell/shell.py)
+from section [Example application](#example-application)
+can access an interface emulating tex2txt.py from repository Tex2txt by
+`from yalafi import tex2txt`.
+Direct usage as script is almost the same as for Tex2txt/tex2txt.py, compare
+[Tex2txt/README.md](https://github.com/matze-dd/Tex2txt#command-line).
+Please note the difference for option --defs described in section
+[Differences to Tex2txt](#differences-to-tex2txt).
+Invocation as filter: `python -m yalafi [options] [files]`
 
 If you use this tool and encounter a bug or have other suggestions
 for improvement, please leave a note under category [Issues](../../issues),
@@ -146,557 +89,80 @@ Many thanks in advance.
 
 Happy TeXing!
 
-[Back to top](#tex2txt-a-flexible-latex-filter)
+[Back to top](#yalafi-yet-another-latex-filter)
 
-## Principal limitations
-The implemented parsing mechanism can only roughly approximate the behaviour
-of a real LaTeX system.
-Apart from many minor shortcomings, a list of major incompatibilities
-must contain at least the following points.
 
-- Macro arguments, which shall be processed somehow, have to be delimited
-  by {} braces or \[\] brackets in text mode.
-  This is perhaps the most severe restriction.
-  Currently, only macros for text-mode accents form an exception.
-- Mathematical material is represented by simple replacements.
-- Parsing does not cross file boundaries. Tracking of file inclusions is
-  possible though.
-- Macros depending on (spacing) lengths may be treated incorrectly.
-- Macro definitions in the text are ignored.
-- Macros are not expanded in the order they appear in the text.
-  We have tried to compensate related problems by several hacks.
+## Installation
 
-Please compare section
-[Remarks on implementation](#remarks-on-implementation), too.
+Choose one of the following possibilities.
 
-[Back to top](#tex2txt-a-flexible-latex-filter)
+- Use `python -m pip install [--user] yalafi`.
+  This installs the last version uploaded to [PyPI](https://www.pypi.org).
+  Module pip itself can be installed with `python -m ensurepip`.
+- Place yalafi/ or a link to it in the current directory.
+- Place yalafi/ in a standard directory like `/usr/lib/python3.?/`
+  or `~/.local/lib/python3.?/site-packages/`.
+- Place yalafi/ somewhere else and set environment variable PYTHONPATH
+  accordingly.
 
-## Selected actions
-Here is a list of the most important script operations.
+[Back to top](#yalafi-yet-another-latex-filter)
 
-- flexible treatment of own macros with arbitrary LaTeX-style arguments;
-  see section [Declaration of LaTeX macros](#declaration-of-latex-macros),
-  and label LAB:MACROS in script
-- “undeclared” macros are silently ignored, keeping their arguments
-  with enclosing \{\} braces removed
-- frames \\begin\{...\} and \\end\{...\} of environments are deleted;
-  tailored behaviour for environment types listed in script:
-  fixed environment replacement or removal, treatment of \\begin arguments
-- text in heading macros as \\section\{...\} is extracted with
-  added interpunction (suppresses false positives from LanguageTool)
-- suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
-- inline maths $...$ and \\(...\\) is replaced with text from rotating
-  collection in variable parms.inline\_math in script, appending trailing
-  interpunction from variable parms.mathpunct
-- equation environments are resolved in a way suitable for check of
-  interpunction and spacing, argument of \\text\{...\} is included into output
-  text; \\\[...\\\] and $$...$$ are same as environment equation\*;
-  see the section
-  [Handling of displayed equations](#handling-of-displayed-equations),
-  file [Example.md](Example.md), and LAB:EQUATIONS in script
-- some treatment for specified \\item\[...\] labels, see LAB:ITEMS in script
-- default \\item labels in enumerate environment are taken from rotating
-  collection in script variable parms.default\_item\_enum\_labs
-- letters with text-mode accents as '\\\`' or '\\v' are translated to 
-  corresponding UTF-8 characters, see LAB:ACCENTS in script
-- replacement of things like double quotes '\`\`' and dashes '\-\-' with
-  corresponding UTF-8 characters;
-  replacement of '\~' and '\\,' by UTF-8 non-breaking space and
-  narrow non-breaking space
-- on option --lang de: suitable replacements for macros like '"\`' and '"=',
-  see variable parms.misc\_replace\_de in script
-- treatment of \\verb(\*) macros and verbatim(\*) environments,
-  see LAB:VERBATIM in script; note, however, [issue #6](../../issues/6)
-- handling of % comments near to TeX: skipping of line break under certain
-  circumstances, see LAB:COMMENTS in script
-- rare warnings from proofreading program can be suppressed using \\LTadd{},
-  \\LTskip{}, \\LTalter{}{} in the LaTeX text with suitable macro definition
-  there; e.g., adding something that only the proofreader should see:
-  \newcommand{\\LTadd}\[1\]{}
 
-[Back to top](#tex2txt-a-flexible-latex-filter)
-
-## Command line
-The script expects the following parameters.
-```
-python3 tex2txt.py [--nums file] [--char] [--repl file] [--defs file]
-                   [--extr list] [--lang xy] [--ienc enc] [--unkn]
-                   [texfile]
-```
-- without positional argument `texfile`:<br>
-  read standard input
-- option `--nums file`:<br>
-  file for storing original position numbers;
-  if option --char not given: for each line of output text, the file contains
-  a line with the estimated original line number;
-  can be used later to correct line numbers in messages
-- option `--char`:<br>
-  activates character position tracking; if option --nums is given, then
-  the file contains the estimated input position for each character of output
-- option `--repl file`:<br>
-  file with phrase replacements performed at the end, for instance after
-  changing inline maths to text, and German hyphen "= to - ;
-  see LAB:SPELLING in script for line syntax
-- option `--defs file`:<br>
-  file with additional declarations, example file content (defs members,
-  given without lambda, are “appended” to corresponding parms members;
-  compare section
-  [Declaration of LaTeX macros](#declaration-of-latex-macros)):<br>
-  `defs.project_macros = (Macro(name='swap', args='AA', repl=r'\2\1'),)`
-- option `--extr ma[,mb,...]` (comma-separated list of macro names):<br>
-  extract only first braced argument of these macros;
-  useful, e.g., for check of foreign-language text and footnotes,
-  or for tracking of file inclusions
-- option `--lang xy`:<br>
-  language de or en, default: de;
-  used for adaptation of equation replacements, maths operator names,
-  proof titles, for handling of macros like \"\=, and for replacement
-  of foreign-language text;
-  see LAB:LANGUAGE in script
-- option `--ienc enc`:<br>
-  encoding for LaTeX input and file from option --repl, default is UTF-8;
-  Python code in file from option --defs is fixed to UTF-8
-- option `--unkn`:<br>
-  print list of undeclared macros and environments outside of equations;
-  declared macros do appear here, if a mandatory argument is missing
-  in input text
-
-[Back to top](#tex2txt-a-flexible-latex-filter)
-
-## Usage under Windows
-If Python is installed under Windows, then the main Python
-program [tex2txt.py](tex2txt.py) may be directly used in a Windows command
-console or script.
-Furthermore, at least the application script [shell.py](shell.py) from section
-[Application examples](#application-examples) can be run,
-if option '--server lt' is used, or if Java and the LanguageTool software
-are locally present.
-For example, this could look like
-```
-py -3 shell.py --html t.tex > t.html
-```
-or
-```
-"c:\Program Files\Python\Python37\python.exe" shell.py --html t.tex > t.html
-```
-if the Python launcher has not been installed.
-The file tex2txt.py should reside in the current directory.
-Variable 'ltdirectory' in script shell.py has to be customised, unless option
-'--server lt' is used.
-
-The software has been developed under Linux and additionally tested under
-Cygwin on Windows&nbsp;7.
-In the latter case, a Windows Java installation is sufficient.
-Some possible encoding problems related to Windows are addressed in
-section [Encoding problems](#encoding-problems).
-
-[Back to top](#tex2txt-a-flexible-latex-filter)
-
-## Tool integration
-The Python script is meant as small utility that performs a limited task
-with good quality.
-Integration with a proofreading software and features like tracking of
-\\input{...} directives have to be implemented “on top”.
-Apart from application in Bash scripts, extension is also possible like
-in section [Application as Python module](#application-as-python-module).
-
-### Simple scripts
-A first Bash script that checks a single LaTeX file is given in
-file [shell.sh](shell.sh).
-The command
-```
-bash shell.sh file_name
-```
-will read the specified LaTeX file and create plain text and line number
-files with additional extensions .txt and .lin, respectively.
-Then it will call [LanguageTool](https://www.languagetool.org)
-and filter line numbers in output messages.
-File [Example.md](Example.md) demonstrates the script.
-
-A variant correcting both line and column numbers is given in
-file [shell2.sh](shell2.sh) with application example in file
-[Example2.md](Example2.md).
-
-We assume that [Java](https://java.com) is installed, and that the directory
-with relative path ../LT/ contains an unzipped archive of the LanguageTool
-software.
-This archive, for example LanguageTool-4.4.zip, can be obtained
-from [here](https://www.languagetool.org/download).
-
-### More complete integration
-A Bash script for language checking of a whole document tree is proposed
-in file [checks.sh](checks.sh).
-For instance, the command
-```
-bash checks.sh Banach/*.tex > errs
-```
-will check the main text and extracted foreign-language parts in all these
-files.
-The result file 'errs' will contain names of files with problems together
-with filtered messages from the proofreader.
-
-With option --recurse, file inclusions as \\input{...} will be tracked
-recursively.
-Exceptions are listed at LAB:RECURSE in the Bash script.
-Note, however, the limitation sketched in [issue #12](../../issues/12).
-
-It is assumed that the Bash script is invoked at the “root directory”
-of the LaTeX project, and that all LaTeX documents are placed directly there
-or in subdirectories.
-For safety, the script will refuse to create auxiliary files outside of
-the directory specified by variable $txtdir (see below).
-Thus, an inclusion like \\input{../../generics.tex}
-probably won't work with option --recurse.
-
-Apart from [Python](https://www.python.org),
-the [Bash](https://www.gnu.org/software/bash) script
-uses [Java](https://java.com) together with
-[LanguageTool's](https://www.languagetool.org)
-desktop version for offline use,
-[Hunspell](https://github.com/hunspell/hunspell),
-and some standard [Linux](https://www.linux.org) tools.
-Before application, variables in the script have to be customised.
-For placement of intermediate text and line number files, the script uses an
-auxiliary directory designated by variable $txtdir.
-This directory and possibly necessary subdirectories will be created
-without request.
-They can be deleted with option --delete.
-
-### Actions of the Bash script
-- convert content of given LaTeX files to plain text, extract foreign-language
-  parts
-- call LanguageTool (or Hunspell on --no-lt) for native-language main text
-- check foreign-language text using Hunspell
-- only if variable $check\_for\_single\_letters set to 'yes':
-  look for single letters, excluding abbreviations in script variable $acronyms
-  (useful, for instance, in German)
-
-### Usage of the Bash script
-```
-bash checks.sh [--recurse] [--adapt-lt] [--no-lt]
-               [--columns] [--delete] [files]
-```
-- no positional arguments `files`:<br>
-  use files from script variable $all\_tex\_files
-- option `--recurse`:<br>
-  track file inclusions; see LAB:RECURSE in script for exceptions
-- option `--adapt-lt`:<br>
-  prior to checks, back up LanguageTool's files spelling.txt (additional
-  accepted words) and prohibit.txt (words raising an error), and append
-  corresponding private files; see LAB:ADAPT-LT in script
-- option `--no-lt`:<br>
-  do not use LanguageTool but instead Hunspell for native-language checks;
-  perform replacements from script variable $repls\_hunspell beforehand
-- option `--columns`:<br>
-  correct both line and column numbers in messages from LanguageTool
-- option `--delete`:<br>
-  only remove auxiliary directory in script variable $txtdir, and exit
-
-[Back to top](#tex2txt-a-flexible-latex-filter)
-
-## Encoding problems
-For script [tex2txt.py](tex2txt.py), the encoding of LaTeX input may be set
-with option --ienc; output encoding is fixed to UTF-8.
-In application Python script [shell.py](shell.py) from section
-[Application examples](#application-examples),
-this corresponds to option --encoding.
-The Bash scripts from section [Tool integration](#tool-integration)
-currently expect plain ASCII or UTF-8 input.
-
-Files with Windows style line endings (CRLF) are accepted, but the text
-output will be Unix style (LF only), unless a Windows Python interpreter
-is used.
-The output filters as in Bash script [shell2.sh](shell2.sh) will work
-properly, however.
-
-Under Cygwin with Java from the Windows installation, LanguageTool will
-produce Latin-1 output, even if option '--encoding utf-8' is specified.
-Therefore, a translator to UTF-8 has to be placed in front of a Python filter
-for line or column numbers.
-This is shown in Bash function LTfilter() in file [checks.sh](checks.sh).
-A similar approach is taken in example Python script [shell2.py](shell2.py).
-
-With option --json, LanguageTool always delivers UTF-8 encoded text.
-JSON output is used in application script [shell.py](shell.py).
-
-Similarly, Python's version for Windows by default prints Latin-1 encoded
-text to standard output.
-As this ensures proper work in a Windows command console, we do not change it
-for the example script shell.py when generating a text report.
-On option --html, we enforce UTF-8 output in order to
-determine the encoding of the generated HTML page.
-The stand-alone script tex2txt.py will produce UTF-8 output, too.
-
-[Back to top](#tex2txt-a-flexible-latex-filter)
-
-## Declaration of LaTeX macros
-The first section of the Python script consists of collections for
-LaTeX macros and environments.
-The central “helper function” Macro() declares a LaTeX macro, see the
-synopsis below, and is applied in the collections
-parms.project\_macros and parms.system\_macros.
-Here is a short extract from the definition of standard LaTeX macros already
-included.
-(The lambda construct allows us to use variables and functions introduced
-only later.)
-```
-parms.system_macros = lambda: (
-    Macro('caption', 'OA', extr=r'\2'),         # extract to end of text
-    Macro('cite', 'A', '[1]'),
-    Macro('cite', 'PA', r'[1, \1]'),
-    Macro('color', 'A'),
-    Macro('colorbox', 'AA', r'\2'),
-    Macro('documentclass', 'OA'),
-    ...
-```
-Other collections, e.g. for LaTeX environments, use functions similar
-to Macro().
-Project specific extension of all these collections is possible with
-option --defs and an additional Python file.
-The corresponding collections there, for instance defs.project\_macros,
-have to be defined using simple tuples without lambda construct;
-compare the example in section [Command line](#command-line).
-
-Synopsis of `Macro(name, args, repl='', extr='')`:
-- argument `name`:
-    - macro name without leading backslash
-    - characters with special meaning in regular expressions, e.g. '\*',
-      may need to be escaped; see for example declaration of macro \\hspace,
-      and use only unreferenced groups \(?:...\), see \\renewcommand
-- argument `args`:
-    - string that encodes argument sequence
-    - A: a mandatory \{...\} argument
-    - O: an optional \[...\] argument
-    - P: a mandatory \[...\] argument, see for instance macro \\cite
-- optional argument `repl`:
-    - replacement pattern, r'...\\d...' (d: single digit) extracts text
-      from position d in args (counting from 1)
-    - other escape rules: see escape handling at function myexpand();
-      e.g., include a single backslash: repl=r'...\\\\...'
-    - inclusion of % only accepted as escaped version r'...\\\\%...',
-      will be resolved to % at the end by function before\_output()
-    - inclusion of double backslash \\\\ and replacement ending with \\
-      will be rejected
-    - reference by r'\\d' to an optional argument will be refused
-- optional argument `extr`:
-    - append this replacement (specified as in argument repl) to the end
-      of the main text, separated by blank lines
-
-[Back to top](#tex2txt-a-flexible-latex-filter)
-
-## Handling of displayed equations
-Displayed equations should be part of the text flow and include the
-necessary interpunction.
-The German version of
-[LanguageTool](https://www.languagetool.org) (LT)
-will detect a missing dot in the following snippet.
-For English texts, see the comments in section
-[Equation replacements in English documents](#equation-replacements-in-english-documents)
-ahead.
-```
-Wir folgern
-\begin{align}
-    a   &= b \\
-    c   &= d
-\end{align}
-Daher ...
-```
-Here, 'a' to 'd' stand for arbitrary mathematical
-terms (meaning: “We conclude \<maths\> Therefore, ...”).
-In fact, LT complains about the capital “Daher” that should start a
-new sentence.
-
-### Trivial version
-With the entry
-```
-    EnvRepl('align', repl=''),
-```
-in parms.environments of the Python script (but no 'align' entry in
-parms.equation\_environments), the equation environment is simply removed.
-We get the following script output that will probably cause a problem,
-even if the equation ends with a correct interpunction sign.
-```
-Wir folgern
-Daher ...
-```
-
-### Simple version
-With the entry
-```
-    EquEnv('align', repl='  Relation'),
-```
-in parms.equation\_environments of the script, one gets:
-```
-Wir folgern
-  Relation
-Daher ...
-```
-Adding a dot '= d.' in the equation will lead to 'Relation.' in the output.
-This will also hold true, if the interpunction sign is followed by maths space
-or by macros as \\label and \\nonumber.
-
-### Full version
-With the entry
-```
-    EquEnv('align'),
-```
-we obtain (“gleich” means equal, and option --lang en will print “equal”):
-```
-Wir folgern
-  U-U-U  gleich V-V-V 
-  V-V-V  gleich W-W-W 
-Daher ...
-```
-The replacements 'U-U-U' to 'W-W-W' are taken from the collection in script
-variable parms.display\_math that depends on option --lang, too.
-Now, LT will additionally complain about repetition of 'V-V-V'.
-Finally, writing '= b,' and '= d.' in the equation leads to the output:
-```
-Wir folgern
-  U-U-U  gleich V-V-V, 
-  W-W-W  gleich X-X-X. 
-Daher ...
-```
-The rules for this equation parsing are described at LAB:EQUATIONS
-in the Python script.
-They ensure that variations like
-```
-    a   &= b \\
-        &= c.
-```
-and
-```
-    a   &= b \\
-        &\qquad -c.
-```
-also will work properly.
-In contrast, the text
-```
-    a   &= b \\
-    -c  &= d.
-```
-will again produce an LT warning due to the missing comma after 'b',
-since the script replaces both 'b' and '-c' by 'V-V-V' without
-intermediate text.
-
-In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
-to avoid false warnings from the proofreader.
-See also file [Example.md](Example.md).
-
-### Inclusion of “normal” text
-In variant “Full version”, the argument of \\text\{...\}
-(variable for macro name in script: parms.text\_macro) is directly copied.
-Outside of \\text, only maths space like \\; and \\quad is considered as space.
-Therefore, one will get warnings from the proofreading program, if subsequent
-\\text and maths parts are not properly separated.
-See file [Example.md](Example.md).
-
-### Equation replacements in English documents
-The replacement collection in variable parms.display\_math does not work well,
-if single letters are taken as replacements, compare
-[Issue #22](../../issues/22).
-We now have chosen replacements as 'B-B-B' for German and English texts.
-
-Furthermore, the English version of LanguageTool (like other proofreading
-tools) rarely detects mistakenly capital words inside of a sentence;
-they are probably considered as proper names.
-Therefore, a missing dot at the end of a displayed equation is hardly found.
-An experimental hack is provided by option --equation-punctuation of
-application script [shell.py](shell.py) described in section
-[Application examples](#application-examples).
-
-[Back to top](#tex2txt-a-flexible-latex-filter)
-
-## Application as Python module
-The script can be extended with Python's module mechanism.
-In order to use `import tex2txt`, this module has to reside in the same
-directory as the importing script, or environment variable PYTHONPATH
-has to be set accordingly.
-
-### Module interface
-The module provides the following central function.
-```
-(plain, nums) = tex2txt.tex2txt(latex, options)
-```
-Argument 'latex' is the LaTeX text as string, return element 'plain' is the
-plain text as string.
-Array 'nums' contains the estimated original line or character positions,
-counting from one.
-Negative values indicate that the actual position may be larger.
-Argument 'options' can be created with class
-```
-tex2txt.Options(...)
-```
-that takes arguments similar to the command-line options of the script.
-They are documented at the definition of class 'Options', see LAB:OPTIONS.
-The parameters 'defs' and 'repl' for this class can be set using functions
-tex2txt.read\_definitions(fn, enc) and tex2txt.read\_replacements(fn, enc),
-both expecting 'None' or a file name as argument 'fn', and an encoding name
-for 'enc'.
+## Example application
 
 **Remark.**
-Since the function tex2txt() modifies globals in its module, an application
-must only run it once at each point in time.
+You can find examples for tool integration with Bash scripts in
+[Tex2txt/README.md](https://github.com/matze-dd/Tex2txt#tool-integration).
 
-Two additional functions support translation of line and column numbers
-in case of character position tracking.
-Translation is performed by
-```
-ret = tex2txt.translate_numbers(latex, plain, nums, starts, lin, col)
-```
-with strings 'latex' and 'plain' containing LaTeX and derived plain texts.
-Argument 'nums' is the number array returned by function tex2txt(),
-'lin' and 'col' are the integers to be translated.
-Argument 'starts' has to be obtained beforehand by the call
-```
-starts = tex2txt.get_line_starts(plain)
-```
-and contains positions in string 'plain' that start a new line.
-The return value 'ret' above is 'None', if translation was not successful.
-On success, 'ret' is a small object.
-Integers 'ret.lin' and 'ret.col' indicate line and column numbers, and
-boolean 'ret.flag' equals 'True', if the actual position may be larger.
-
-Finally, function
-```
-tex2txt.myopen(filename, encoding, mode='r')
-```
-is similar to standard function open(), but it requires an explicit encoding
-specification and converts a possible exception into an error message.
-
-### Application examples
-The module interface is demonstrated in function main() that is activated
-when running the script tex2txt.py directly.
-
-Example Python script [shell.py](shell.py) will generate a proofreading report
-in text or HTML format from filtering the LaTeX input and application of
+Example Python script [yalafi/shell/shell.py](yalafi/shell/shell.py)
+has been copied with minor changes from repository
+[Tex2txt](https://github.com/matze-dd/Tex2txt)
+and subdivided into several files.
+It will generate a proofreading report in text or HTML format from filtering
+the LaTeX input and application of
 [LanguageTool](https://www.languagetool.org) (LT).
+It is best called as module as shown below, but can also be placed elsewhere
+and invoked as script.
 On option '--server lt', LT's Web server is contacted.
 Otherwise, [Java](https://java.com) has to be present, and
-the path to LT has to be customised in script variable 'ltdirectory';
-compare the corresponding comment in script.
+the path to LT has to be specified with --lt-directory.
 Note that from version 4.8, LT does not fully support 32-bit systems any more.
-File tex2txt.py should reside in the current directory, see also
-the [beginning of this section](#application-as-python-module).
 Both LT and the script will print some progress messages to stderr.
-They can be suppressed with `python3 shell.py ... 2>/dev/null`.
+They can be suppressed with `python ... 2>/dev/null`.
 ```
-python3 shell.py [--html] [--link] [--context number]
-                 [--include] [--skip regex] [--plain] [--list-unknown]
-                 [--language lang] [--t2t-lang lang] [--encoding ienc]
-                 [--replace file] [--define file] [--extract macros]
-                 [--disable rules] [--lt-options opts]
-                 [--single-letters accept] [--equation-punctuation mode]
-                 [--server mode] [--lt-server-options opts]
-                 [--textgears apikey]
-                 latex_file [latex_file ...] [> text_or_html_file]
+python -m yalafi.shell
+                [--lt-directory dir] [--as-server port]
+                [--output mode] [--link] [--context number]
+                [--include] [--skip regex] [--plain-input]
+                [--list-unknown] [--language lang] [--encoding ienc]
+                [--replace file] [--define file] [--python-defs module]
+                [--extract macros] [--disable rules] [--lt-options opts]
+                [--single-letters accept] [--equation-punctuation mode]
+                [--server mode] [--lt-server-options opts]
+                [--textgears apikey] [--no-config]
+                latex_file [latex_file ...] [> text_or_html_file]
 ```
 Option names may be abbreviated.
-If present, options are also read from a configuration file designated
-by script variable config\_file (one option per line, possibly with argument).
+If option --no-config is not given and if present, options are also read
+from a configuration file designated by script variable config\_file
+(one option per line, possibly with argument).
 Default option values are set at the Python script beginning.
-- option `--html`:<br>
-  generate HTML report; see below for further details
+- option `--lt-directory dir`:<br>
+  directory of the local LT installation; for instance, it has to contain
+  'languagetool-server.jar';
+  the LT zip archive, for example LanguageTool-4.9.zip, can be obtained
+  from the [LT download page](https://www.languagetool.org/download);
+  see also the comment at script variable 'ltdirectory' (the default value)
+- option `--as-server port`:<br>
+  emulate an LT server listening on the given port,
+  see section [Interface to Emacs](#interface-to-emacs) for an example;
+  fields of HTML requests (settings for language, rules, categories)
+  overwrite values given in command line;
+  the internally used proofreader is influenced by options like --server
+- option `--output mode`:<br>
+  mode is one of plain, html, xml, json; default: plain;
+  html: generate HTML report, see below for further details;
+  xml: for Vim plug-in, compare section [Interface to Vim](#interface-to-vim)
 - option `--link`:<br>
   if HTML report : left-click on a highlighted text part opens Web link
   provided by LT
@@ -709,21 +175,30 @@ Default option values are set at the Python script beginning.
 - option `--skip regex`:<br>
   skip files matching the given regular expression;
   useful, e.g., for exclusion of figures on option --include
-- option `--plain`:<br>
+- option `--plain-input`:<br>
   assume plain-text input: no evaluation of LaTeX syntax;
   cannot be used together with option --include or --replace
 - option `--list-unknown`:<br>
-  only print list of unknown macros and environments, compare option
-  --unkn in section [Command line](#command-line)
+  only print list of unknown macros and environments seen outside of
+  maths parts
 - option `--language lang`:<br>
   language code as expected by LT, default: 'en-GB';
-  first two letters are passed to tex2txt();
-  currently, only 'de' and 'en' supported, but see --t2t-lang
-- option `--t2t-lang lang`:<br>
-  overwrite option for tex2txt() from --language
-- options `--encoding ienc`, `--replace file`, `--define file`:<br>
-  like options --ienc, --repl, --defs described in section
-  [Command line](#command-line)
+  first two letters are passed to yalafi.tex2txt(), which uses 'en' in case
+  of unknown language
+- option `--encoding ienc`:<br>
+  encoding for LaTeX input and files from options --define and --replace;
+  default is UTF-8
+- option `--replace file`:<br>
+  file with phrase replacements to be performed after conversion to plain
+  text; per line, a '\&' sign separated by space splits two parts: first part
+  is replaced by second part; space in first part is interpreted as arbitrary
+  space not breaking the paragraph; a '#' sign marks rest of line as comment
+- option `--define file`:<br>
+  read macro definitions as LaTeX code (using \\newcommand)
+- option `--python-defs module`:<br>
+  modify default definitions in file yalafi/parameters.py by function
+  'modify\_parameters()' in the given module;
+  compare example in [definitions.py](definitions.py)
 - option `--extract macros`:<br>
   only check arguments of the LaTeX macros whose names are given as
   comma-separated list; useful for check of foreign-language text,
@@ -748,16 +223,17 @@ Default option values are set at the Python script beginning.
 - option `--equation-punctuation mode`:<br>
   experimental hack for check of punctuation after equations in English texts,
   compare section
-  [Equation replacements in English documents](#equation-replacements-in-english-documents);
+  [Equation replacements in English documents](#equation-replacements-in-english-documents)
+  and example in section [Differences to Tex2txt](#differences-to-tex2txt);
   abbreviatable mode values, indicating checked equation type:
-  'displayed', 'inline', 'all';
+  'displayed', 'inline', 'all';<br>
   generates a message, if an element of an equation is not terminated
   by a dot '.' and at the same time is not followed by a lower-case word or
   another equation element, both possibly separated by a mark from ',;:';
   patterns for equations are given by script variables
   equation\_replacements\_display and equation\_replacements\_inline
-  corresponding to variables parms.display\_math and parms.inline\_math
-  in script tex2txt.py
+  corresponding to member variables Parameters.math\_repl\_display and
+  Parameters.math\_repl\_inline in file yalafi/parameters.py
 - option `--server mode`:<br>
   use LT's Web server (mode is 'lt') or a local LT server (mode is 'my');
   stop the local server (mode is 'stop', currently only works under Linux
@@ -783,6 +259,8 @@ Default option values are set at the Python script beginning.
   [https://textgears.com/signup.php?givemethatgoddamnkey=please](https://textgears.com/signup.php?givemethatgoddamnkey=please),
   but key 'DEMO\_KEY' seems to work for short input;
   server address is given by script variable textgears\_server
+- option `--no-config`:<br>
+  do not read config file (its name: script variable 'config\_file')
 
 **Dictionary adaptation.**
 LT evaluates the two files 'spelling.txt' and 'prohibit.txt' in directory
@@ -812,72 +290,619 @@ For simplicity, marked text regions that intertwine with other ones
 are separately repeated at the end.
 In case of multiple input files, the HTML report starts with an index.
 
-**Simpler demonstration script.**
-A simpler Python application is [shell2.py](shell2.py).
-It resembles Bash script [shell2.sh](shell2.sh)
-from section [Simple scripts](#simple-scripts),
-but it accepts multiple inputs and does not create auxiliary files.
+[Back to top](#yalafi-yet-another-latex-filter)
 
-[Back to top](#tex2txt-a-flexible-latex-filter)
+
+## Interface to Vim
+
+For the Vim plug-in
+[\[vim-grammarous\]](https://github.com/rhysd/vim-grammarous),
+it is possible to provide an interface for checking LaTeX texts.
+With an entry in \~/.vimrc, one may simply replace the command that
+invokes LanguageTool.
+For instance, you can add to your \~/.vimrc
+```
+let g:grammarous#languagetool_cmd = '/home/foo/bin/yalafi-grammarous'
+map <F9> :GrammarousCheck --lang=en-GB<CR>
+```
+A proposal for Bash script /home/foo/bin/yalafi-grammarous is given in
+[yalafi-grammarous](yalafi-grammarous).
+It has to be made executable with `chmod +x ...`.
+Please adapt script variable `ltdir`, compare option --lt-directory
+in section [Example application](#example-application).
+If you do not want to have started a local LT server, comment out the line
+defining script variable `use_server`.
+
+**Installation of vim-grammarous.**
+Download and unzip vim-grammarous.
+Create a directory \~/.vim/pack/bundle/start/.
+Place vim-grammarous/ under this directory.
+
+Here is the [introductory example](#example-html-report) from above:
+
+![Vim plug-in](vim-plug-in.png)
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+
+## Interface to Emacs
+
+The Emacs plug-in
+[\[Emacs-langtool\]](https://github.com/mhayashi1120/Emacs-langtool)
+may be used in two variants.
+First, you can add to your \~/.emacs
+```
+(setq langtool-bin "/home/foo/bin/yalafi-emacs")
+(setq langtool-default-language "en-GB")
+(setq langtool-disabled-rules "WHITESPACE_RULE")
+(require 'langtool)
+```
+A proposal for Bash script /home/foo/bin/yalafi-emacs is given in
+[yalafi-emacs](yalafi-emacs).
+It has to be made executable with `chmod +x ...`.
+Please adapt script variable `ltdir`, compare option --lt-directory
+in section [Example application](#example-application).
+If you do not want to have started a local LT server, comment out the line
+defining script variable `use_server`.
+
+**Server interface.**
+This variant may result in better tracking of character positions.
+In order to use it, you can write in \~/.emacs
+```
+(setq langtool-http-server-host "localhost"
+      langtool-http-server-port 8082)
+(setq langtool-default-language "en-GB")
+(setq langtool-disabled-rules "WHITESPACE_RULE")
+(require 'langtool)
+```
+and start yalafi.shell as server in another terminal with
+```
+$ python -m yalafi.shell --as-server 8082 [--lt-directory /path/to/LT]
+```
+The server will print some progress messages and can be stopped with CTRL-C.
+Further script arguments from section
+[Example application](#example-application)
+may be given.
+If you add, for instance, '--server my', then a local LT server will be used.
+It is started on the first HTML request received from Emacs-langtool,
+if it is not yet running.
+
+**Installation of Emacs-langtool.**
+Download and unzip Emacs-langtool.
+Place file langtool.el in directory \~/.emacs.d/lisp/.
+Set in your \~/.bash\_profile
+```
+export EMACSLOADPATH=~/.emacs.d/lisp:
+```
+
+Here is the [introductory example](#example-html-report) from above:
+
+![Emacs plug-in](emacs-plug-in.png)
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+
+## Filter actions
+
+Here is a list of the most important filter operations.
+When the filter encounters a LaTeX problem like a missing end of equation,
+a message is printed to stderr.
+Additionally, the message is included into the filter output together
+with the mark from 'Parameters.mark\_latex\_error' in yalafi/parameters.py.
+This mark should raise a spelling error from the proofreader at the place
+where the problem was detected.
+
+- macro definitions with \\(re)newcommand in input text are processed,
+  further flexible treatment of own macros with arbitrary arguments;
+  statement \\LTmacros{file.tex} reads macro definitions from given file;
+  see also section [Inclusion of own macros](#inclusion-of-own-macros)
+- “undeclared” macros are silently ignored, keeping their arguments
+  with enclosing \{\} braces removed
+- frames \\begin\{...\} and \\end\{...\} of environments are deleted;
+  tailored behaviour for environment types listed in
+  'Parameters.environment\_defs' in file yalafi/parameters.py;
+  see section [Inclusion of own macros](#inclusion-of-own-macros)
+- text in heading macros as \\section\{...\} is extracted with
+  added interpunction (suppresses false positives from LanguageTool)
+- suitable placeholders for \\ref, \\eqref, \\pageref, and \\cite
+- arguments of macros like \\footnote are appended to the main text,
+  separated by blank lines
+- inline maths material $...$ and \\(...\\) is replaced with text from
+  rotating collection in 'Parameters.math\_repl\_inline' in
+  file yalafi/parameters.py,
+  appending trailing interpunction from 'Parameters.math\_punctuation'
+- equation environments are resolved in a way suitable for check of
+  interpunction and spacing, argument of \\text\{...\} is included into output
+  text; \\\[...\\\] and $$...$$ are same as environment displaymath;
+  see sections
+  [Handling of displayed equations](#handling-of-displayed-equations)
+  and
+  [Parser for maths material](#parser-for-maths-material)
+- generation of numbered default \\item labels for environment enumerate
+- some treatment for \\item with specified \[...\] label;
+  if the text before ends with a punctuation mark from collection
+  'Parameters.item\_punctuation' in file yalafi/parameters.py, then this mark
+  is appended to the label;
+  works well for German texts, turned off with 'item\_punctuation = []'
+- letters with text-mode accents as '\\\`' or '\\v' are translated to 
+  corresponding UTF-8 characters
+- replacement of things like double quotes '\`\`' and dashes '\-\-' with
+  corresponding UTF-8 characters;
+  replacement of '\~' and '\\,' by UTF-8 non-breaking space and
+  narrow non-breaking space
+- for language 'de': suitable replacements for macros like '"\`' and '"=',
+  see method 'Parameters.init\_language()' in file yalafi/parameters.py
+- treatment of \\verb macro and verbatim environment;
+  verbatim can be replaced or removed like other environments with
+  appropriate entry in 'Parameters.environment\_defs' in yalafi/parameters.py
+- rare warnings from proofreading program can be suppressed using \\LTadd{},
+  \\LTskip{}, \\LTalter{}{} in the LaTeX text with suitable macro definition
+  there; e.g., adding something that only the proofreader should see:
+  \\newcommand{\\LTadd}\[1\]{}
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+
+## Principal limitations
+
+The implemented parsing mechanism can only roughly approximate the behaviour
+of a real LaTeX system.
+We assume that only “reasonable” macros are used, lower-level TeX operations
+are not supported.
+If necessary, they should be placed in a LaTeX file “hidden” for the filter
+(compare option --skip of yalafi.shell in section
+[Example application](#example-application)).
+A list of remaining incompatibilities must contain at least the following
+points.
+
+- Mathematical material is represented by simple replacements.
+  As the main goal is application of a proofreading software, we have
+  deliberately taken this approach.
+- Parsing does not cross file boundaries.
+  Tracking of file inclusions is possible though.
+- Macros depending on (spacing) lengths may be treated incorrectly.
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+
+## Usage under Windows
+
+Both yalafi.shell and yalafi can be used directly in a Windows command
+script or console.
+For example, this could look like
+```
+py -3 -m yalafi.shell --output html t.tex > t.html
+```
+or
+```
+"c:\Program Files\Python\Python37\python.exe" -m yalafi.shell --output html t.tex > t.html
+```
+if the Python launcher has not been installed.
+
+Possible encoding issues related to Windows are addressed in
+[Tex2txt/README.md](https://github.com/matze-dd/Tex2txt#encoding-problems).
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+
+## Inclusion of own macros
+
+Unknown macros and environment frames are silently ignored.
+As all input files are processed independently, it may be necessary to
+provide project-specific definitions in advance.
+
+For macros, which may be declared with \\newcommand, you can apply
+`\LTmacros{file.tex}` as a simple solution.
+This adds the macros defined in the given file, skipping all other content.
+For the “real” LaTeX, the macro \\LTmacros has to be defined as
+`\newcommand{\LTmacros}[1]{}` that is in turn ignored by the filter.
+
+If LaTeX files have to stay untouched, you can use options
+--defs and --define for yalafi and yalafi.shell, respectively.
+Alternatively, one can add the definitions to member
+'Parameters.macro\_defs\_latex' in file yalafi/parameters.py.
+Here is a short excerpt from this file:
+```
+        self.macro_defs_latex = r"""
+        ...
+        \newcommand{\color}[1]{}
+        \newcommand{\colorbox}[2]{#2}
+        \newcommand{\documentclass}[2][]{}
+        \newcommand{\eqref}[1]{(0)}
+        \newcommand{\fcolorbox}[3]{#3}
+```
+
+More complicated macros as well as environments have to be registered
+with Python code.
+This may be done with options --pyth and --python-defs for yalafi and
+yalafi.shell, respectively;
+see the example in [definitions.py](definitions.py).
+Alternatively, you can modify the collections
+'Parameters.macro\_defs\_python' and 'Parameters.environment\_defs'
+in yalafi/parameters.py.
+
+### Definition of macros
+
+`Macro(parms, name, args='', repl='', defaults=[], extract='')`
+
+- `parms`: current object of type Parameters
+- `name`: macro name with '\\'
+- `args`: string that codes the argument sequence
+    - 'A': mandatory argument, may be a single token or a sequence
+      enclosed in {} braces
+    - 'O': optional argument in \[\] brackets
+    - '\*' optional asterisk
+- `repl`: replacement string as for \\newcommand ('\*' does count as argument),
+  or a function (see file [yalafi/handlers.py](yalafi/handlers.py)
+  for examples)
+- `defaults`: an optional list of replacement strings for absent optional
+  arguments
+- `extract`: like `repl`, but the resulting text is appended to the main
+  text, separated by blank lines; for an example, see declaration of macro
+  \\footnote in 'Parameters.macro\_defs\_python' in yalafi/parameters.py
+
+### Definition of environments
+
+`Environ(parms, name, args='', repl='', defaults=[], remove=False, add_pars=True, items=None)`
+
+Argument `parms` to `defaults` are the same as for `Macro()`, where the
+arguments are those behind the opening '\\begin{xyz}'.
+This means that the environment name 'xyz' does not yet count as argument
+in `args` and `repl`.
+
+- `remove`: if True, then the complete environment body is skipped;
+  a fixed replacement can be given in `repl`
+- `add_pars`: if True, then paragraph breaks (blank lines) are generated
+  before and behind the environment body
+- `items`: for inclusion of specific \\item labels;
+  a generator taking a nesting level argument has to be specified;
+  compare declaration of environment enumerate in yalafi/paramters.py
+
+### Definition of equation environments
+
+`EquEnv(parms, name, args='', repl='', defaults=[], remove=False)`
+
+This is equivalent to `Environ()`, but maths material is replaced according to
+section
+[Handling of displayed equations](#handling-of-displayed-equations).
+Replacements in `repl` and `defaults` are still interpreted in text mode.
+
+- `remove`: if True, then a fixed replacement can be specified in `repl`,
+and trailing interpunction given by 'Parameters.math\_punctuation' in
+file yalafi/parameters.py is appended
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+
+## Package interface
+
+We comment the central function in file
+[yalafi/tex2txt.py](yalafi/tex2txt.py)
+that uses the package interface to emulate the behaviour of
+script tex2txt.py in repository
+[Tex2txt](https://github.com/matze-dd/Tex2txt).
+
+```
+ 1  from . import parameters, parser, utils
+ 2  def tex2txt(latex, opts):
+ 3      def read(file):
+ 4          try:
+ 5              with open(file, encoding=opts.ienc) as f:
+ 6                  return True, f.read()
+ 7          except:
+ 8              return False, ''
+ 9      parms = parameters.Parameters(opts.lang)
+10      if opts.defs:
+11          parms.add_latex_macros(opts.defs)
+12      if opts.pyth:
+13          exec('import ' + opts.pyth)
+14          exec(opts.pyth + '.modify_parameters(parms)')
+15      if opts.extr:
+16          extr = ['\\' + s for s in opts.extr.split(',')]
+17      else:
+18          extr = []
+19      p = parser.Parser(parms, read_macros=read)
+20      toks = p.parse(latex, extract=extr)
+21      txt, pos = utils.get_txt_pos(toks)
+22      if opts.repl:
+23          txt, pos = utils.replace_phrases(txt, pos, opts.repl)
+24      if opts.unkn:
+25          txt = '\n'.join(p.get_unknowns()) + '\n'
+26          pos = [0 for n in range(len(txt))]
+27      pos = [n + 1 for n in pos]
+28      return txt, pos
+```
+- 3-8: This is an auxiliary function for the parser.
+- 9: The created parameter object contains all default settings
+  and definitions from file yalafi/parameters.py.
+- 11: If requested by script option --defs, additional macros are included
+  from the string opts.defs.
+- 14: On option --pyth, we call a function to modify the parameter object,
+  see file [definitions.py](definitions.py) for an example.
+- 15-18: If option --extr requests only extraction of arguments of certain
+  macros, this is prepared.
+- 19: We create a parser object, the passed function is called on \\LTmacros.
+- 20: The parsing method returns a list of tokens.
+- 21: The token list is converted into a 2-tuple containing the plain-text
+  string and a list of numbers.
+  Each number in the list indicates the estimated position of the
+  corresponding character in the text string.
+- 23: If phrase replacements are requested by option --repl, this is done.
+  String opts.repl contains the replacement specifications read from the file.
+- 25: On option --unkn, a list of unknown macros and environments is
+  generated.
+- 27: This is necessary, since position numbers are zero-based in yalafi,
+  but one-based in Tex2txt/tex2txt.py.
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+
+## Handling of displayed equations
+
+Displayed equations should be part of the text flow and include the
+necessary interpunction.
+The German version of
+[LanguageTool](https://www.languagetool.org) (LT)
+will detect a missing dot in the following snippet.
+For English texts, see the comments in section
+[Equation replacements in English documents](#equation-replacements-in-english-documents)
+ahead.
+```
+Wir folgern
+\begin{align}
+    a   &= b \\
+    c   &= d
+\end{align}
+Daher ...
+```
+Here, 'a' to 'd' stand for arbitrary mathematical
+terms (meaning: “We conclude \<maths\> Therefore, ...”).
+In fact, LT complains about the capital “Daher” that should start a
+new sentence.
+
+### Trivial version
+
+With the entry
+```
+    Environ(self, 'align', remove=True, add_pars=False),
+```
+in 'Parameters.environment\_defs' of file yalafi/parameters.py,
+the equation environment is simply removed.
+We get the following filter output that will probably cause a problem,
+even if the equation itself ends with a correct interpunction sign.
+```
+Wir folgern
+Daher ...
+```
+
+### Simple version
+
+With the entry
+```
+    EquEnv(self, 'align', repl='  Relation', remove=True),
+```
+in 'Parameters.environment\_defs', one gets:
+```
+Wir folgern
+  Relation
+Daher ...
+```
+Adding a dot '= d.' in the equation will lead to 'Relation.' in the output.
+This will also hold true, if the interpunction sign
+('Parameters.math\_punctuation') is followed by maths space or by macros
+as \\label and \\nonumber.
+
+### Full version
+
+With the default entry
+```
+    EquEnv(self, 'align'),
+```
+we obtain (“gleich” means equal, and setting language to English will
+produce “equal”):
+```
+Wir folgern
+  V-V-V  gleich W-W-W
+  W-W-W  gleich X-X-X.
+Daher ...
+```
+The replacements like 'V-V-V' are taken from collection
+'Parameters.math\_repl\_display' that depends on language setting, too.
+Now, LT will additionally complain about repetition of 'W-W-W'.
+Finally, writing '= b,' and '= d.' in the equation leads to the output:
+```
+Wir folgern
+  V-V-V  gleich W-W-W,
+  X-X-X  gleich Y-Y-Y.
+Daher ...
+```
+The rules for equation parsing are described in section
+[Parser for maths material](#parser-for-maths-material).
+They ensure that variations like
+```
+    a   &= b \\
+        &= c.
+```
+and
+```
+    a   &= b \\
+        &\qquad -c.
+```
+also will work properly.
+In contrast, the text
+```
+    a   &= b \\
+    -c  &= d.
+```
+will again produce an LT warning due to the missing comma after 'b',
+since the filter replaces both 'b' and '-c' by 'W-W-W' without
+intermediate text.
+
+In rare cases, manipulation with \\LTadd{} or \\LTskip{} may be necessary
+to avoid false warnings from the proofreader.
+
+### Inclusion of “normal” text
+
+In variant “Full version”, the argument of \\text\{...\}
+(macro names: collection 'Parameters.math\_text\_macros') is directly copied.
+Outside of \\text, only maths space like \\; and \\quad
+(see 'Parameters.math\_space') is considered as space.
+Therefore, one will get warnings from the proofreading program, if subsequent
+\\text and maths parts are not properly separated.
+
+### Equation replacements in English documents
+
+The replacement collection of 'Parameters.math\_repl\_display' in file
+yalafi/parameters.py does not work well, if single letters are taken as
+replacements.
+For instance, 'V.' cannot be safely considered as end of a sentence.
+We now have chosen replacements as 'U-U-U' for German and English texts.
+
+Furthermore, the English version of LanguageTool (like other proofreading
+tools) rarely detects mistakenly capital words inside of a sentence;
+they are probably considered as proper names.
+Therefore, a missing dot at the end of a displayed equation is hardly found.
+An experimental hack is provided by option --equation-punctuation of
+application script [yalafi/shell/shell.py](yalafi/shell/shell.py)
+described in section
+[Example application](#example-application).
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+
+## Differences to Tex2txt
+
+Invocation of `python -m yalafi ...` differs as follows from
+`python tex2txt.py ...` (the script described in
+[Tex2txt/README.md](https://github.com/matze-dd/Tex2txt#command-line)).
+
+- Option --defs expects a file containing macro definitions as LaTeX code.
+- Option --ienc is also effective for file from --defs.
+- Option --char (position tracking for single characters) is always activated.
+- Default language is English. It is also used for an unknown language.
+- Macro definitions with \\(re)newcommand in the LaTeX input are processed.
+- Macro arguments need not be delimited by {} braces or \[\] brackets.
+- Macros are expanded in the order they appear in the text.
+- Character position tracking for displayed equations is improved,
+  see the example below.
+- Parameters like predefined LaTeX macros and environments are set in file
+  [yalafi/parameters.py](yalafi/parameters.py).
+  You can modify them at run-time with script option '--pyth module'.
+  The given Python module has to provide a function
+  'modify\_parameters(parms)' receiving the parameter object 'parms',
+  compare the example in [definitions.py](definitions.py).
+
+YaLafi/yalafi/tex2txt.py is faster for input texts till about 30 Kilobytes,
+for larger files it can be slower than 'Tex2txt/tex2txt.py --char'.
+Run-time increases quasi linearly with file size.
+Due to token generation for each single “normal” character, memory usage
+may be substantial for long input texts.
+
+Number of effective code lines (without blank and pure comment lines)
+is around 1050 for Tex2txt/tex2txt.py and 1350 for yalafi/\*.py in total.
+
+With
+```
+python -m yalafi.shell --equation-punct all --output html test.tex > test.html
+```
+and input 
+```
+For each $\epsilon > 0$, there is a $\delta > 0$ so that
+%
+\begin{equation}
+\norm{y-x} < \delta \text{\quad implies\quad}
+    \norm{A(y) - A(x)} < \epsilon, \label{lab}
+\end{equation}
+%
+Therefore, operator $A$ is continuous at point $x$.
+```
+we get
+
+![HTML report](equation.png)
+
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
 
 ## Remarks on implementation
-Parsing with regular expressions is fun, but it remains a rather coarse
-approximation of the “real thing”.
-Nevertheless, it seems to work quite well for our purposes, and it inherits
-high flexibility from the Python environment.
-A stricter approach could be based on software like
-[plasTeX](https://github.com/tiarno/plastex)
-or [pylatexenc](https://github.com/phfaist/pylatexenc).
-Another attempt has been started with
-[YaLafi](https://github.com/matze-dd/YaLafi).
 
-In order to parse nested structures, some regular expressions are constructed
-by iteration.
-At the beginning, we hence check for instance, whether nested {} braces of
-the actual input text do overrun the corresponding regular expression.
-In that case, an error message is generated, and the variable
-parms.max\_depth\_br for maximum brace nesting depth has to be changed.
-Setting control variables for instance to 100 does work, but also increases
-resource usage.
+### Scanner / tokeniser
 
-A severe general problem is order of macro expansion.
-While TeX strictly evaluates from left to right, the order of treatment by
-regular expressions is completely different.
-Additionally, we mimic TeX's behaviour in skipping white space between
-macro name and next non-space character.
-This calls for hacks like the regular expression in variable skip\_space\_macro
-together with the temporary placeholder in mark\_begin\_env.
-It avoids that a macro without arguments consumes leading space inside of
-an already resolved following environment.
-Besides, that protects a line break, for instance in front of an equation
-environment.
-Another issue emerges with input text like '\\y{a\\z} b' that can lead
-to the output 'ab', if macro \\z is expanded after macro \\y{...} taking an
-argument.
-The workaround inserts the temporary placeholder in variable mark\_deleted
-for each closing } brace or \] bracket, when a macro argument is expanded.
+The scanner identifies token types defined in yalafi/defs.py.
 
-Our mechanism for line number tracking relies on a partial reimplementation
-of the substitution function re.sub() from the standard Python module
-for regular expressions.
-Here, the manipulated text string is replaced by a pair of this same string
-and an array of integers.
-These represent the estimated original line numbers of the lines in the
-current text string part.
-During substitution, the line number array is adjusted upon deletion or
-inclusion of line breaks.
-The tracking of character positions for option --char works similarly.
+- All “normal” characters yield an own token.
+- Many character combinations like '{', '\\\[' or '---' are recognised
+  as “special tokens”.
+- Names of “normal” macros formed by a backslash and subsequent letters
+  (method 'Parameters.macro\_character()') result in a token, macros
+  '\\begin', '\\end', '\\item', and '\\verb' are treated separately.
+- For space, we distinguish between character sequences that do or do not
+  represent a paragraph break.
+  In both cases, a single token is generated.
+- Comments starting with '%' consume the rest of the line and leading space
+  on the next line, if it is not blank.
+  A single token is generated.
 
-Since creation of new empty lines may break the text flow, we avoid it
-with a simple scheme.
-Whenever a LaTeX macro is expanded or an environment frame is deleted,
-the mark from variable mark\_deleted is left in the text string.
-At the very end, these marks are deleted, and lines only consisting
-of space and such marks are removed completely.
-This also means that initially blank lines remain in the text (except
-those only containing a % comment).
+### Parser
 
-Under category [Issues](../../issues), some known shortcomings are listed.
-Additionally, we have marked several problems as BUG in the script.
+The central method 'Parser.expand\_sequence()' does not directly read from
+the scanner, but from an intermediate buffer that can take back tokens.
+On macro expansion, the parser simply pushes back all tokens generated by
+argument substitution.
+The result is close to the “real” TeX behaviour, compare the tests in
+directory tests/.
 
-[Back to top](#tex2txt-a-flexible-latex-filter)
+A method important for simple implementation is 'Parser.arg\_buffer()'.
+It creates a new buffer that subsequently returns tokens forming a macro
+argument (only a single token or all tokens enclosed in paired {} braces
+or \[\] brackets).
+
+### Parser for maths material
+
+We follow the ideas described in section
+[Handling of displayed equations](#handling-of-displayed-equations),
+compare the tests in [tests/test\_display.py](tests/test_display.py).
+All unknown macros, which are not in the blacklist 'Parameters.math\_ignore',
+are assumed to generate some “visible” output.
+Thus, it is not necessary to declare all the maths macros like \\alpha
+and \\sum.
+
+Displayed equations are parsed as follows.
+
+- Equation environments are split into “lines” separated by '\\\\'.
+- Each “line” is split into “sections” delimited by '\&'.
+- Each “section” is split into “maths parts” only consisting of maths
+  material separated by intermediate \\text{...} or \\mbox{...}
+  ('Parameters.math\_text\_macros').
+- Arguments of \\text and \\mbox are directly copied.
+- A “maths part” is substituted with a placeholder from rotating collection
+  'Parameters.math\_repl\_display', if it does not consist only of punctuation
+  marks from 'Parameters.math\_punctuation' or of operators from
+  'Parameters.math\_operators'.
+- A leading maths operator is displayed using 'Parameters.math\_op\_text'
+  (language-dependent), if the “maths part” is first in “section” and
+  the “section” is not first on “line”.
+- Trailing interpunction of a “maths part” is appended to the placeholder.
+- If the “maths part” includes leading or trailing maths space from
+  'Parameters.math\_space', then white space is prepended or appended to the
+  replacement.
+- Replacements from 'Parameters.math\_repl\_display' are rotated
+    - if a non-blank \\text part is detected,
+    - if a “maths part” starts with an operator and is first in “section”,
+      but not on “line”
+    - if a “maths part” only consists of an operator,
+    - if a “maths part” includes trailing interpunction.
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
+### Removal of unnecessary blank lines
+
+In order to avoid creation of new blank lines by macros expanding to space or
+“nothing”, we include a token of type 'ActionToken' whenever
+expanding a macro.
+Method 'Parser.remove\_pure\_action\_lines()' removes all lines only
+containing space and at least one such token.
+Initially empty lines are retained.
+
+[Back to top](#yalafi-yet-another-latex-filter)
+
